@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Exploratory Biology</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#faf8f4;--ink:#1f1b2e;--muted:#6a647a;--card:#fff;--line:#e6e0d4;--teal:#1f7a8c;--magenta:#b5338a;--gold:#d99a1e;--shadow:0 1px 2px rgba(31,27,46,.06),0 8px 24px rgba(31,27,46,.06)}
+@media(prefers-color-scheme:dark){:root{--bg:#14111d;--ink:#f3f0fa;--muted:#a79fbd;--card:#1d1829;--line:#322b45;--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Open Sans',system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.5;-webkit-text-size-adjust:100%}
+.glow{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(520px 320px at 12% 6%,color-mix(in srgb,var(--teal) 22%,transparent),transparent 70%),radial-gradient(480px 300px at 88% 10%,color-mix(in srgb,var(--magenta) 18%,transparent),transparent 70%),radial-gradient(420px 260px at 60% 0%,color-mix(in srgb,var(--gold) 16%,transparent),transparent 70%)}
+.wrap{position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:0 20px}
+header{padding:64px 0 24px}
+h1{margin:0;font-size:clamp(40px,8vw,76px);font-weight:800;line-height:1.02;letter-spacing:-.02em}
+.lead{margin:16px 0 0;max-width:600px;font-size:clamp(17px,2.4vw,20px);color:var(--muted)}
+#signin{max-width:760px;margin-bottom:22px}
+#signin .bvl-box{background:var(--card);color:var(--ink);border-color:var(--line)}
+#signin .bvl-s{color:var(--muted)}
+#signin .bvl-box button.g{background:transparent;color:var(--ink);border-color:var(--muted)}
+#signin input{background:var(--bg);color:var(--ink);border-color:var(--line)}
+#signin a{color:inherit}
+#grid{padding-bottom:64px}
+.err{background:#fdecea;border:2px solid #c0392b;color:#7a1f16;border-radius:12px;padding:12px 16px;margin:12px 0;font-weight:600}
+</style>
+</head>
+<body>
+<div class="glow" aria-hidden="true"></div>
+<div class="wrap">
+<header>
+  <h1 id="st">Exploratory Biology</h1>
+  <p class="lead" id="ss">Explore, experiment, and investigate. New units appear as we discover them in class.</p>
+</header>
+<section id="signin" aria-label="Sign in"></section>
+<div id="err"></div>
+<main><nav class="tiles" id="grid" aria-label="Units"></nav></main>
+</div>
+<script>
+/* Each step below runs on its own, so one broken file cannot stop the others. */
+function problem(t){document.getElementById("err").insertAdjacentHTML("beforeend",'<div class="err">'+t+'</div>')}
+function load(src,ok,bad){const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=bad;document.body.appendChild(s)}
+load("/assets/units.js",function(){
+  if(window.BVL_CFG){document.getElementById("st").textContent=BVL_CFG.siteTitle||"Exploratory Biology";document.title=BVL_CFG.siteTitle||document.title;if(BVL_CFG.siteSub)document.getElementById("ss").textContent=BVL_CFG.siteSub}
+  start()
+},function(){problem("Teacher: the file /assets/units.js could not be loaded, so the unit buttons are hidden. Check that the file exists at that path.");start()});
+function start(){
+  load("/assets/bvl.js",function(){
+    try{BVL.mountSignIn(document.getElementById("signin"))}catch(e){problem("The sign-in box had a problem: "+e.message)}
+    try{
+      if(!window.BVL_UNITS)return;
+      BVL.tiles(document.getElementById("grid"),BVL_UNITS.map(function(u){return{key:"unit"+u.n,sub:"Unit "+u.n,title:u.title,theme:u.theme,url:u.url||("/u"+u.n+"/home.html"),release:u.release}}));
+    }catch(e){problem("Teacher: the unit buttons could not be drawn. This is usually a missing comma or quotation mark in /assets/units.js ("+e.message+").")}
+  },function(){problem("Teacher: the file /assets/bvl.js could not be loaded, so sign-in and the unit buttons are unavailable. Check that the file exists at that path.")});
+}
+</script>
+</body>
+</html>
