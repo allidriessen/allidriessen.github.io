@@ -4,93 +4,43 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Biology Virtual Labs</title>
-<meta name="description" content="Interactive simulations for high school biology, organized by unit.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#faf8f4; --ink:#1f1b2e; --muted:#6a647a; --card:#ffffff; --line:#e6e0d4;
-  --teal:#1f7a8c; --magenta:#b5338a; --gold:#d99a1e; --purple:#6a46ad; --tan:#b79f74;
-  --shadow:0 1px 2px rgba(31,27,46,.06),0 8px 24px rgba(31,27,46,.06);
-}
-@media (prefers-color-scheme:dark){
-  :root{--bg:#14111d; --ink:#f3f0fa; --muted:#a79fbd; --card:#1d1829; --line:#322b45;
-        --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35)}
-}
+:root{--bg:#faf8f4;--ink:#1f1b2e;--muted:#6a647a;--card:#fff;--line:#e6e0d4;--teal:#1f7a8c;--magenta:#b5338a;--gold:#d99a1e;--shadow:0 1px 2px rgba(31,27,46,.06),0 8px 24px rgba(31,27,46,.06)}
+@media(prefers-color-scheme:dark){:root{--bg:#14111d;--ink:#f3f0fa;--muted:#a79fbd;--card:#1d1829;--line:#322b45;--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35)}}
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:'Open Sans',system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.5}
-.glow{position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:
-   radial-gradient(520px 320px at 12% 6%,color-mix(in srgb,var(--teal) 22%,transparent),transparent 70%),
-   radial-gradient(480px 300px at 88% 10%,color-mix(in srgb,var(--magenta) 18%,transparent),transparent 70%),
-   radial-gradient(420px 260px at 60% 0%,color-mix(in srgb,var(--gold) 16%,transparent),transparent 70%)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Open Sans',system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.5;-webkit-text-size-adjust:100%}
+.glow{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(520px 320px at 12% 6%,color-mix(in srgb,var(--teal) 22%,transparent),transparent 70%),radial-gradient(480px 300px at 88% 10%,color-mix(in srgb,var(--magenta) 18%,transparent),transparent 70%),radial-gradient(420px 260px at 60% 0%,color-mix(in srgb,var(--gold) 16%,transparent),transparent 70%)}
 .wrap{position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:0 20px}
-header{padding:72px 0 40px}
-.mark{display:flex;align-items:center;gap:8px;color:var(--muted);font-weight:600;font-size:15px;margin-bottom:18px}
+header{padding:64px 0 24px}
 h1{margin:0;font-size:clamp(40px,8vw,76px);font-weight:800;line-height:1.02;letter-spacing:-.02em}
 .lead{margin:16px 0 0;max-width:560px;font-size:clamp(17px,2.4vw,20px);color:var(--muted)}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding-bottom:64px}
-@media(max-width:860px){.grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:540px){.grid{grid-template-columns:1fr}}
-.unit{position:relative;display:flex;flex-direction:column;gap:10px;min-height:170px;padding:20px;border-radius:18px;
-  background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);color:inherit;text-decoration:none;
-  transition:transform .18s ease,border-color .18s ease}
-a.unit:hover,a.unit:focus-visible{transform:translateY(-3px);border-color:var(--c);outline:none}
-a.unit:focus-visible{box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 40%,transparent)}
-.num{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;font-weight:800;font-size:16px;
-  color:#fff;background:var(--c)}
-.unit h2{margin:0;font-size:19px;line-height:1.25;font-weight:700}
-.unit .go{margin-top:auto;font-size:14px;font-weight:700;color:var(--c)}
-.unit.soon{opacity:.62}
-.unit.soon .go{color:var(--muted);font-weight:600}
-a.unit .go::after{content:" →";transition:margin-left .18s}
-a.unit:hover .go::after{margin-left:4px}
+#signin{max-width:760px;margin-bottom:22px}
+#signin .bvl-box{background:var(--card);color:var(--ink);border-color:var(--line)}
+#signin .bvl-s{color:var(--muted)}
+#signin .bvl-box button.g{background:transparent;color:var(--ink);border-color:var(--muted)}
+#signin input{background:var(--bg);color:var(--ink);border-color:var(--line)}
+#signin a{color:inherit}
+#grid{padding-bottom:64px}
 footer{padding:0 0 40px;color:var(--muted);font-size:13px}
-@media(prefers-reduced-motion:reduce){.unit{transition:none}}
 </style>
 </head>
 <body>
 <div class="glow" aria-hidden="true"></div>
 <div class="wrap">
 <header>
-  <div class="mark">
-    <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="9.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="11" cy="11" r="3.6" fill="currentColor"/></svg>
-    Interactive simulations for biology
-  </div>
   <h1>Biology Virtual Labs</h1>
-  <p class="lead">Explore, experiment, and investigate. Choose a unit to find its simulations.</p>
+  <p class="lead">Explore, experiment, and investigate. New units appear as we discover them in class.</p>
 </header>
-
-<main>
-  <nav class="grid" id="grid" aria-label="Units"></nav>
-</main>
-<footer>Choose the unit your teacher assigned.</footer>
+<section id="signin" aria-label="Sign in"></section>
+<main><nav class="tiles" id="grid" aria-label="Units"></nav></main>
+<footer>Each unit opens up as your class reaches it.</footer>
 </div>
-
+<script src="assets/units.js"></script>
+<script src="assets/bvl.js"></script>
 <script>
-/* ===== TEACHER: EDIT THE LINKS HERE =====
-   url: the page for that unit, relative to this file (for example "unit-3/index.html")
-        or a full web address. Leave "" and the unit shows "Coming soon".        */
-const UNITS=[
-  {n:1,title:"Ecosystem Interactions & Dynamics", url:""},
-  {n:2,title:"Matter & Energy",                   url:""},
-  {n:3,title:"Cellular Dynamics",                 url:"https://allidriessen.github.io/U3-index.html"},
-  {n:4,title:"Life's Molecular Code",             url:""},
-  {n:5,title:"From Genes to Proteins",            url:""},
-  {n:6,title:"Inheritance & Variation",           url:""},
-  {n:7,title:"Patterns of Heredity",              url:""},
-  {n:8,title:"Natural Selection & Evolution of Populations", url:""},
-  {n:9,title:"Human Body Systems",                url:""}
-];
-const COLORS=["#1f7a8c","#d99a1e","#b5338a","#6a46ad","#2f8f6b","#c4572b","#3f78b5","#8a4fa8","#b5335a"];
-document.getElementById("grid").innerHTML=UNITS.map((u,i)=>{
-  const inner=`<span class="num" aria-hidden="true">${u.n}</span><h2><span style="font-weight:600;color:var(--muted);font-size:14px;display:block">Unit ${u.n}</span>${u.title}</h2>`;
-  const st=`style="--c:${COLORS[i%COLORS.length]}"`;
-  return u.url
-    ? `<a class="unit" ${st} href="${u.url}">${inner}<span class="go">Open unit</span></a>`
-    : `<div class="unit soon" ${st} aria-disabled="true">${inner}<span class="go">Coming soon</span></div>`;
-}).join("");
+BVL.mountSignIn(document.getElementById("signin"));
+BVL.tiles(document.getElementById("grid"),BVL_UNITS.map(u=>({key:"unit"+u.n,sub:"Unit "+u.n,title:u.title,url:"unit-"+u.n+"/index.html",release:u.release})));
 </script>
 </body>
 </html>
