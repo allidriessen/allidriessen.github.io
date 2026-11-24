@@ -1,19 +1,39 @@
-/* ===== TEACHER SETTINGS (the only file you edit during the year) =====
-   release: the date (YYYY-MM-DD) a unit becomes visible and clickable for students.
-   Before that date students see only a blurry magnifying glass, with no title.
-   NOTE: titles are readable by anyone who views this file's source, so students who
-   look at the code could see them. Leave a title as "" until you are ready if that matters. */
+/* ===== TEACHER SETTINGS: the only file you edit during the year =====
+   HOW TO EDIT SAFELY: change only the text between quotation marks and the dates.
+   Every line inside a list ends with a comma, except the last one. A missing comma or
+   quotation mark can stop this whole file from loading.
+
+   release: the date (YYYY-MM-DD) something becomes visible and clickable.
+            Before that date students see a blurry magnifying glass and "Not yet discovered".
+   theme:   the picture inside the magnifying glass: earth, atoms, cells, dna, protein,
+            chromo, punnett, tree, body. (An activity uses its unit's theme unless it has its own.)
+   NOTE: titles in this file can be read by anyone who views the page source. */
 window.BVL_CFG={
-  teacherCode:"teacher"   // change this. Use ?preview=YOURCODE on a page's address to preview everything.
+  teacherCode:"teacher",   // change this. Add ?preview=YOURCODE to a page address to see everything unlocked.
+  siteTitle:"Exploratory Biology",   // or "Biology Simulations & Labs"
+  siteSub:"Explore, experiment, and investigate. New units appear as we discover them in class."
 };
 window.BVL_UNITS=[
-  {n:1,title:"Ecosystem Interactions & Dynamics",release:"2026-08-17"},
-  {n:2,title:"Matter & Energy",release:"2026-09-21"},
-  {n:3,title:"Cellular Dynamics",release:"2026-10-26"},
-  {n:4,title:"Life's Molecular Code",release:"2027-01-11"},
-  {n:5,title:"From Genes to Proteins",release:"2027-02-08"},
-  {n:6,title:"Inheritance & Variation",release:"2027-03-01"},
-  {n:7,title:"Patterns of Heredity",release:"2027-03-22"},
-  {n:8,title:"Natural Selection & Evolution of Populations",release:"2027-04-12"},
-  {n:9,title:"Human Body Systems",release:"2027-05-03"}
+ {n:1,title:"Ecosystem Interactions & Dynamics",theme:"earth",release:"2026-08-17",activities:[
+ ]},
+ {n:2,title:"Matter & Energy",theme:"atoms",release:"2026-09-21",activities:[
+  {key:"ers",title:"Enzymatic Reactions Simulator",desc:"",url:"/u2/ers.html",release:"2026-09-21"},
+  {key:"ersbe",title:"Enzymatic Reaction Simulator: Build the Equation",desc:"",url:"/u2/ersbe.html",release:"2026-09-28"}
+ ]},
+ {n:3,title:"Cellular Dynamics: The Life and Death of a Cell",theme:"cells",release:"2026-10-26",activities:[
+  {key:"cce",title:"Cancer Cell Exploration",desc:"How are cancer cells different from normal cells?",url:"/u3/cce.html",release:"2026-10-26"},
+  {key:"ch",title:"Cellular Homeostasis",desc:"",url:"/u3/ch.html",release:"2099-01-01"}   /* in development: set the real date when ready */
+ ]},
+ {n:4,title:"The Quest to Discover Life's Molecular Code",theme:"dna",release:"2027-01-11",activities:[
+ ]},
+ {n:5,title:"From Genes to Proteins: How Molecules Shape Us",theme:"protein",release:"2027-02-08",activities:[
+ ]},
+ {n:6,title:"Inheritance and Variation: Passing and Changing Genes Through Generations",theme:"chromo",release:"2027-03-01",activities:[
+ ]},
+ {n:7,title:"Patterns of Heredity",theme:"punnett",release:"2027-03-22",activities:[
+ ]},
+ {n:8,title:"Natural Selection & Evolution of Populations",theme:"tree",release:"2027-04-12",activities:[
+ ]},
+ {n:9,title:"Human Body Systems",theme:"body",release:"2027-05-03",activities:[
+ ]}
 ];
