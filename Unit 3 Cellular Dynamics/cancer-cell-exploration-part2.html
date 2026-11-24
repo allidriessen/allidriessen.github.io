@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cancer Cell Exploration – Part 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#241a38;--pur:#4b2e83;--bg:#f5f0fa;--ok:#14803f;--bad:#c0392b}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Open Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-text-size-adjust:100%;line-height:1.5}
+button{font:inherit;cursor:pointer}
+.wrap{max-width:1000px;margin:0 auto;padding:12px}
+.hd{background:linear-gradient(135deg,#2b1856,#5b3a9a 65%,#a0507a);color:#fff;border-radius:16px;padding:14px 18px;display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.hd h1{margin:0;font-size:clamp(24px,5vw,36px);font-weight:800;line-height:1.1}
+.hd .sub{font-size:15px;opacity:.95}
+.chip{background:#fff;color:var(--pur);font-weight:700;border-radius:999px;padding:7px 14px;font-size:15px}
+.dots{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}
+.dot{font-size:13px;font-weight:600;padding:4px 10px;border-radius:999px;background:#e4daf1;color:#5b4a7a}
+.dot.on{background:var(--pur);color:#fff}
+.stage{background:#fff;border:2px solid #ddd0ee;border-radius:14px;overflow:hidden}
+.stage svg{width:100%;height:auto;display:block}
+.t{font:700 13px 'Open Sans',sans-serif;fill:#2a1d3f;paint-order:stroke;stroke:#fff;stroke-width:3.5px;stroke-linejoin:round}
+.t2{font:800 14px 'Open Sans',sans-serif;fill:#fff}
+.hot{cursor:pointer;animation:pl 1.3s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pl{50%{transform:scale(1.25);opacity:.5}}
+.box{background:#fff;border:2px solid #ddd0ee;border-radius:14px;padding:12px 16px;margin:12px 0}
+.box h3{margin:4px 0 6px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:720px){.pair{grid-template-columns:1fr}}
+.pnl{border:2px solid #ddd0ee;border-radius:12px;overflow:hidden;background:#fff}
+.pnl h3{margin:0;padding:8px 12px;font-size:17px}
+.chips{display:flex;gap:4px;flex-wrap:wrap;padding:6px 8px}
+.chips span{font-size:12px;font-weight:600;background:#eee8f6;border-radius:8px;padding:3px 7px;color:#6b5a85}
+.chips span.on{background:var(--pur);color:#fff}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}
+.bar input{flex:1;min-width:140px;height:34px;accent-color:var(--pur)}
+.pbtn{background:var(--pur);color:#fff;border:0;border-radius:12px;padding:11px 18px;font-weight:700;font-size:16px;min-height:46px}
+.pbtn[disabled]{background:#b9aed0;cursor:not-allowed}
+.ghost{background:#fff;color:var(--pur);border:2px solid var(--pur)}
+.nav{display:flex;justify-content:space-between;gap:8px;margin:12px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid #ddd0ee;padding:6px 8px;text-align:left;vertical-align:top}
+th{background:#efe8f8}
+.q{margin:12px 0}.q p{font-weight:700;margin:0 0 6px}
+.opt{display:block;width:100%;text-align:left;background:#faf7fd;border:2px solid #ddd0ee;border-radius:10px;padding:10px 12px;margin:6px 0;min-height:46px}
+.opt.right{background:#e9f8ef;border-color:var(--ok)}.opt.wrong{background:#fdecea;border-color:var(--bad)}
+.ws{background:#fff8d6;border:1px solid #e6c84a;border-radius:8px;padding:8px 10px;margin-top:6px;font-weight:600}
+.hide{display:none}
+.banner{background:#e9f8ef;border:2px solid var(--ok);border-radius:12px;padding:12px 16px;margin:12px 0}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;padding:10px}.wide{grid-column:1/-1}.sum .note{padding:0 10px 8px;margin:4px 0}
+.note{font-size:13px;color:#6b5a85}
+</style></head>
+<body><div class="wrap">
+<div class="hd"><div><h1 id="ht"></h1><div class="sub" id="hs"></div></div><span class="chip" id="chip"></span></div>
+<div class="dots" id="dots"></div>
+<div class="stage" id="stage"></div>
+<div id="ctl"></div>
+<div class="box" id="info"></div>
+<div class="box hide" id="qz"></div>
+<div id="fin"></div>
+<div class="nav"><button class="pbtn ghost" id="bk">← Back</button><button class="pbtn" id="nx">Next</button></div>
+</div>
+<script>
+const PART3_URL=""; // paste the Part 3 link here later
+/* ===== EDITABLE CONTENT ===== */
+const STEPS=[
+{t:"The Digestive Tract",s:"Zoomed-out view",chip:"Click the glowing section of the colon",g:0,inv:0,nx:"Zoom in →",
+ info:`<h3>Where do we start?</h3><p>Food moves from the <b>small intestine</b> into the <b>large intestine (colon)</b> and out through the <b>rectum</b>. Cancer that starts in the colon or rectum is called colorectal cancer. Polyps can form anywhere along the colon, and the sigmoid colon and rectum are common spots. <b>Click the glowing circle</b> to zoom in on the colon wall.</p>`},
+{t:"Stage 1",s:"Promotion: about 10–20 years",chip:"Small benign polyp",g:.3,inv:0,nx:"Advance to Stage 2 →",
+ info:`<h3>Zooming in on the colon wall</h3><p>The lining (<b>epithelium</b>) sits on a thin <b>basement membrane</b>. Below it run <b>blood vessels</b> (carrying red blood cells and immune cells) and <b>lymphatic vessels</b> (carrying lymph and immune cells). Over about 10–20 years, a lining cell with DNA changes divides too often and builds a small <b>polyp</b>: a <b>benign</b> growth that stays on the surface.</p>`,
+ qs:[{q:"What is a polyp?",o:["A small growth of extra cells on the lining of the colon","A kind of blood vessel","A type of immune cell"],a:0,ws:"Stage 1: a small benign growth (polyp) in the colon lining."},
+ {q:"About how long can this stage take?",o:["10–20 years","A few days","Exactly one year"],a:0,ws:"Cancer progression is slow: stages can each take about 10–20 years."}]},
+{t:"Stage 2",s:"Progression: about 10–20 years",chip:"Large benign growth (early adenoma)",g:.65,inv:0,nx:"Advance to Stage 3 →",
+ info:`<h3>The growth gets bigger</h3><p>Cells in the polyp keep dividing. It becomes a larger growth called an <b>adenoma</b>. It is still <b>benign</b>: it is contained inside the lining and has not crossed the basement membrane. Doctors use <b>stage numbers</b> to describe how big the tumor is, where it is, and whether it has spread.</p>`,
+ qs:[{q:"What changed from Stage 1 to Stage 2?",o:["The growth got larger but is still contained in the colon lining","The growth spread to the liver","The polyp disappeared"],a:0,ws:"Stage 2: larger benign growth (early adenoma), still contained."},
+ {q:"What do stage numbers describe?",o:["Tumor size, location, and how far it has spread","The patient's age","The color of the cells"],a:0,ws:"Stage numbers refer to tumor size, location, and spread."}]},
+{t:"Stage 3",s:"Progression (continued): about 10–20 years",chip:"Late adenoma turning malignant",g:1,inv:1,nx:"Advance to Stage 4: Metastasis →",
+ info:`<h3>Benign vs. malignant</h3><p>In a late adenoma, some cells gain even more DNA changes. When cells <b>break through the basement membrane</b> and push into the tissue below, the growth has become <b>malignant</b> (a carcinoma), and it is now close to the blood and lymphatic vessels.</p>
+ <table><tr><th></th><th>Benign tumor</th><th>Malignant tumor</th></tr><tr><td>Growth</td><td>Stays in one place, often with smooth borders</td><td>Invades nearby tissue, irregular borders</td></tr><tr><td>Basement membrane</td><td>Contained by it</td><td>Breaks through it</td></tr><tr><td>Spread</td><td>Does not metastasize</td><td>Can metastasize</td></tr><tr><td>"Cancer"?</td><td>Usually no</td><td>Yes</td></tr></table>`,
+ qs:[{q:"What does malignant mean in this model?",o:["Cells break through the membrane, invade nearby tissue, and can spread","The growth is small and stays put","The growth is shrinking"],a:0,ws:"Malignant: invades nearby tissue and can spread (metastasize)."},
+ {q:"Which describes a benign tumor?",o:["It grows in one place and does not invade or spread","It always spreads to the liver","It is made of immune cells"],a:0,ws:"Benign: stays in place, does not invade or spread."},
+ {q:"Why are benign tumors often not considered cancerous?",o:["Their cells do not invade other tissues or spread","They contain no DNA","They grow faster than cancer"],a:0,ws:"Not cancer because the cells don't invade or spread."}]},
+{t:"Stage 4",s:"Metastasis: about 0–5 years",chip:"Malignant tumor (carcinoma) spreading",g:1,inv:1,nx:"View the summary →",
+ info:`<h3>Metastasis: two highway systems</h3><p><b>Metastasis</b> means cancer cells break away from the primary tumor, travel through the body, and start new tumors. Use each highway's Play button, or reset and play both together, to watch the same cell travel on each highway. Watch both highways to unlock the questions.</p>
+ <div class="pair"><div><b>🩸 Blood highway</b><p class="note">Fast and body-wide. Cells can reach organs far away, such as the liver, lungs, bones, and brain. Blood from the intestines flows to the liver first, so colon cancer often spreads there.</p></div>
+ <div><b>🟢 Lymph highway</b><p class="note">A slower network that drains fluid and passes through lymph nodes, which filter it. Cells often get caught in the nearest node first. Cancers that start in the lining of organs, like colon and breast cancer, often spread this way. Cancers that start in bone, muscle, or fat tend to travel more through the blood.</p></div></div>`,
+ qs:[{q:"What is metastasis?",o:["Cancer cells spread from the original tumor to other body parts and form new tumors","A tumor shrinking after treatment","A polyp staying in the colon lining"],a:0,ws:"Metastasis: cancer cells spread and form new (secondary) tumors elsewhere."},
+ {q:"Which TWO statements about the highways are correct?",o:["Blood vessels carry cells far and fast","Lymph vessels pass through nodes that can trap cells","Lymph vessels move cells faster than blood vessels","Cancer cells can only travel through blood vessels"],a:[0,1],ws:"Two routes: blood vessels carry cells far and fast; lymph vessels pass through lymph nodes that can trap cells. Different cancers favor different routes."},
+ {q:"Colon cancer spreads to the liver. What is the liver tumor called?",o:["Metastatic colon cancer (a secondary tumor)","Liver cancer that began in the liver","A benign polyp"],a:0,ws:"Spread tumors keep the name of where the cancer started."},
+ {q:"How are cancers typically named?",o:["By the organ or cell type where they began","By the patient's name","By where they spread"],a:0,ws:"Cancers are named for the organ or cell type where they start."},
+ {q:"Breast and testicular tumors aren't in organs needed for survival. How can they still be deadly?",o:["Cancer cells can spread to essential organs like the lungs or liver","Cancer cells can turn nearby healthy cells into new immune cells","Cancer cells can make the rest of the body grow too quickly"],a:0,ws:"Metastasis to essential organs. (Challenge: think of another way, such as tumors blocking tubes, pressing on organs, or causing bleeding.)"}]},
+{t:"Summary",s:"From healthy lining to metastasis",chip:"All four stages",g:1,inv:1,nx:"Finish Part 2 ✓",
+ info:`<h3>Putting it all together</h3><ul><li><b>Progression is slow.</b> Each stage can take about 10–20 years, and stage numbers describe tumor size, location, and spread.</li><li><b>Benign</b> growths stay in place and are not usually called cancer. <b>Malignant</b> growths break through the basement membrane, invade nearby tissue, and can spread.</li><li><b>Metastasis</b> uses blood and lymph vessels to start secondary tumors, which keep the name of the original cancer.</li></ul>`}
+];
+/* ===== drawing ===== */
+const $=id=>document.getElementById(id);
+const bl=(x,y,r,j,k)=>{const n=10,p=[];for(let i=0;i<n;i++){const a=i/n*6.2832,q=r*(1+j*Math.sin(k*5.7+i*2.3)*Math.cos(i*1.7+k));p.push([x+Math.cos(a)*q,y+Math.sin(a)*q])}const m=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2];let s=m(p[n-1],p[0]),d=`M${s[0]},${s[1]}`;for(let i=0;i<n;i++){const e=m(p[i],p[(i+1)%n]);d+=`Q${p[i][0]},${p[i][1]} ${e[0]},${e[1]}`}return d+"Z"};
+const cc=(x,y,r,k)=>`<path d="${bl(x,y,r,.3,k)}" fill="#dba7d2" stroke="#8a3f86" stroke-width="2"/><path d="${bl(x+r*.1,y-r*.05,r*.64,.24,k+3)}" fill="#2d1458" stroke="#140a2e"/><circle cx="${x-r*.15}" cy="${y}" r="${r*.12}" fill="#6a4aa8"/><circle cx="${x+r*.2}" cy="${y+r*.18}" r="${r*.1}" fill="#6a4aa8"/>`;
+const COLON="M250,400V140Q250,110 280,110H520Q550,110 550,140V320Q550,372 505,380Q455,388 440,415V462";
+function organ(){let d="M320,170";for(let r=0;r<6;r++){const y=170+r*27;d+=r%2?`H320A13.5,13.5 0 0 0 320,${y+27}`:`H480A13.5,13.5 0 0 1 480,${y+27}`}d+="H480";
+ const L=(x,y,t,a)=>`<text class="t" x="${x}" y="${y}" text-anchor="${a||"start"}">${t}</text>`;
+ return `<path d="${COLON}" fill="none" stroke="#d98c97" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/><path d="${COLON}" fill="none" stroke="#f4b3ba" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/><path d="${COLON}" fill="none" stroke="#d98c97" stroke-width="32" stroke-dasharray="3 16" opacity=".55"/>
+ <path d="${d}" fill="none" stroke="#e39c8b" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="#f6c6b6" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>`}
+const ORGAN_LABELS=`<text class="t" x="222" y="262" text-anchor="end">Ascending colon</text><text class="t" x="400" y="94" text-anchor="middle">Transverse colon</text><text class="t" x="578" y="240">Descending colon</text><text class="t" x="560" y="406">Sigmoid colon</text><text class="t" x="462" y="454">Rectum</text><text class="t" x="400" y="256" text-anchor="middle">Small intestine</text>`;
+function scene0(){return `<svg viewBox="0 0 800 480" id="s0"><g id="og" style="transition:transform .85s ease-in,opacity .85s;transform-origin:497px 381px">${organ()}${ORGAN_LABELS}<circle class="hot" id="hot" cx="497" cy="381" r="34" fill="rgba(255,255,255,.35)" stroke="#c0392b" stroke-width="5"/></g></svg>`}
+function tissue(g,inv,busy,mini){
+ const cx=400,w=70+170*g,h=25+105*g,by=185,L=(x,y,t,a)=>`<text class="t" x="${x}" y="${y}" text-anchor="${a||"start"}">${t}</text>`;
+ let s=`<svg viewBox="0 0 800 480"><defs><pattern id="pc" width="20" height="18" patternUnits="userSpaceOnUse"><circle cx="10" cy="9" r="7.5" fill="#e48f9a" stroke="#a64557"/><circle cx="10" cy="9" r="2.6" fill="#7d3a6a"/></pattern></defs>
+ <rect width="800" height="185" fill="#fdf1ee"/><rect y="232" width="800" height="248" fill="#fbe6ee"/>
+ <rect x="-20" y="304" width="840" height="52" rx="26" fill="#f4a6ab" stroke="#b4343f" stroke-width="3"/><rect x="-20" y="401" width="840" height="38" rx="19" fill="#d6ecca" stroke="#4f9a3e" stroke-width="3"/>`;
+ [[60,330,60,"r"],[150,322,60,"r"],[230,338,60,"r"],[310,326,60,"r"],[470,334,60,"r"],[560,322,60,"r"],[650,338,60,"r"],[730,328,60,"r"],[110,420,22,"w"],[480,420,22,"w"],[250,336,60,"w"],[620,326,60,"w"]].forEach(f=>{s+=`<g class="fl" data-x="${f[0]}" data-y="${f[1]}" data-v="${f[2]}">${f[3]=="r"?`<ellipse rx="10" ry="6.5" fill="#d6303f"/><ellipse rx="4" ry="2.4" fill="#f08a92"/>`:`<circle r="10" fill="#fff" stroke="#8a7ab5" stroke-width="2"/><circle r="5" fill="#8a6bbf"/>`}</g>`});
+ for(let x=-4;x<800;x+=28)s+=`<rect x="${x}" y="185" width="26" height="45" rx="9" fill="#f6c1cf" stroke="#d98aa3"/><circle cx="${x+13}" cy="214" r="7" fill="#a78bd1"/>`;
+ const g0=cx-6-40*inv,g1=cx+6+40*inv,seg=(a,b)=>{let p="";for(let x=a;x<=b;x+=8)p+=`${x},${232+3*Math.sin(x/18)} `;return `<polyline points="${p}" fill="none" stroke="#a8566b" stroke-width="5"/>`};
+ s+=seg(-4,g0)+seg(g1,804);
+ s+=`<path d="M${cx-w/2},${by} C${cx-w/2},${by-h*1.35} ${cx+w/2},${by-h*1.35} ${cx+w/2},${by}Z" fill="url(#pc)" stroke="#a64557" stroke-width="3"/>`;
+ if(g>.5)s+=`<ellipse cx="${cx}" cy="${by-h*.42}" rx="${w*.2}" ry="${h*.2}" fill="#f6e3b4" opacity=".85"/>`;
+ for(let k=0;k<16;k++){const u=k/16;if(u>inv||inv==0)continue;const x=cx-4+u*50+Math.sin(k*2.1)*14,y=226+u*80;s+=cc(x,y,13+(k%3)*2,k)}
+ if(inv>.3&&!mini)s+=L(cx+75,266,"Malignant cells break through the membrane");
+ if(!mini)s+=L(230,30,"Lumen (inside the colon)")+L(780,210,"Epithelium (lining)","end")+L(780,256,"Basement membrane","end")+L(780,298,"Blood vessel","end")+L(780,396,"Lymphatic vessel","end")+L(14,374,"Red blood cells")+L(14,462,"Immune cells (white blood cells)");
+ if(!mini&&st.step<4)s+=`<g transform="translate(10,10)"><rect width="190" height="116" rx="10" fill="#fff" stroke="#4b2e83" stroke-width="2" opacity=".96"/><g transform="translate(6,5) scale(.22)">${organ()}</g><circle cx="115" cy="89" r="8" fill="none" stroke="#c0392b" stroke-width="2.5"/></g>`;
+ if(busy)s+=`<text x="790" y="30" text-anchor="end" font-size="18" font-weight="800" fill="#4b2e83">⏩ Years pass…</text>`;
+ return s+"</svg>"}
+/* ===== metastasis scene ===== */
+const M=[{t:[72,94],s:[78,118],d:[308,386]},{t:[72,94],s:[78,118],d:[150,272]}];
+const clu=(x,y,k)=>`<g transform="translate(${x} ${y}) scale(${k})">`+[[0,0,16],[22,6,14],[-13,20,15],[15,27,13],[34,-7,11],[-28,3,11]].map((c,i)=>cc(c[0],c[1],c[2],i+1)).join("")+"</g>";
+function panel(k){
+ const tube=(d,W,c1,c2)=>`<path d="${d}" fill="none" stroke="${c2}" stroke-width="${W+6}" stroke-linecap="round"/><path ${k==(W>20?0:1)?`id="pp${k}"`:""} d="${d}" fill="none" stroke="${c1}" stroke-width="${W}" stroke-linecap="round"/>`;
+ let s=`<svg viewBox="0 0 400 440"><rect width="400" height="440" fill="${k?"#eef8ea":"#fdecef"}"/>${clu(55,68,1)}<text class="t" x="12" y="24">Primary tumor (colon)</text>`;
+ if(k==0)s+=tube("M78,118C70,190 170,200 190,250S290,300 298,346",24,"#f4a6ab","#b4343f")+`<ellipse cx="308" cy="388" rx="78" ry="36" fill="#b0645a" stroke="#7a3a33" stroke-width="3"/><text class="t2" x="308" y="394" text-anchor="middle">Liver</text>`;
+ else s+=`<path d="M170,292C230,330 270,340 300,380" fill="none" stroke="#4f9a3e" stroke-width="12" opacity=".3" stroke-linecap="round"/><ellipse cx="312" cy="398" rx="30" ry="21" fill="#a8d39a" stroke="#4f9a3e" stroke-width="2" opacity=".35"/><text class="t" x="312" y="440" text-anchor="middle" opacity=".6">next node</text>`+tube("M78,118C66,170 136,196 148,246",14,"#bfe3b0","#4f9a3e")+`<ellipse cx="150" cy="272" rx="36" ry="25" fill="#a8d39a" stroke="#4f9a3e" stroke-width="3"/><text class="t" x="150" y="320" text-anchor="middle">Lymph node</text>`;
+ const d=M[k].d;
+ s+=`<g id="nt${k}">${clu(0,0,.8)}</g><text class="t" id="nl${k}" x="${d[0]}" y="${d[1]+(k?-44:-14)}" text-anchor="middle" opacity="0">Secondary tumor</text><g id="mc${k}">${cc(0,0,12,5)}</g></svg>`;
+ return s}
+function metaScene(){
+ const ch=k=>`<div class="chips" id="chips${k}">${["1 Invade the vessel","2 Travel","3 Exit the vessel","4 Grow a new tumor"].map(x=>`<span>${x}</span>`).join("")}</div>`,nm=["blood","lymph"];
+ $("stage").innerHTML=`<div class="pair" style="gap:0">`+[0,1].map(k=>`<div class="pnl"><h3>${k?"🟢 Lymph":"🩸 Blood"} highway</h3>${panel(k)}${ch(k)}<div class="bar" style="padding:0 8px 8px"><button class="pbtn ghost" id="p${k}">▶ Play ${nm[k]}</button><input type="range" id="sl${k}" min="0" max="1000" value="0" aria-label="${nm[k]} time"></div></div>`).join("")+`</div>`;
+ $("ctl").innerHTML=`<div class="bar"><button class="pbtn" id="pb">▶ Reset and play both together</button></div>`;
+ [0,1].forEach(k=>{$("p"+k).onclick=()=>{if(st.mt[k]>=1)st.mt[k]=0;st.mp[k]=st.mp[k]?0:1;lab(k)};$("sl"+k).oninput=e=>{st.mp[k]=0;lab(k);st.mt[k]=e.target.value/1000;meta(k)};meta(k)});
+ $("pb").onclick=()=>{st.mt=[0,0];st.mp=[1,1];lab(0);lab(1)}}
+function lab(k){const b=$("p"+k);if(b)b.textContent=(st.mp[k]?"❚❚ Pause ":"▶ Play ")+(k?"lymph":"blood")}
+function meta(k){const t=st.mt[k],P=M[k],p=$("pp"+k),L=p.getTotalLength();let x,y,ph;
+ if(t<.15){const u=t/.15;x=P.t[0]+(P.s[0]-P.t[0])*u;y=P.t[1]+(P.s[1]-P.t[1])*u;ph=0}
+ else if(t<.7){const q=p.getPointAtLength(L*(t-.15)/.55);x=q.x;y=q.y;ph=1}
+ else if(t<.8){const u=(t-.7)/.1,e=p.getPointAtLength(L);x=e.x+(P.d[0]-e.x)*u;y=e.y+(P.d[1]-e.y)*u;ph=2}
+ else{x=P.d[0];y=P.d[1];ph=3}
+ $("mc"+k).setAttribute("transform",`translate(${x} ${y})`);$("mc"+k).style.display=t>=.8?"none":"";
+ $("nt"+k).setAttribute("transform",`translate(${P.d[0]} ${P.d[1]}) scale(${t<.8?0:Math.min(1,(t-.8)/.2)})`);
+ $("nl"+k).setAttribute("opacity",t>=.95?1:0);
+ document.querySelectorAll(`#chips${k} span`).forEach((e,i)=>e.classList.toggle("on",i==ph));
+ const sl=$("sl"+k);if(sl)sl.value=Math.round(t*1000);
+ if(t>=1)st.fin[k]=1;if(st.step==4&&st.fin[0]&&st.fin[1]&&!st.seen){st.seen=1;metaDone()}}
+function metaDone(){
+ $("fin").innerHTML=`<div class="box"><h3>Secondary cancers</h3><p>The new tumors are <b>secondary tumors</b> (also called <b>metastases</b>). They are made of colon cancer cells, so a tumor in the liver that came from the colon is called <b>metastatic colon cancer</b>, not liver cancer. Cancers are named for where they <i>start</i>: the organ or cell type. The secondary tumor can crowd out normal tissue and disrupt an essential organ, which is how cancers in non-essential organs can still be deadly.</p><p><b>Challenge for your worksheet:</b> can you think of at least one more way a non-fatal tumor can indirectly cause death?</p></div>`;
+ showQuiz()}
+/* ===== quiz ===== */
+function quiz(host,qs,done){let n=0;
+ host.innerHTML=`<h3>Check your understanding</h3>`+qs.map((q,i)=>{const ord=q.o.map((_,k)=>k).sort(()=>Math.random()-.5);return `<div class="q"><p>${i+1}. ${q.q}${Array.isArray(q.a)?" <i>(Select two answers.)</i>":""}</p>${ord.map(k=>`<button class="opt" data-q="${i}" data-k="${k}">${q.o[k]}</button>`).join("")}<div class="ws hide"></div></div>`}).join("");
+ host.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const i=+b.dataset.q,q=qs[i],blk=b.parentElement,A=[].concat(q.a);if(blk.dataset.ok||b.classList.contains("right")||b.classList.contains("wrong"))return;
+  if(A.includes(+b.dataset.k)){b.classList.add("right");blk.dataset.c=(+blk.dataset.c||0)+1;if(+blk.dataset.c===A.length){blk.dataset.ok=1;const w=blk.querySelector(".ws");w.textContent="✅ Correct! Add this to your worksheet: "+q.ws;w.classList.remove("hide");if(++n===qs.length)done()}}
+  else{b.classList.add("wrong");b.textContent+="  (Not quite. Re-read the explanation and try another answer.)"}})}
+function showQuiz(){const i=st.step,q=$("qz");q.classList.remove("hide");quiz(q,STEPS[i].qs,()=>{S.done[i]=1;upd();if(i==4)$("fin").insertAdjacentHTML("beforeend",`<div class="banner"><b>Great work!</b> Continue to the summary.</div>`)})}
+/* ===== state & flow ===== */
+const S={done:[0,0,0,0,0,0]};const st={step:0,g:0,inv:0,anim:null,mt:[0,0],mp:[0,0],fin:[0,0],seen:0};
+function upd(){const i=st.step;$("nx").textContent=STEPS[i].nx;$("nx").disabled=i>0&&i<5&&!S.done[i];$("bk").style.visibility=i?"visible":"hidden"}
+function go(n,fwd){
+ st.step=n;st.mp=[0,0];st.mt=[0,0];st.fin=[0,0];st.seen=0;st.anim=null;const C=STEPS[n];
+ $("ht").textContent=C.t;$("hs").textContent=C.s;$("chip").textContent=C.chip;$("info").innerHTML=C.info;$("fin").innerHTML="";$("ctl").innerHTML="";$("qz").classList.add("hide");
+ $("dots").innerHTML=["Overview","Stage 1","Stage 2","Stage 3","Stage 4","Summary"].map((x,k)=>`<span class="dot ${k==n?"on":""}">${S.done[k]&&k&&k<5?"✓ ":""}${x}</span>`).join("");
+ if(n==0){$("stage").innerHTML=scene0();$("hot").onclick=zoom}
+ else if(n<4){const P=STEPS[n-1],d=n==3?3.6:2.4;
+  st.g=fwd?P.g:C.g;st.inv=fwd?P.inv:C.inv;if(fwd)st.anim={g0:P.g,p:0,d};draw();showQuiz();
+  $("ctl").innerHTML=`<div class="bar"><button class="pbtn ghost" id="rpl">⟲ Replay</button></div>`;
+  $("rpl").onclick=()=>{st.g=P.g;st.inv=P.inv;st.anim={g0:P.g,p:0,d}}}
+ else if(n==4){metaScene();if(S.done[4])showQuiz()}
+ else summary();
+ upd();scrollTo(0,0)}
+function summary(){st.mt=[1,1];
+ const card=(h,svg,t)=>`<div class="pnl"><h3>${h}</h3>${svg}<p class="note">${t}</p></div>`;
+ $("stage").innerHTML=`<div class="sum">`+card("Healthy colon",`<svg viewBox="0 0 800 480">${organ()}<circle cx="497" cy="381" r="36" fill="none" stroke="#c0392b" stroke-width="6"/></svg>`,"We zoom in on the sigmoid colon wall.")
+  +card("Stage 1: small benign polyp",tissue(.3,0,0,1),"About 10–20 years. Benign, stays on the surface.")
+  +card("Stage 2: large benign growth",tissue(.65,0,0,1),"Bigger early adenoma, still contained.")
+  +card("Stage 3: late adenoma turning malignant",tissue(1,1,0,1),"Cells break through the basement membrane.")
+  +`<div class="pnl wide"><h3>Stage 4: metastasis (about 0–5 years)</h3><div class="pair" style="gap:0">${panel(0)}${panel(1)}</div><p class="note">Cancer cells travel by the blood and lymph highways and start secondary tumors in new places.</p></div></div>`;
+ meta(0);meta(1)}
+function zoom(){const o=$("og");o.style.transform="scale(7)";o.style.opacity="0";setTimeout(()=>go(1,true),800)}
+function draw(){$("stage").innerHTML=tissue(st.g,st.inv,!!st.anim)}
+$("nx").onclick=()=>{if(st.step==0)return zoom();if(st.step==5)return PART3_URL?location.href=PART3_URL:alert("Part 3 is coming soon.");go(st.step+1,true)};
+$("bk").onclick=()=>go(st.step-1,false);
+/* ===== animation loop ===== */
+let last=performance.now(),T=0;
+function tick(ts){const dt=Math.min(.05,(ts-last)/1000);last=ts;T+=dt;const a=st.anim;
+ if(a){const C=STEPS[st.step],u=a.p=Math.min(1,a.p+dt/a.d);
+  if(st.step==3){st.g=a.g0+(C.g-a.g0)*Math.min(1,u/.45);st.inv=Math.max(0,(u-.45)/.55)}else{st.g=a.g0+(C.g-a.g0)*u;st.inv=0}
+  if(u>=1)st.anim=null;draw()}
+ if(st.step>0&&st.step<4)document.querySelectorAll(".fl").forEach(f=>{const v=+f.dataset.v,x=((+f.dataset.x+T*v)%880+880)%880-40;f.setAttribute("transform",`translate(${x} ${f.dataset.y})`)});
+ if(st.step==4)[0,1].forEach(k=>{if(st.mp[k]){st.mt[k]=Math.min(1,st.mt[k]+dt/14);meta(k);if(st.mt[k]>=1){st.mp[k]=0;lab(k)}}});
+ requestAnimationFrame(tick)}
+go(0,false);requestAnimationFrame(tick);
+</script></body></html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cancer Cell Exploration – Part 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#241a38;--pur:#4b2e83;--mid:#7a5bb5;--pink:#f6c1cf;--bg:#f5f0fa;--ok:#14803f;--bad:#c0392b}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Open Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-text-size-adjust:100%;line-height:1.5}
+button{font:inherit;cursor:pointer}
+.wrap{max-width:1100px;margin:0 auto;padding:14px}
+.hero{background:linear-gradient(135deg,#2b1856,#5b3a9a 60%,#a0507a);color:#fff;border-radius:18px;padding:26px 22px;display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.hero h1{margin:0 0 6px;font-size:clamp(26px,5vw,42px);font-weight:800;line-height:1.1}
+.hero p{margin:4px 0;max-width:560px;font-size:16px}
+.hero svg{flex:0 0 auto;width:150px;height:150px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:18px 0}
+.card{background:#fff;border:2px solid #ddd0ee;border-radius:14px;padding:16px;text-align:left;color:inherit;min-height:150px}
+.card:active,.card:hover{border-color:var(--mid)}
+.card h3{margin:6px 0 2px;font-size:19px}.card small{color:#6b5a85}
+.card .st{display:inline-block;margin-top:8px;font-weight:700;font-size:14px;color:#6b5a85}
+.card.done{border-color:var(--ok)}.card.done .st{color:var(--ok)}
+.pbtn{background:var(--pur);color:#fff;border:0;border-radius:12px;padding:12px 20px;font-weight:700;font-size:16px;min-height:46px}
+.pbtn[disabled]{background:#b9aed0;cursor:not-allowed}
+.ghost{background:#fff;color:var(--pur);border:2px solid var(--pur)}
+.top{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{background:#fff;border:2px solid #ddd0ee;border-radius:10px;padding:8px 12px;font-weight:600;min-height:44px}
+.tab.on{background:var(--pur);color:#fff;border-color:var(--pur)}
+h2{margin:6px 0 4px;font-size:26px}
+.goal{background:#fff;border-left:6px solid var(--mid);border-radius:8px;padding:10px 14px;margin:8px 0 14px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:720px){.pair{grid-template-columns:1fr}}
+.panel{background:#fff;border-radius:14px;padding:10px;border:2px solid #ddd0ee}
+.panel h3{margin:2px 4px 8px;font-size:17px}
+.vw{position:relative;width:100%;aspect-ratio:1;background:#111;border-radius:12px;overflow:hidden}
+.vw svg{width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+.mag{position:absolute;left:8px;bottom:8px;background:rgba(0,0,0,.7);color:#fff;font-weight:700;font-size:13px;padding:3px 9px;border-radius:8px;pointer-events:none}
+.fx{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.7);color:#fff;font-size:13px;padding:3px 9px;border-radius:8px;pointer-events:none}
+.ctl{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.b{width:46px;height:46px;border-radius:10px;border:2px solid var(--pur);background:#fff;color:var(--pur);font-size:24px;font-weight:800;line-height:1}
+.ctl label{flex:1;display:flex;gap:8px;align-items:center;font-weight:600;min-width:150px}
+.ctl input[type=range]{flex:1;height:34px;accent-color:var(--pur)}
+.cell .cy{cursor:pointer}
+.cell .ck{display:none;font:800 16px 'Open Sans',sans-serif;fill:#0a7d3a;stroke:#fff;stroke-width:3;paint-order:stroke;pointer-events:none}
+.cell.hit .cy{stroke:#16a34a;stroke-width:4}.cell.hit .ck{display:block}
+.cell.miss .cy{stroke:#d92d20;stroke-width:4}
+.cell.div .cy{stroke:#f5b700;stroke-width:3}
+.count{font-weight:800;font-size:20px;margin:4px 4px}
+.msg{min-height:44px;margin:2px 4px;font-weight:600}
+.msg.ok{color:var(--ok)}.msg.no{color:var(--bad)}
+.banner{background:#e9f8ef;border:2px solid var(--ok);border-radius:12px;padding:12px 16px;margin:14px 0}
+.box{background:#fff;border:2px solid #ddd0ee;border-radius:14px;padding:14px 16px;margin:14px 0}
+.q{margin:14px 0}.q p{font-weight:700;margin:0 0 6px}
+.opt{display:block;width:100%;text-align:left;background:#faf7fd;border:2px solid #ddd0ee;border-radius:10px;padding:10px 12px;margin:6px 0;min-height:46px}
+.opt.right{background:#e9f8ef;border-color:var(--ok)}.opt.wrong{background:#fdecea;border-color:var(--bad)}
+.ws{background:#fff8d6;border:1px solid #e6c84a;border-radius:8px;padding:8px 10px;margin-top:6px;font-weight:600}
+.hide{display:none}
+.simbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0}
+.big{font-size:22px;font-weight:800}
+select{font:inherit;padding:10px;border-radius:10px;border:2px solid var(--pur);min-height:46px}
+.tab[disabled]{opacity:.45;cursor:not-allowed}
+.note{font-size:13px;color:#6b5a85}
+
+[hidden]{display:none!important}
+.ph{background:linear-gradient(135deg,#2b1856,#5b3a9a 65%,#a0507a);color:#fff;border-radius:16px;padding:14px 20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.ph .ey{font-size:15px;font-weight:600;opacity:.9}
+.ph h1{margin:0;font-size:clamp(26px,5vw,40px);font-weight:800;line-height:1.1}
+.foot{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin:30px 0 70px;opacity:.35}
+.foot input{font:inherit;padding:6px;border-radius:8px;border:1px solid #999;width:110px}
+#tg{cursor:pointer;font-size:16px;padding:6px}
+.tb{position:fixed;left:0;right:0;bottom:0;background:#241a38;color:#fff;padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;z-index:50}
+.tb button{border:0;border-radius:8px;padding:8px 12px;font-weight:700;min-height:40px}
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:#241a38;color:#fff;padding:10px 16px;border-radius:10px;z-index:60}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+<body><div class="wrap"><header class="ph"><div><div class="ey">Cancer Cell Exploration</div><h1>Part 1: Comparison of Cell Structures and Features</h1></div><button class="pbtn ghost" id="hm">🏠 All parts</button></header><div id="app"></div><div class="foot"><input id="tc" type="password" placeholder="code" aria-label="Teacher code" hidden><span id="tg" role="button" tabindex="0" aria-label="Teacher options">⚙</span></div><div class="tb" id="tb" hidden></div><div class="toast" id="toast" hidden></div></div>
+<script>
+/* ====== EDITABLE CONTENT (change questions here without touching the simulation) ====== */
+const PART2_URL="cancer-cell-exploration-part2.html"; // paste the Part 2 page link here later
+const SHOT="Take a screenshot of the healthy and cancer samples side by side. On iPad: press the top button and the volume-up button together (or top button + Home button if your iPad has one). Then upload it to your worksheet.";
+const CONTENT=[
+{name:"Cell Size & Shape",tissue:"Skin tissue (squamous epithelium)",
+ goal:"Healthy cells are similar in size and have regular shapes suited to their job. Cancer cells often vary widely in size and shape, with irregular, messy borders. Find the cancer cells in the right sample.",
+ ws:"Cell: overall shape and size",
+ qs:[
+ {q:"How would you describe the healthy cells on the left?",o:["Wildly different sizes and ragged outlines","Similar in size, with regular, rounded shapes","Mostly very small with no clear outline"],a:1,ws:"Normal cells: uniform size and regular shape."},
+ {q:"How do the cancer cells you flagged compare with each other?",o:["They are all identical copies","They vary widely: some are larger, some smaller, with irregular borders","They are all smaller than normal cells"],a:1,ws:"Cancer cells: variable sizes and irregular, messy borders."},
+ {q:"Why does a regular, uniform cell shape help healthy tissue?",o:["Cells fit together neatly and are shaped for their job","It makes cells divide faster","It hides the cells from the microscope"],a:0,ws:"Regular shape = cells fit together and do their job."}]},
+{name:"Nucleus Size & Staining",tissue:"Breast tissue (duct lining)",
+ goal:"Healthy cells usually have one evenly proportioned nucleus. Cancer nuclei are often enlarged, irregular, off-center, and stain darker (hyperchromasia) because of extra or tightly packed DNA.",
+ ws:"Nucleus to cytoplasm volume ratio and nucleus shape and size",
+ qs:[
+ {q:"What do the nuclei of the healthy cells look like?",o:["One small, round, evenly stained nucleus near the center","Several huge, dark nuclei","No visible nucleus"],a:0,ws:"Normal: single, small, round, centered, light staining."},
+ {q:"What is different about the nuclei of the cancer cells?",o:["Smaller and paler than normal","Enlarged, irregular, often off-center, and darker","Exactly the same as healthy nuclei"],a:1,ws:"Cancer: large, irregular, off-center, dark nucleus."},
+ {q:"Cancer nuclei fill much more of the cell. What happens to the nucleus-to-cytoplasm ratio?",o:["It gets higher (nucleus takes up more of the cell)","It gets lower","It stays the same"],a:0,ws:"Cancer cells have a higher nucleus-to-cytoplasm ratio."},
+ {q:"Hyperchromasia means the nucleus stains darker. What causes it?",o:["Extra or densely packed DNA","A thicker cell membrane","More cytoplasm"],a:0,ws:"Hyperchromasia = darker stain from extra or densely packed DNA."}]},
+{name:"Tissue Architecture & Growth",tissue:"Colon tissue (glands)",
+ goal:"Healthy cells build organized structures such as glands, with orderly spacing. Cancer cells often lose that structure and appear crowded, overlapping, or invading nearby tissue.",
+ ws:"Cell-to-cell arrangement and tissue formation",
+ qs:[
+ {q:"How are the healthy cells arranged?",o:["Randomly scattered","In organized rings (glands) around an open center, evenly spaced","In one big overlapping pile"],a:1,ws:"Normal: organized structures (glands) with orderly spacing."},
+ {q:"What best describes the cancer cell region?",o:["Crowded and overlapping, with no gland structure","Neat rings around open centers","Widely spaced single cells"],a:0,ws:"Cancer: lost structure, crowded, overlapping."},
+ {q:"Cancer cells can spread into nearby healthy tissue. What is this called?",o:["Invasion","Digestion","Staining"],a:0,ws:"Cancer cells can invade nearby tissue."}]},
+{name:"Cell Division Rate",tissue:"Time-lapse of dividing cells",
+ goal:"Cancer cells divide much faster than normal cells. Press Play to watch 72 hours of cell division in both samples, and compare the cell counts.",
+ ws:"Cell division rate",
+ qs:[
+ {q:"Which sample ended with more cells after 72 hours?",o:["Healthy","Cancer","They were equal"],a:1,ws:"Cancer cells divide much faster."},
+ {q:"About how many cells were in each sample at 72 hours?",o:["Healthy 8, Cancer 512","Healthy 512, Cancer 8","Healthy 64, Cancer 64"],a:0,ws:"At 72 h: healthy about 8 cells, cancer about 512 cells."},
+ {q:"Why is fast, unchecked division a problem?",o:["Extra cells pile up into a tumor and crowd out healthy tissue","Cells get smaller and disappear","Nothing changes in the tissue"],a:0,ws:"Rapid division builds up a mass of cells (a tumor)."}]},
+{name:"Bonus Challenge",tissue:"Mixed tissue samples",goal:"Four samples, getting harder each time. The cancer cells are less obvious, and some healthy cells look suspicious. Combine several clues (size, shape, nucleus, arrangement) before you decide. Use the Hint button if you get stuck.",ws:"Bonus: which clues were most reliable?",qs:[{q:"Some healthy cells had a big or dark nucleus. What is the best way to decide if a cell is cancerous?",o:["Judge by nucleus darkness alone","Look for a combination of abnormal features, not just one","Pick the biggest cell"],a:1,ws:"Normal cells also vary, so look for several abnormal features together."},{q:"Why can one feature alone be misleading?",o:["Healthy cells also vary naturally in size and staining","Cancer cells never differ from healthy cells","Microscopes cannot show the nucleus"],a:0,ws:"Natural variation means no single clue is enough."}]}
+];
+/* ====== helpers ====== */
+const HOME_URL="cancer-cell-exploration-home.html";
+const TEACHER_CODE="teacher"; // teacher: change this code (tap the faint gear at the bottom right of any page)
+let TEACH=false;
+function flash(t){const e=document.getElementById("toast");e.textContent=t;e.hidden=false;clearTimeout(flash.t);flash.t=setTimeout(()=>e.hidden=true,2600)}
+function link(u){u?window.open(u,"_top"):flash("This part is coming soon.")}
+let SKIPF=null,CURV=-1;
+const app=document.getElementById("app");
+const S={done:[0,0,0,0,0],lv:0}; // progress lives here (ready to be saved with localStorage later)
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function blob(x,y,r,j,R,n=12){const p=[];for(let i=0;i<n;i++){const a=i/n*6.2832,k=r*(1+(R()-.5)*2*j);p.push([x+Math.cos(a)*k,y+Math.sin(a)*k])}
+ const m=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2];let s=m(p[n-1],p[0]),d=`M${s[0]},${s[1]}`;
+ for(let i=0;i<n;i++){const e=m(p[i],p[(i+1)%n]);d+=`Q${p[i][0]},${p[i][1]} ${e[0]},${e[1]}`}return d+"Z"}
+function mk(R,x,y,r,j,nu,c){return{c,x,y,r,d:blob(x,y,r,j,R),nuc:nu.map(n=>`<path d="${blob(x+n[0],y+n[1],n[2],n[3],R,9)}" fill="${n[4]?"#2d1458":"#a78bd1"}" stroke="${n[4]?"#140a2e":"#7d5fb0"}" stroke-width="1.5"/>`).join("")}}
+function cellSVG(c,i){return`<g class="cell" data-i="${i}"><path class="cy" d="${c.d}" fill="${c.fill||(c.c?"#e6a8cc":"#f6c1cf")}" stroke="${c.stroke||(c.c?"#9c4a78":"#d98aa3")}" stroke-width="1.5"/>${c.nuc}</g>`}
+const TAB_O=[{sz:.6,nu:.15},{sz:.08,nu:.65}];
+const mix=(a,b,t)=>a.map((v,i)=>Math.round(v+(b[i]-v)*t)),rgb=a=>`rgb(${a})`;
+function clip(P,a,b,c){const o=[];for(let i=0;i<P.length;i++){const p=P[i],q=P[(i+1)%P.length],fp=a*p[0]+b*p[1]-c,fq=a*q[0]+b*q[1]-c;if(fp<=0)o.push(p);if(fp*fq<0){const t=fp/(fp-fq);o.push([p[0]+t*(q[0]-p[0]),p[1]+t*(q[1]-p[1])])}}return o}
+function power(W,i,P){const s=W[i];W.forEach((t,j)=>{if(j==i||P.length<3)return;const dx=t.x-s.x,dy=t.y-s.y;if(dx*dx+dy*dy>19600)return;P=clip(P,dx,dy,(t.x*t.x+t.y*t.y-s.x*s.x-s.y*s.y+s.r*s.r-t.r*t.r)/2)});return P}
+function tcell(R,P,o){let cx=0,cy=0;P.forEach(p=>{cx+=p[0];cy+=p[1]});cx/=P.length;cy/=P.length;
+ if(o.pj)P=P.map(p=>[p[0]+(R()-.5)*o.pj,p[1]+(R()-.5)*o.pj]);
+ P=P.map(p=>[cx+(p[0]-cx)*.95,cy+(p[1]-cy)*.95]);
+ let A=0;P.forEach((p,i)=>{const q=P[(i+1)%P.length];A+=p[0]*q[1]-q[0]*p[1]});const rad=Math.sqrt(Math.abs(A)/6.2832);
+ const m=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2],n=P.length;let s=m(P[n-1],P[0]),d=`M${s[0]},${s[1]}`;
+ for(let i=0;i<n;i++){const e=m(P[i],P[(i+1)%n]);d+=`Q${P[i][0]},${P[i][1]} ${e[0]},${e[1]}`}d+="Z";
+ const nr=rad*o.ratio,ox=cx+(R()-.5)*2*o.off*rad+(o.sx||0)*rad,oy=cy+(R()-.5)*2*o.off*rad+(o.sy||0)*rad;
+ const nc=mix([176,150,214],[48,22,92],o.dark),dc=rgb(mix(nc,[20,8,50],.5));
+ let dots="";for(let k=0;k<(o.c?4:1);k++)dots+=`<circle cx="${ox+(R()-.5)*nr*(o.c?1.1:.4)}" cy="${oy+(R()-.5)*nr*(o.c?1.1:.4)}" r="${nr*(o.c?.17:.2)}" fill="${dc}"/>`;
+ return{c:o.c?1:0,x:cx,y:cy,d,fill:rgb(mix(mix([246,194,208],[222,160,200],o.cm||0),[255,255,255],(R()-.5)*.14)),stroke:o.c?"#a2547f":"#cf8aa6",
+  nuc:`<path d="${blob(ox,oy,nr,o.nj,R,10)}" fill="${rgb(nc)}" stroke="${rgb(mix(nc,[20,10,40],.4))}" stroke-width="1.2"/>`+dots}}
+function build(t,canc,seed,o){
+ const R=rng(seed);o={n:6,dec:0,...(t<2?TAB_O[t]:{}),...o};let cells=[],extra="",total=0;
+ if(t<2){
+  const W=[];for(let r=0;r<9;r++)for(let c=0;c<9;c++)W.push({x:2+c*46+(r%2)*23+(R()-.5)*14,y:28+r*44+(R()-.5)*12,r:22+(R()-.5)*3,r0:r,c0:c,k:0});
+  const pk=(n,ex)=>{const s=new Set();while(s.size<n){const q=Math.floor(R()*81),w=W[q];if(w.r0>1&&w.r0<7&&w.c0>1&&w.c0<7&&!ex.has(q))s.add(q)}return s};
+  if(canc){const cs=pk(o.n,new Set()),ds=pk(o.dec,cs);cs.forEach(q=>{const w=W[q];w.k=1;w.r=R()<.6?22*(1+o.sz*(.7+.3*R())):22*(1-.5*o.sz)});[...ds].forEach((q,n)=>{W[q].k=n%2?3:2;if(!(n%2))W[q].r=22*(1+.8*o.sz)});total=o.n}
+  W.forEach((w,i)=>{const P=power(W,i,[[-30,-30],[430,-30],[430,430],[-30,430]]);
+   const o2=w.k==1?{c:1,ratio:.3+.25*o.nu+R()*.04,off:.04+.25*o.nu,dark:.15+.85*o.nu,nj:.1+.3*o.nu,cm:.2+.6*Math.max(o.sz,o.nu),pj:3+9*o.sz}
+    :{c:0,ratio:w.k==3?.4:.3+(R()-.5)*.06,off:.06,dark:w.k==3?.6:R()*.2,nj:w.k==3?.25:.07,cm:0,pj:0};
+   cells.push(tcell(R,P,o2))});
+ }else{
+  const G=canc?[[80,70],[200,60],[320,70],[75,200],[110,330]]:[[80,70],[200,60],[320,70],[75,200],[195,200],[320,205],[110,330],[250,330]];
+  for(let k=0;k<45;k++){const x=R()*400,y=R()*400;if(G.some(g=>Math.hypot(g[0]-x,g[1]-y)<48)||(canc&&Math.hypot(x-275,y-250)<95))continue;extra+=`<ellipse cx="${x}" cy="${y}" rx="4.5" ry="2" transform="rotate(${R()*180} ${x} ${y})" fill="#6b4ea0" opacity=".75"/>`}
+  G.forEach(g=>{extra+=`<circle cx="${g[0]}" cy="${g[1]}" r="15" fill="#fff9fb" stroke="#e8b4c6"/>`;const N=11;
+   for(let k=0;k<N;k++){const a0=k/N*6.2832,a1=(k+1)/N*6.2832,am=(a0+a1)/2,ro=38+(R()-.5)*3,pt=(r,a)=>[g[0]+Math.cos(a)*r,g[1]+Math.sin(a)*r];
+    cells.push(tcell(R,[pt(15,a0),pt(15,am),pt(15,a1),pt(ro,a1),pt(ro+1,am),pt(ro,a0)],{c:0,ratio:.38,off:.03,dark:R()*.2,nj:.08,sx:Math.cos(am)*.45,sy:Math.sin(am)*.45}))}});
+  if(canc){const mp=[];for(let k=0;k<16;k++){const a=k/16*6.2832,r=85+(R()-.5)*24;mp.push([275+Math.cos(a)*r,250+Math.sin(a)*r])}
+   const W=[];let tries=0;while(W.length<11&&tries++<500){const a=R()*6.2832,r=72*Math.sqrt(R()),x=275+Math.cos(a)*r,y=250+Math.sin(a)*r;if(W.every(w=>Math.hypot(w.x-x,w.y-y)>30))W.push({x,y,r:14+R()*8})}
+   W.forEach((w,i)=>cells.push(tcell(R,power(W,i,mp),{c:1,ratio:.42,off:.2,dark:.75,nj:.3,cm:.5,pj:4})));
+   for(let k=0;k<3;k++){const a=R()*6.2832,x=275+Math.cos(a)*84,y=250+Math.sin(a)*84;cells.push(mk(R,x,y,13,.25,[[0,0,8,.3,1]],1))}
+   total=W.length+3}
+ }
+ return{cells,extra,total};
+}
+/* ====== microscope ====== */
+function scope(host,o){
+ const id="f"+Math.random().toString(36).slice(2,7),R=rng(o.seed+99);
+ const st={z:0,px:0,py:0,f:Math.round(8+R()*25),tg:Math.round(55+R()*35)},Z=[1,2,3.2],M=[40,100,400];
+ host.innerHTML=`<div class="vw"><svg viewBox="0 0 400 400" role="img" aria-label="${o.label}"><defs><clipPath id="c${id}"><circle cx="200" cy="200" r="198"/></clipPath><filter id="${id}" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="0"/></filter></defs><g clip-path="url(#c${id})"><g id="g${id}" filter="url(#${id})"><rect x="-600" y="-600" width="1600" height="1600" fill="#fbe6ee"/>${o.extra}${o.cells.map(cellSVG).join("")}</g></g><circle cx="200" cy="200" r="199" fill="none" stroke="#1b1b1b" stroke-width="4"/></svg><div class="mag"></div><div class="fx"></div></div>
+ <div class="ctl"><button class="b" data-z="-1" aria-label="Zoom out">−</button><button class="b" data-z="1" aria-label="Zoom in">+</button><label>Focus<input type="range" min="0" max="100" value="${st.f}" aria-label="Focus"></label></div>`;
+ const svg=host.querySelector("svg"),g=host.querySelector("#g"+id),bl=host.querySelector("feGaussianBlur"),mag=host.querySelector(".mag"),fx=host.querySelector(".fx");
+ let blur=0;
+ function up(){const s=Z[st.z],lim=200*(s-1);st.px=Math.max(-lim,Math.min(lim,st.px));st.py=Math.max(-lim,Math.min(lim,st.py));
+  g.setAttribute("transform",`translate(200 200) translate(${st.px} ${st.py}) scale(${s}) translate(-200 -200)`);
+  blur=Math.max(0,Math.abs(st.f-st.tg)-4)*.13;bl.setAttribute("stdDeviation",blur.toFixed(2));
+  mag.textContent=M[st.z]+"× magnification";fx.textContent=blur<.7?"In focus ✓":"Blurry: adjust focus"}
+ host.querySelectorAll("[data-z]").forEach(b=>b.onclick=()=>{st.z=Math.max(0,Math.min(2,st.z+ +b.dataset.z));up()});
+ host.querySelector("input").oninput=e=>{st.f=+e.target.value;up()};
+ let dn=null,mv=false;
+ svg.addEventListener("pointerdown",e=>{dn={x:e.clientX,y:e.clientY};mv=false});
+ window.addEventListener("pointermove",e=>{if(!dn)return;const dx=e.clientX-dn.x,dy=e.clientY-dn.y;if(!mv&&Math.hypot(dx,dy)<6)return;mv=true;const k=400/svg.getBoundingClientRect().width;st.px+=dx*k;st.py+=dy*k;dn={x:e.clientX,y:e.clientY};up()});
+ window.addEventListener("pointerup",e=>{if(!dn)return;dn=null;if(mv)return;
+  const el=document.elementFromPoint(e.clientX,e.clientY),c=el&&el.closest&&el.closest(".cell");
+  if(c&&svg.contains(c)){if(blur>1.5){o.onTap&&o.onTap(-2,c)}else o.onTap&&o.onTap(+c.dataset.i,c)}});
+ up();
+}
+/* ====== quiz ====== */
+function quiz(host,qs,ws,done){let n=0;
+ host.innerHTML=`<h3>Analysis questions</h3>`+qs.map((q,i)=>`<div class="q"><p>${i+1}. ${q.q}</p>${q.o.map((t,k)=>`<button class="opt" data-q="${i}" data-k="${k}">${t}</button>`).join("")}<div class="ws hide"></div></div>`).join("")+`<div class="ws" id="wsall">📝 Fill in your worksheet row: <b>${ws}</b></div>`;
+ host.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const i=+b.dataset.q,k=+b.dataset.k,q=qs[i],blk=b.parentElement;if(blk.dataset.ok)return;
+  if(k===q.a){b.classList.add("right");blk.dataset.ok=1;const w=blk.querySelector(".ws");w.textContent="✅ Correct! Add this to your worksheet: "+q.ws;w.classList.remove("hide");if(++n===qs.length)done()}
+  else{b.classList.add("wrong");b.textContent+="  (Not quite. Look at the samples again and try another answer.)";}});
+}
+/* ====== pages ====== */
+function home(){CURV=-1;SKIPF=null;
+ app.innerHTML=`<div class="hero"><svg viewBox="0 0 150 150" aria-hidden="true"><circle cx="75" cy="75" r="68" fill="#fbe6ee" stroke="#fff" stroke-width="6"/><path d="${blob(52,60,24,.06,rng(3))}" fill="#f6c1cf" stroke="#d98aa3" stroke-width="2"/><circle cx="52" cy="60" r="8" fill="#a78bd1"/><path d="${blob(96,88,26,.3,rng(8))}" fill="#e6a8cc" stroke="#9c4a78" stroke-width="2"/><path d="${blob(98,86,15,.3,rng(9),9)}" fill="#2d1458"/></svg>
+ <div><h1>Your lab instructions</h1><p>Use the virtual microscope to compare healthy tissue with cancer tissue. Complete all four tabs, then record what you find on your worksheet.</p></div></div>
+ <div class="cards">${CONTENT.map((c,i)=>`<button class="card ${S.done[i]?"done":""}" data-i="${i}"><span style="font-size:28px">${["⬡","◉","▦","⏱","★"][i]}</span><h3>${c.name}</h3><small>${c.tissue}</small><br><span class="st">${S.done[i]?"✓ Complete":"Not started"}</span></button>`).join("")}</div>
+ <div class="top"><button class="pbtn" id="nx" ${(S.done.slice(0,4).every(x=>x)||TEACH)?"":"disabled"}>Next: Part 2 →</button><button class="pbtn ghost" id="lp">🏠 Back to landing page</button><span class="note">${(S.done.slice(0,4).every(x=>x)||TEACH)?"All four tabs are complete!":"Finish the first four tabs to unlock Part 2. The bonus challenge is optional."}</span></div>`;
+ app.querySelectorAll(".card").forEach(b=>b.onclick=()=>tab(+b.dataset.i));
+ document.getElementById("nx").onclick=()=>link(PART2_URL);document.getElementById("lp").onclick=()=>link(HOME_URL);
+}
+function nav(i){return`<div class="top"><button class="tab" id="mn">← Part 1 menu</button><div class="tabs">${CONTENT.map((c,k)=>`<button class="tab ${k==i?"on":""}" data-k="${k}">${S.done[k]?"✓ ":""}${c.name}</button>`).join("")}</div></div>`}
+function wire(i){document.getElementById("mn").onclick=home;app.querySelectorAll(".tab[data-k]").forEach(b=>b.onclick=()=>tab(+b.dataset.k))}
+function finish(i,host){S.done[i]=1;const t=document.createElement("div");t.className="box";
+ t.innerHTML=`<b>🎉 Tab complete!</b> <div style="margin-top:10px"><button class="pbtn" id="nt">${i<4?"Next: "+CONTENT[i+1].name+" →":"Back to Part 1 menu"}</button>${i==3?` <button class="pbtn ghost" id="mm">Part 1 menu</button>`:""}</div>`;
+ host.appendChild(t);t.querySelector("#nt").onclick=()=>i<4?tab(i+1):home();const mm=t.querySelector("#mm");if(mm)mm.onclick=home;t.scrollIntoView({behavior:"smooth",block:"nearest"})}
+function tab(i){CURV=i;SKIPF=null;
+ const C=CONTENT[i];
+ app.innerHTML=nav(i)+`<h2>${C.name}</h2><div class="goal"><b>${C.tissue}.</b> ${C.goal}</div><div id="body"></div>`;wire(i);
+ i<3?scopeTab(i):i==3?simTab(i):chalTab(i);scrollTo(0,0);
+}
+function pair(host,T,sd,o,nm,onDone){
+ const H=build(T,0,sd+1,o),K=build(T,1,sd+2,o);
+ host.innerHTML=`<div class="pair"><div class="panel"><h3>Healthy ${nm}</h3><div id="L"></div><div class="msg">Use this sample as your reference.</div></div>
+ <div class="panel"><h3>Cancer ${nm}</h3><div id="Rr"></div><div class="count">Cancer cells found: <span id="n">0</span> / ${K.total}${o.hint?` <button class="b" id="ht" style="width:auto;padding:0 12px;font-size:15px">💡 Hint</button>`:""}</div><div class="msg" id="m">Zoom, focus, and tap each cell you think is cancerous. Drag to move the slide.</div></div></div>`;
+ let found=0;const set=new Set();let fired=0;const fire=()=>{if(!fired){fired=1;onDone()}};SKIPF=fire;
+ function say(t,k){const m=document.getElementById("m");m.textContent=t;m.className="msg "+(k||"")}
+ scope(document.getElementById("L"),{...H,seed:sd+1,label:"Healthy tissue slide",onTap(){say("That is the healthy reference. Flag cancer cells in the right sample.","no")}});
+ scope(document.getElementById("Rr"),{...K,seed:sd+7,label:"Cancer tissue slide",onTap(k,c){
+  if(k==-2)return say("Too blurry to identify. Use the focus slider first.","no");
+  if(set.has(k))return;
+  if(K.cells[k].c){set.add(k);c.classList.add("hit");found++;document.getElementById("n").textContent=found;say("✅ Correct! That is a cancer cell.","ok");if(found===K.total)fire()}
+  else{c.classList.add("miss");setTimeout(()=>c.classList.remove("miss"),900);say("❌ Not a cancer cell. Compare its size, shape, and nucleus with its neighbors, then try again.","no")}}});
+ const ht=document.getElementById("ht");if(ht)ht.onclick=()=>{const k=K.cells.findIndex((c,q)=>c.c&&!set.has(q)),e=document.querySelector(`#Rr [data-i="${k}"]`);if(e){e.classList.add("div");setTimeout(()=>e.classList.remove("div"),2500)}}}
+function scopeTab(i){const C=CONTENT[i];document.getElementById("body").innerHTML=`<div id="pv"></div><div id="after"></div>`;
+ pair(document.getElementById("pv"),i,i*10+1,{},C.tissue.split(" (")[0].toLowerCase(),()=>{const a=document.getElementById("after");
+  a.innerHTML=`<div class="banner"><b>You found all the cancer cells! 📸</b><p>${SHOT}</p><p><b>Worksheet row: ${C.ws}</b></p></div><div class="box" id="qz"></div>`;
+  quiz(document.getElementById("qz"),C.qs,C.ws,()=>finish(i,a));a.scrollIntoView({behavior:"smooth",block:"nearest"})})}
+const LV=[{t:0,n:3,sz:.7,nu:.6,dec:0,tis:"skin tissue"},{t:1,n:4,sz:.5,nu:.45,dec:2,tis:"breast tissue"},{t:0,n:5,sz:.35,nu:.35,dec:4,tis:"skin tissue"},{t:1,n:6,sz:.2,nu:.25,dec:6,tis:"breast tissue"}];
+function chalTab(i){const C=CONTENT[i];document.getElementById("body").innerHTML=`<div class="tabs" id="lb"></div><div id="pv" style="margin-top:12px"></div><div id="after"></div>`;let cur=-1;
+ function bar(){const e=document.getElementById("lb");e.innerHTML=LV.map((l,k)=>`<button class="tab ${k==cur?"on":""}" data-l="${k}" ${k>S.lv&&!TEACH?"disabled":""}>${k<S.lv?"✓ ":""}Level ${k+1}</button>`).join("");e.querySelectorAll("button").forEach(x=>x.onclick=()=>go(+x.dataset.l))}
+ function go(k){cur=k;bar();const l=LV[k],a=document.getElementById("after");a.innerHTML="";
+  pair(document.getElementById("pv"),l.t,300+k*17,{...l,hint:1},l.tis,()=>{S.lv=Math.max(S.lv,k+1);bar();
+   if(k<LV.length-1){a.innerHTML=`<div class="banner"><b>Level ${k+1} complete! 🎉</b><p>The next sample is harder. Look for combinations of clues.</p><button class="pbtn" id="go">Start Level ${k+2} →</button></div>`;document.getElementById("go").onclick=()=>go(k+1)}
+   else{a.innerHTML=`<div class="banner"><b>All levels complete! 🏆</b></div><div class="box" id="qz"></div>`;quiz(document.getElementById("qz"),C.qs,C.ws,()=>finish(i,a))}
+   a.scrollIntoView({behavior:"smooth",block:"nearest"})})}
+ go(Math.min(S.lv,LV.length-1))}
+/* ====== division simulation ====== */
+function simTab(i){
+ const C=CONTENT[i],body=document.getElementById("body"),END=72;
+ body.innerHTML=`<div class="simbar"><button class="pbtn" id="pl">▶ Play</button><button class="pbtn ghost" id="rs">⟲ Reset</button><label>Speed <select id="sp"><option value="3">Slow</option><option value="6" selected>Normal</option><option value="12">Fast</option></select></label><span class="big">Time: <span id="t">0</span> hours</span></div>
+ <div class="pair"><div class="panel"><h3>Healthy cells (divide about every 24 h)</h3><div class="vw"><svg viewBox="0 0 400 400" id="s0"></svg></div><div class="count">Cell count: <span id="c0">1</span></div></div>
+ <div class="panel"><h3>Cancer cells (divide about every 8 h)</h3><div class="vw"><svg viewBox="0 0 400 400" id="s1"></svg></div><div class="count">Cell count: <span id="c1">1</span> <span class="note" id="cap"></span></div></div></div>
+ <p class="note">Yellow outline = a cell that just divided. The drawing shows at most 64 cancer cells; the counter keeps the true number.</p><div id="after"></div>`;
+ const T=[24,8],MX=[8,64],cfg=[{sp:44,r:21,j:.05},{sp:22,r:15,j:.3}],els=[[],[]],tb=[[],[]];
+ [0,1].forEach(w=>{const R=rng(40+w),svg=document.getElementById("s"+w);let h=`<circle cx="200" cy="200" r="199" fill="#fbe6ee" stroke="#1b1b1b" stroke-width="4"/>`;
+  for(let j=0;j<MX[w];j++){const a=j*2.39996,rad=cfg[w].sp*Math.sqrt(j),x=200+Math.cos(a)*rad,y=200+Math.sin(a)*rad,c=mk(R,x,y,cfg[w].r,cfg[w].j,[[0,0,cfg[w].r*(w?.6:.35),w?.3:.1,w]],w);tb[w].push(Math.log2(j+1)*T[w]);
+   h+=`<g class="cell" id="e${w}_${j}" style="display:none"><path class="cy" d="${c.d}" fill="${w?"#e6a8cc":"#f6c1cf"}" stroke="${w?"#9c4a78":"#d98aa3"}" stroke-width="1.5"/>${c.nuc}</g>`;els[w].push([x,y])}
+  svg.innerHTML=h});
+ let t=0,play=false,last=0,fin=false;
+ function draw(){document.getElementById("t").textContent=Math.floor(t);
+  [0,1].forEach(w=>{const N=Math.floor(Math.pow(2,t/T[w]+1e-9));document.getElementById("c"+w).textContent=N;
+   for(let j=0;j<MX[w];j++){const e=document.getElementById(`e${w}_${j}`),age=t-tb[w][j];
+    if(j>=N||age<0){e.style.display="none";continue}e.style.display="";const k=Math.min(1,.45+.55*age/(T[w]*.15)),[x,y]=els[w][j];
+    e.setAttribute("transform",`translate(${x} ${y}) scale(${k}) translate(${-x} ${-y})`);e.classList.toggle("div",age<T[w]*.15&&j>0)}});
+  document.getElementById("cap").textContent=Math.pow(2,t/T[1])>64?"(showing 64)":""}
+ function loop(ts){if(!play)return;const dt=(ts-last)/1000;last=ts;t=Math.min(END,t+dt*+document.getElementById("sp").value);draw();
+  if(t>=END){play=false;document.getElementById("pl").textContent="▶ Play";if(!fin){fin=true;const a=document.getElementById("after");
+   a.innerHTML=`<div class="banner"><b>72 hours complete! 📸</b><p>${SHOT.replace("healthy and cancer samples","two cell counts")}</p><p><b>Worksheet row: ${C.ws}</b></p></div><div class="box" id="qz"></div>`;
+   quiz(document.getElementById("qz"),C.qs,C.ws,()=>finish(i,a));a.scrollIntoView({behavior:"smooth",block:"nearest"})}return}
+  requestAnimationFrame(loop)}
+ document.getElementById("pl").onclick=function(){if(t>=END)return;play=!play;this.textContent=play?"❚❚ Pause":"▶ Play";if(play){last=performance.now();requestAnimationFrame(loop)}};
+ document.getElementById("rs").onclick=()=>{play=false;t=0;draw();document.getElementById("pl").textContent="▶ Play"};
+ SKIPF=()=>{if(!fin){t=END;play=true;requestAnimationFrame(loop)}};
+ draw();
+}
+function refresh(){CURV<0?home():tab(CURV)}
+function teacherBar(){const b=document.getElementById("tb");b.hidden=false;
+ b.innerHTML=`<b>🔓 Teacher mode</b><button data-j="-1">Menu</button>`+CONTENT.map((c,i)=>`<button data-j="${i}">${i<4?"Tab "+(i+1):"★ Bonus"}</button>`).join("")+`<button id="sq">Show questions</button><button id="ex">Exit</button>`;
+ b.querySelectorAll("[data-j]").forEach(x=>x.onclick=()=>{+x.dataset.j<0?home():tab(+x.dataset.j)});
+ document.getElementById("sq").onclick=()=>SKIPF?SKIPF():flash("Nothing to skip on this page");
+ document.getElementById("ex").onclick=()=>{TEACH=false;b.hidden=true;refresh()}}
+document.getElementById("hm").onclick=()=>link(HOME_URL);
+document.getElementById("tg").onclick=()=>{if(TEACH)return;const e=document.getElementById("tc");e.hidden=!e.hidden;if(!e.hidden)e.focus()};
+document.getElementById("tc").onkeydown=e=>{if(e.key==="Enter"){if(e.target.value===TEACHER_CODE){TEACH=true;e.target.hidden=true;e.target.value="";teacherBar();refresh()}else{e.target.value="";flash("Incorrect code")}}};
+home();
+</script></body></html>
