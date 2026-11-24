@@ -1,46 +1,4 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Biology Virtual Labs</title>
-<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#faf8f4;--ink:#1f1b2e;--muted:#6a647a;--card:#fff;--line:#e6e0d4;--teal:#1f7a8c;--magenta:#b5338a;--gold:#d99a1e;--shadow:0 1px 2px rgba(31,27,46,.06),0 8px 24px rgba(31,27,46,.06)}
-@media(prefers-color-scheme:dark){:root{--bg:#14111d;--ink:#f3f0fa;--muted:#a79fbd;--card:#1d1829;--line:#322b45;--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35)}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:'Open Sans',system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.5;-webkit-text-size-adjust:100%}
-.glow{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(520px 320px at 12% 6%,color-mix(in srgb,var(--teal) 22%,transparent),transparent 70%),radial-gradient(480px 300px at 88% 10%,color-mix(in srgb,var(--magenta) 18%,transparent),transparent 70%),radial-gradient(420px 260px at 60% 0%,color-mix(in srgb,var(--gold) 16%,transparent),transparent 70%)}
-.wrap{position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:0 20px}
-header{padding:64px 0 24px}
-h1{margin:0;font-size:clamp(40px,8vw,76px);font-weight:800;line-height:1.02;letter-spacing:-.02em}
-.lead{margin:16px 0 0;max-width:560px;font-size:clamp(17px,2.4vw,20px);color:var(--muted)}
-#signin{max-width:760px;margin-bottom:22px}
-#signin .bvl-box{background:var(--card);color:var(--ink);border-color:var(--line)}
-#signin .bvl-s{color:var(--muted)}
-#signin .bvl-box button.g{background:transparent;color:var(--ink);border-color:var(--muted)}
-#signin input{background:var(--bg);color:var(--ink);border-color:var(--line)}
-#signin a{color:inherit}
-#grid{padding-bottom:64px}
-footer{padding:0 0 40px;color:var(--muted);font-size:13px}
-</style>
-</head>
-<body>
-<div class="glow" aria-hidden="true"></div>
-<div class="wrap">
-<header>
-  <h1>Biology Virtual Labs</h1>
-  <p class="lead">Explore, experiment, and investigate. New units appear as we discover them in class.</p>
-</header>
-<section id="signin" aria-label="Sign in"></section>
-<main><nav class="tiles" id="grid" aria-label="Units"></nav></main>
-<footer>Each unit opens up as your class reaches it.</footer>
-</div>
-<script src="assets/units.js"></script>
-<script src="assets/bvl.js"></script>
-<script>
-BVL.mountSignIn(document.getElementById("signin"));
-BVL.tiles(document.getElementById("grid"),BVL_UNITS.map(u=>({key:"unit"+u.n,sub:"Unit "+u.n,title:u.title,url:""U"+u.n+"/index.html",release:u.release})));
-</script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><title>Exploratory Biology</title>
+<meta http-equiv="refresh" content="0;url=/home.html"><link rel="canonical" href="/home.html"></head>
+<body><p>Taking you to the <a href="/home.html">home page</a>…</p></body></html>
