@@ -76,7 +76,7 @@ select{font:inherit;padding:10px;border-radius:10px;border:2px solid var(--pur);
 <body><div class="wrap"><header class="ph"><div><div class="ey">Cancer Cell Exploration</div><h1>Part 1: Comparison of Cell Structures and Features</h1></div><button class="pbtn ghost" id="hm">🏠 All parts</button></header><div id="app"></div><div class="foot"><input id="tc" type="password" placeholder="code" aria-label="Teacher code" hidden><span id="tg" role="button" tabindex="0" aria-label="Teacher options">⚙</span></div><div class="tb" id="tb" hidden></div><div class="toast" id="toast" hidden></div></div>
 <script>
 /* ====== EDITABLE CONTENT (change questions here without touching the simulation) ====== */
-const PART2_URL="cancer-cell-exploration-part2.html"; // paste the Part 2 page link here later
+const PART2_URL="https://allidriessen.github.io/U3/CCE-P2.html"; // paste the Part 2 page link here later
 const SHOT="Take a screenshot of the healthy and cancer samples side by side. On iPad: press the top button and the volume-up button together (or top button + Home button if your iPad has one). Then upload it to your worksheet.";
 const CONTENT=[
 {name:"Cell Size & Shape",tissue:"Skin tissue (squamous epithelium)",
@@ -111,11 +111,11 @@ const CONTENT=[
 {name:"Bonus Challenge",tissue:"Mixed tissue samples",goal:"Four samples, getting harder each time. The cancer cells are less obvious, and some healthy cells look suspicious. Combine several clues (size, shape, nucleus, arrangement) before you decide. Use the Hint button if you get stuck.",ws:"Bonus: which clues were most reliable?",qs:[{q:"Some healthy cells had a big or dark nucleus. What is the best way to decide if a cell is cancerous?",o:["Judge by nucleus darkness alone","Look for a combination of abnormal features, not just one","Pick the biggest cell"],a:1,ws:"Normal cells also vary, so look for several abnormal features together."},{q:"Why can one feature alone be misleading?",o:["Healthy cells also vary naturally in size and staining","Cancer cells never differ from healthy cells","Microscopes cannot show the nucleus"],a:0,ws:"Natural variation means no single clue is enough."}]}
 ];
 /* ====== helpers ====== */
-const HOME_URL="cancer-cell-exploration-home.html";
+const HOME_URL="https://allidriessen.github.io/U3/CCE-Home.html";
 const TEACHER_CODE="teacher"; // teacher: change this code (tap the faint gear at the bottom right of any page)
 let TEACH=false;
 function flash(t){const e=document.getElementById("toast");e.textContent=t;e.hidden=false;clearTimeout(flash.t);flash.t=setTimeout(()=>e.hidden=true,2600)}
-function link(u){u?window.open(u,"_top"):flash("This part is coming soon.")}
+function link(u){u?window.open(u,"_blank"):flash("This part is coming soon.")}
 let SKIPF=null,CURV=-1;
 const app=document.getElementById("app");
 const S={done:[0,0,0,0,0],lv:0}; // progress lives here (ready to be saved with localStorage later)

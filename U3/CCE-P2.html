@@ -48,8 +48,20 @@ th{background:#efe8f8}
 .banner{background:#e9f8ef;border:2px solid var(--ok);border-radius:12px;padding:12px 16px;margin:12px 0}
 .sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;padding:10px}.wide{grid-column:1/-1}.sum .note{padding:0 10px 8px;margin:4px 0}
 .note{font-size:13px;color:#6b5a85}
+
+[hidden]{display:none!important}
+.ph{background:linear-gradient(135deg,#2b1856,#5b3a9a 65%,#a0507a);color:#fff;border-radius:16px;padding:14px 20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.ph .ey{font-size:15px;font-weight:600;opacity:.9}
+.ph h1{margin:0;font-size:clamp(26px,5vw,40px);font-weight:800;line-height:1.1}
+.foot{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin:30px 0 70px;opacity:.35}
+.foot input{font:inherit;padding:6px;border-radius:8px;border:1px solid #999;width:110px}
+#tg{cursor:pointer;font-size:16px;padding:6px}
+.tb{position:fixed;left:0;right:0;bottom:0;background:#241a38;color:#fff;padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;z-index:50}
+.tb button{border:0;border-radius:8px;padding:8px 12px;font-weight:700;min-height:40px}
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:#241a38;color:#fff;padding:10px 16px;border-radius:10px;z-index:60}
+.hd{background:#fff;color:var(--ink);border:2px solid #ddd0ee}.hd h1{font-size:clamp(22px,4.5vw,30px)}.chip{background:#efe8f8}
 </style></head>
-<body><div class="wrap">
+<body><div class="wrap"><header class="ph"><div><div class="ey">Cancer Cell Exploration</div><h1>Part 2: Tumor Growth Stages and Types</h1></div><button class="pbtn ghost" id="hm">🏠 All parts</button></header>
 <div class="hd"><div><h1 id="ht"></h1><div class="sub" id="hs"></div></div><span class="chip" id="chip"></span></div>
 <div class="dots" id="dots"></div>
 <div class="stage" id="stage"></div>
@@ -58,9 +70,16 @@ th{background:#efe8f8}
 <div class="box hide" id="qz"></div>
 <div id="fin"></div>
 <div class="nav"><button class="pbtn ghost" id="bk">← Back</button><button class="pbtn" id="nx">Next</button></div>
+<div class="foot"><input id="tc" type="password" placeholder="code" aria-label="Teacher code" hidden><span id="tg" role="button" tabindex="0" aria-label="Teacher options">⚙</span></div><div class="tb" id="tb" hidden></div><div class="toast" id="toast" hidden></div>
 </div>
 <script>
-const PART3_URL=""; // paste the Part 3 link here later
+const PART3_URL="";
+const HOME_URL="https://allidriessen.github.io/U3/CCE-Home.html";
+const TEACHER_CODE="teacher"; // teacher: change this code (tap the faint gear at the bottom right of any page)
+let TEACH=false;
+function flash(t){const e=document.getElementById("toast");e.textContent=t;e.hidden=false;clearTimeout(flash.t);flash.t=setTimeout(()=>e.hidden=true,2600)}
+function link(u){u?window.open(u,"_blank"):flash("This part is coming soon.")}
+ // paste the Part 3 link here later
 /* ===== EDITABLE CONTENT ===== */
 const STEPS=[
 {t:"The Digestive Tract",s:"Zoomed-out view",chip:"Click the glowing section of the colon",g:0,inv:0,nx:"Zoom in →",
@@ -88,7 +107,7 @@ const STEPS=[
  {q:"Colon cancer spreads to the liver. What is the liver tumor called?",o:["Metastatic colon cancer (a secondary tumor)","Liver cancer that began in the liver","A benign polyp"],a:0,ws:"Spread tumors keep the name of where the cancer started."},
  {q:"How are cancers typically named?",o:["By the organ or cell type where they began","By the patient's name","By where they spread"],a:0,ws:"Cancers are named for the organ or cell type where they start."},
  {q:"Breast and testicular tumors aren't in organs needed for survival. How can they still be deadly?",o:["Cancer cells can spread to essential organs like the lungs or liver","Cancer cells can turn nearby healthy cells into new immune cells","Cancer cells can make the rest of the body grow too quickly"],a:0,ws:"Metastasis to essential organs. (Challenge: think of another way, such as tumors blocking tubes, pressing on organs, or causing bleeding.)"}]},
-{t:"Summary",s:"From healthy lining to metastasis",chip:"All four stages",g:1,inv:1,nx:"Finish Part 2 ✓",
+{t:"Summary",s:"From healthy lining to metastasis",chip:"All four stages",g:1,inv:1,nx:"Next: Part 3 →",
  info:`<h3>Putting it all together</h3><ul><li><b>Progression is slow.</b> Each stage can take about 10–20 years, and stage numbers describe tumor size, location, and spread.</li><li><b>Benign</b> growths stay in place and are not usually called cancer. <b>Malignant</b> growths break through the basement membrane, invade nearby tissue, and can spread.</li><li><b>Metastasis</b> uses blood and lymph vessels to start secondary tumors, which keep the name of the original cancer.</li></ul>`}
 ];
 /* ===== drawing ===== */
@@ -160,7 +179,7 @@ function quiz(host,qs,done){let n=0;
 function showQuiz(){const i=st.step,q=$("qz");q.classList.remove("hide");quiz(q,STEPS[i].qs,()=>{S.done[i]=1;upd();if(i==4)$("fin").insertAdjacentHTML("beforeend",`<div class="banner"><b>Great work!</b> Continue to the summary.</div>`)})}
 /* ===== state & flow ===== */
 const S={done:[0,0,0,0,0,0]};const st={step:0,g:0,inv:0,anim:null,mt:[0,0],mp:[0,0],fin:[0,0],seen:0};
-function upd(){const i=st.step;$("nx").textContent=STEPS[i].nx;$("nx").disabled=i>0&&i<5&&!S.done[i];$("bk").style.visibility=i?"visible":"hidden"}
+function upd(){const i=st.step;$("nx").textContent=STEPS[i].nx;$("nx").disabled=i>0&&i<5&&!S.done[i]&&!TEACH;$("bk").style.visibility=i?"visible":"hidden"}
 function go(n,fwd){
  st.step=n;st.mp=[0,0];st.mt=[0,0];st.fin=[0,0];st.seen=0;st.anim=null;const C=STEPS[n];
  $("ht").textContent=C.t;$("hs").textContent=C.s;$("chip").textContent=C.chip;$("info").innerHTML=C.info;$("fin").innerHTML="";$("ctl").innerHTML="";$("qz").classList.add("hide");
@@ -180,10 +199,11 @@ function summary(){st.mt=[1,1];
   +card("Stage 2: large benign growth",tissue(.65,0,0,1),"Bigger early adenoma, still contained.")
   +card("Stage 3: late adenoma turning malignant",tissue(1,1,0,1),"Cells break through the basement membrane.")
   +`<div class="pnl wide"><h3>Stage 4: metastasis (about 0–5 years)</h3><div class="pair" style="gap:0">${panel(0)}${panel(1)}</div><p class="note">Cancer cells travel by the blood and lymph highways and start secondary tumors in new places.</p></div></div>`;
- meta(0);meta(1)}
+ meta(0);meta(1);
+ $("fin").innerHTML=`<div class="bar"><button class="pbtn ghost" id="lp">🏠 Back to landing page</button></div>`;$("lp").onclick=()=>link(HOME_URL)}
 function zoom(){const o=$("og");o.style.transform="scale(7)";o.style.opacity="0";setTimeout(()=>go(1,true),800)}
 function draw(){$("stage").innerHTML=tissue(st.g,st.inv,!!st.anim)}
-$("nx").onclick=()=>{if(st.step==0)return zoom();if(st.step==5)return PART3_URL?location.href=PART3_URL:alert("Part 3 is coming soon.");go(st.step+1,true)};
+$("nx").onclick=()=>{if(st.step==0)return zoom();if(st.step==5)return link(PART3_URL);go(st.step+1,true)};
 $("bk").onclick=()=>go(st.step-1,false);
 /* ===== animation loop ===== */
 let last=performance.now(),T=0;
@@ -194,5 +214,14 @@ function tick(ts){const dt=Math.min(.05,(ts-last)/1000);last=ts;T+=dt;const a=st
  if(st.step>0&&st.step<4)document.querySelectorAll(".fl").forEach(f=>{const v=+f.dataset.v,x=((+f.dataset.x+T*v)%880+880)%880-40;f.setAttribute("transform",`translate(${x} ${f.dataset.y})`)});
  if(st.step==4)[0,1].forEach(k=>{if(st.mp[k]){st.mt[k]=Math.min(1,st.mt[k]+dt/14);meta(k);if(st.mt[k]>=1){st.mp[k]=0;lab(k)}}});
  requestAnimationFrame(tick)}
+function refresh(){upd()}
+function teacherBar(){const b=$("tb");b.hidden=false;
+ b.innerHTML=`<b>🔓 Teacher mode</b>`+["Overview","Stage 1","Stage 2","Stage 3","Stage 4","Summary"].map((x,k)=>`<button data-j="${k}">${x}</button>`).join("")+`<button id="sq">Show questions</button><button id="ex">Exit</button>`;
+ b.querySelectorAll("[data-j]").forEach(x=>x.onclick=()=>go(+x.dataset.j,false));
+ $("sq").onclick=()=>{if(st.step==4){st.mt=[1,1];meta(0);meta(1)}else flash("Questions are already showing here")};
+ $("ex").onclick=()=>{TEACH=false;b.hidden=true;upd()}}
+$("hm").onclick=()=>link(HOME_URL);
+$("tg").onclick=()=>{if(TEACH)return;const e=$("tc");e.hidden=!e.hidden;if(!e.hidden)e.focus()};
+$("tc").onkeydown=e=>{if(e.key==="Enter"){if(e.target.value===TEACHER_CODE){TEACH=true;e.target.hidden=true;e.target.value="";teacherBar();refresh()}else{e.target.value="";flash("Incorrect code")}}};
 go(0,false);requestAnimationFrame(tick);
 </script></body></html>
