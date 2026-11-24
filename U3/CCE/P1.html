@@ -112,7 +112,7 @@ const CONTENT=[
 {name:"Bonus Challenge",tissue:"Mixed tissue samples",goal:"Four samples, getting harder each time. The cancer cells are less obvious, and some healthy cells look suspicious. Combine several clues (size, shape, nucleus, arrangement) before you decide. Use the Hint button if you get stuck.",ws:"Bonus: which clues were most reliable?",qs:[{q:"Some healthy cells had a big or dark nucleus. What is the best way to decide if a cell is cancerous?",o:["Judge by nucleus darkness alone","Look for a combination of abnormal features, not just one","Pick the biggest cell"],a:1,ws:"Normal cells also vary, so look for several abnormal features together."},{q:"Why can one feature alone be misleading?",o:["Healthy cells also vary naturally in size and staining","Cancer cells never differ from healthy cells","Microscopes cannot show the nucleus"],a:0,ws:"Natural variation means no single clue is enough."}]}
 ];
 /* ====== helpers ====== */
-const HOME_URL="cancer-cell-exploration-home.html";
+const HOME_URL="https://allidriessen.github.io/U3/index.html";
 const TEACHER_CODE="teacher"; // teacher: change this code (tap the faint gear at the bottom right of any page)
 let TEACH=false;
 function flash(t){const e=document.getElementById("toast");e.textContent=t;e.hidden=false;clearTimeout(flash.t);flash.t=setTimeout(()=>e.hidden=true,2600)}
