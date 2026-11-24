@@ -1,7 +1,7 @@
 /* Biology Virtual Labs shared code: sign-in, local saving, reveal tiles, backup tools.
    All data stays in this browser's localStorage. Nothing is uploaded anywhere. */
 (function(){
-const SRC=document.currentScript.src,ROOT=SRC.replace(/assets\/bvl\.js.*$/,""),P="bvl:";
+const ROOT="/",P="bvl:"; /* the site lives at the root of allidriessen.github.io, so links start with "/" */
 const B=window.BVL={root:ROOT,cfg:window.BVL_CFG||{teacherCode:"teacher"}};
 const get=k=>{try{return JSON.parse(localStorage.getItem(P+k))}catch(e){return null}};
 const set=(k,v)=>{try{localStorage.setItem(P+k,JSON.stringify(v));return true}catch(e){return false}};
@@ -48,6 +48,7 @@ const css=document.createElement("style");css.textContent=`
 .bvl-box input[type=text],.bvl-box input[type=password],.bvl-box textarea{font:inherit;padding:10px;border:2px solid #ddd0ee;border-radius:10px;min-height:44px;width:100%;max-width:240px}
 .bvl-box textarea{max-width:100%;display:block;margin:6px 0}
 .bvl-msg{min-height:22px;font-weight:600;margin-top:6px}.bvl-msg.e{color:#c0392b}.bvl-msg.k{color:#14803f}
+[hidden]{display:none!important}
 .bvl-fields{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
 .tile{position:relative;display:flex;gap:14px;align-items:center;min-height:130px;padding:16px;border-radius:18px;background:var(--card,#fff);border:1px solid var(--line,#e6e0d4);box-shadow:var(--shadow,0 6px 20px rgba(0,0,0,.08));color:inherit;text-decoration:none;transition:transform .18s,border-color .18s}
@@ -61,7 +62,7 @@ a.tile:hover,a.tile:focus-visible{transform:translateY(-3px);border-color:var(--
 document.head.appendChild(css);
 /* ---- top bar ---- */
 B.bar=()=>{if(window.BVL_NOBAR)return;let d=document.querySelector(".bvl-bar");if(!d){d=document.createElement("div");d.className="bvl-bar";document.body.appendChild(d)}
- const u=B.user();d.innerHTML=u?`Signed in: ${esc(u.name)} <a href="${ROOT}my-work.html">My work</a> <button id="bvlso">Sign out</button>`:`Not signed in <a href="${ROOT}index.html">Sign in to save</a>`;
+ const u=B.user();d.innerHTML=u?`<a href="${ROOT}home.html">Home</a> Signed in: ${esc(u.name)} <a href="${ROOT}my-work.html">My work</a> <button id="bvlso">Sign out</button>`:`<a href="${ROOT}home.html">Home</a> Not signed in <a href="${ROOT}home.html">Sign in to save</a>`;
  const so=$(d,"#bvlso");if(so)so.onclick=()=>{B.signOut();location.reload()}};
 /* ---- sign-in form ---- */
 B.mountSignIn=(el,done)=>{const u=B.user();
@@ -79,7 +80,7 @@ B.mountSignIn=(el,done)=>{const u=B.user();
  $(el,"#brs").onclick=async()=>fin(await B.resetPin(v("#bf"),v("#bl"),v("#bn"),v("#bt")))};
 /* ---- save and hand in panel ---- */
 B.mountSavePanel=el=>{if(!el)return;const u=B.user();
- if(!u){el.innerHTML=`<div class="bvl-box"><h3>Save your work</h3><p>Sign in on the <a href="${ROOT}index.html">home page</a> so your progress is saved on this iPad.</p></div>`;return}
+ if(!u){el.innerHTML=`<div class="bvl-box"><h3>Save your work</h3><p>Sign in on the <a href="${ROOT}home.html">home page</a> so your progress is saved on this iPad.</p></div>`;return}
  const d=get("data:"+u.id)||{},ks=Object.keys(d);
  el.innerHTML=`<div class="bvl-box"><h3>Save and hand in your work</h3><p class="bvl-s">Your progress saves automatically in this browser on this device. It has not been sent to your teacher; your answers go on your worksheet.</p>
  <ul>${ks.map(k=>`<li><b>${esc(d[k].title||k)}</b>: ${esc(d[k].summary||"")}</li>`).join("")||"<li>No saved progress yet.</li>"}</ul>
@@ -98,12 +99,23 @@ B.mountSavePanel=el=>{if(!el)return;const u=B.user();
 /* ---- reveal tiles ---- */
 const COLORS=["#1f7a8c","#d99a1e","#b5338a","#6a46ad","#2f8f6b","#c4572b","#3f78b5","#8a4fa8","#b5335a"];
 B.released=it=>B.preview||!it.release||new Date(it.release+"T00:00:00")<=new Date();
-B.lens=(c,s)=>{let cells="";for(let i=0;i<7;i++){const x=22+((s*37+i*29)%56),y=22+((s*53+i*41)%56),r=8+((s+i*5)%6);cells+=`<circle cx="${x}" cy="${y}" r="${r}" fill="#f6c1cf" stroke="#d98aa3"/><circle cx="${x}" cy="${y}" r="${r/2.4}" fill="${c}"/>`}
- return`<div class="lw"><svg class="lin" viewBox="0 0 100 100"><defs><clipPath id="lc${s}"><circle cx="42" cy="42" r="32"/></clipPath></defs><g clip-path="url(#lc${s})"><rect width="100" height="100" fill="#fbe6ee"/>${cells}</g></svg><svg viewBox="0 0 100 100"><circle cx="42" cy="42" r="32" fill="none" stroke="${c}" stroke-width="6"/><path d="M66 66L92 92" stroke="${c}" stroke-width="10" stroke-linecap="round"/></svg></div>`};
+const BG='<rect width="100" height="100" fill="#fbe6ee"/>';
+const TH={
+ earth:()=>'<rect width="100" height="100" fill="#cfe9f7"/><circle cx="42" cy="42" r="27" fill="#3b82c4"/><path d="M28 34q8-8 15-1t3 9q-9 5-16 0z" fill="#4caf6a"/><path d="M46 48q9-3 13 4t-6 11q-9-3-7-15z" fill="#4caf6a"/>',
+ atoms:()=>BG+[["C",30,30,"#555"],["H",54,28,"#ddd"],["N",63,46,"#3050f8"],["O",50,62,"#e53935"],["P",30,58,"#ff9800"],["S",21,44,"#f2c200"]].map(a=>`<circle cx="${a[1]}" cy="${a[2]}" r="11" fill="${a[3]}"/><text x="${a[1]}" y="${a[2]+4}" text-anchor="middle" font-size="11" font-weight="800" fill="${"HS".includes(a[0])?"#222":"#fff"}">${a[0]}</text>`).join(""),
+ cells:(c,s)=>{let o=BG;for(let i=0;i<7;i++){const x=22+((s*37+i*29)%56),y=22+((s*53+i*41)%56),r=8+((s+i*5)%6);o+=`<circle cx="${x}" cy="${y}" r="${r}" fill="#f6c1cf" stroke="#d98aa3"/><circle cx="${x}" cy="${y}" r="${r/2.4}" fill="${c}"/>`}return o},
+ dna:()=>BG+'<path d="M32 14C62 26 22 38 52 50S32 70 40 72" fill="none" stroke="#1f7a8c" stroke-width="5"/><path d="M52 14C22 26 62 38 32 50S52 70 44 72" fill="none" stroke="#b5338a" stroke-width="5"/><path d="M36 20h12M30 32h24M36 44h12M31 56h22M38 66h8" stroke="#d99a1e" stroke-width="3"/>',
+ protein:()=>BG+[[20,50],[25,38],[35,31],[46,34],[53,44],[49,56],[39,62],[29,58],[31,47],[41,45]].map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="7" fill="${["#b5338a","#1f7a8c","#d99a1e","#6a46ad","#2f8f6b"][i%5]}" stroke="#fff" stroke-width="1.5"/>`).join(""),
+ chromo:()=>BG+'<path d="M24 18L50 64M50 18L24 64" stroke="#b5338a" stroke-width="9" stroke-linecap="round"/><path d="M42 24L60 56M60 24L42 56" stroke="#6a46ad" stroke-width="7" stroke-linecap="round" opacity=".85"/>',
+ punnett:()=>BG+[["BB",16,16,"#cfe9f7"],["Bb",42,16,"#f6d8a8"],["Bb",16,42,"#f6d8a8"],["bb",42,42,"#f6c1cf"]].map(a=>`<rect x="${a[1]}" y="${a[2]}" width="25" height="25" fill="${a[3]}" stroke="#6a46ad" stroke-width="2"/><text x="${a[1]+12.5}" y="${a[2]+17}" text-anchor="middle" font-size="12" font-weight="800" fill="#241a38">${a[0]}</text>`).join(""),
+ tree:()=>BG+'<path d="M42 70V50M42 50L26 34M42 50L58 34M26 34L18 18M26 34L34 18M58 34L50 18M58 34L66 18" stroke="#2f8f6b" stroke-width="4" fill="none" stroke-linecap="round"/>'+[[18,18],[34,18],[50,18],[66,18]].map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="${["#b5338a","#d99a1e","#1f7a8c","#6a46ad"][i]}"/>`).join(""),
+ body:()=>BG+'<path d="M42 64C18 48 20 26 33 26c6 0 9 4 9 7 0-3 3-7 9-7 13 0 15 22-9 38z" fill="#d6303f"/><path d="M14 44h14l5-9 7 18 5-9h16" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'
+};
+B.lens=(c,s,t)=>`<div class="lw"><svg class="lin" viewBox="0 0 100 100"><defs><clipPath id="lc${s}"><circle cx="42" cy="42" r="32"/></clipPath></defs><g clip-path="url(#lc${s})">${(TH[t]||TH.cells)(c,s)}</g></svg><svg viewBox="0 0 100 100"><circle cx="42" cy="42" r="32" fill="none" stroke="${c}" stroke-width="6"/><path d="M66 66L92 92" stroke="${c}" stroke-width="10" stroke-linecap="round"/></svg></div>`;
 B.tiles=(el,items)=>{const seen=get("seen")||{},fresh=[];
  el.innerHTML=items.map((it,i)=>{const c=it.color||COLORS[i%COLORS.length],open=B.released(it),k=it.key||("t"+i),isNew=open&&!seen[k];if(isNew)fresh.push(k);
-  if(!open)return`<div class="tile locked" style="--c:${c}" aria-label="Not yet discovered">${B.lens(c,i+1)}<div class="tt"><b>Not yet discovered</b></div></div>`;
-  return`<a class="tile${isNew?" fresh":""}" style="--c:${c}" href="${it.url}">${B.lens(c,i+1)}<div class="tt">${it.sub?`<small>${esc(it.sub)}</small>`:""}<b>${esc(it.title)}</b>${it.desc?`<span>${esc(it.desc)}</span>`:""}</div></a>`}).join("");
+  if(!open)return`<div class="tile locked" style="--c:${c}" aria-label="Not yet discovered">${B.lens(c,i+1,it.theme)}<div class="tt"><b>Not yet discovered</b></div></div>`;
+  return`<a class="tile${isNew?" fresh":""}" style="--c:${c}" href="${it.url}">${B.lens(c,i+1,it.theme)}<div class="tt">${it.sub?`<small>${esc(it.sub)}</small>`:""}<b>${esc(it.title)}</b>${it.desc?`<span>${esc(it.desc)}</span>`:""}</div></a>`}).join("");
  if(fresh.length)setTimeout(()=>{el.querySelectorAll(".fresh").forEach(t=>t.classList.remove("fresh"));fresh.forEach(k=>seen[k]=1);set("seen",seen)},700)};
 document.addEventListener("DOMContentLoaded",B.bar);
 })();
