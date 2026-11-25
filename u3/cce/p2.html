@@ -60,6 +60,11 @@ th{background:#efe8f8}
 .tb button{border:0;border-radius:8px;padding:8px 12px;font-weight:700;min-height:40px}
 .toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:#241a38;color:#fff;padding:10px 16px;border-radius:10px;z-index:60}
 .hd{background:#fff;color:var(--ink);border:2px solid #ddd0ee}.hd h1{font-size:clamp(22px,4.5vw,30px)}.chip{background:#efe8f8}
+.tiles6{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0}@media(max-width:560px){.tiles6{grid-template-columns:repeat(2,1fr)}}
+.tiles6 figure{margin:0}.tiles6 img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:3px solid #ddd0ee;cursor:zoom-in;display:block}
+.tiles6 figcaption{font-size:13px;font-weight:600;margin:2px 0}.lb{display:flex;gap:6px}.lb button{flex:1;min-height:46px;font:700 14px 'Open Sans',sans-serif;background:#faf7fd;color:#4b2e83;border:2px solid #ddd0ee;border-radius:10px;cursor:pointer}.lb button.on{background:#4b2e83;color:#fff;border-color:#4b2e83}
+.tiles6 figure.good img{border-color:#14803f}.tiles6 figure.hintring img{border-color:#f5b700;box-shadow:0 0 0 4px #f5b70066}
+#zm{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:80;display:flex;align-items:center;justify-content:center;cursor:zoom-out}#zm img{max-width:92vw;max-height:92vh;border-radius:8px}
 </style></head>
 <body><div class="wrap"><header class="ph"><div><div class="ey">Cancer Cell Exploration</div><h1>Part 2: Tumor Growth Stages and Types</h1></div><button class="pbtn ghost" id="hm">🏠 All parts</button></header>
 <div class="hd"><div><h1 id="ht"></h1><div class="sub" id="hs"></div></div><span class="chip" id="chip"></span></div>
@@ -68,11 +73,15 @@ th{background:#efe8f8}
 <div id="ctl"></div>
 <div class="box" id="info"></div>
 <div class="box hide" id="qz"></div>
+<div class="box hide" id="wr"></div>
+<div class="box hide" id="ch"></div>
 <div id="fin"></div>
 <div class="nav"><button class="pbtn ghost" id="bk">← Back</button><button class="pbtn" id="nx">Next</button></div>
 <div class="foot"><input id="tc" type="password" placeholder="code" aria-label="Teacher code" hidden><span id="tg" role="button" tabindex="0" aria-label="Teacher options">⚙</span></div><div class="tb" id="tb" hidden></div><div class="toast" id="toast" hidden></div>
 </div>
 <script src="/assets/bvl.js"></script>
+<script src="/assets/pdf.js"></script>
+<script src="/u3/cce/ws.js"></script>
 <script>
 const PART3_URL=""; // when Part 3 is ready, change to "p3.html"
 const HOME_URL="../cce.html";
@@ -95,7 +104,7 @@ const STEPS=[
  {q:"What do stage numbers describe?",o:["Tumor size, location, and how far it has spread","The patient's age","The color of the cells"],a:0,ws:"Stage numbers refer to tumor size, location, and spread."}]},
 {t:"Stage 3",s:"Progression (continued): about 10–20 years",chip:"Late adenoma turning malignant",g:1,inv:1,nx:"Advance to Stage 4: Metastasis →",
  info:`<h3>Benign vs. malignant</h3><p>In a late adenoma, some cells gain even more DNA changes. When cells <b>break through the basement membrane</b> and push into the tissue below, the growth has become <b>malignant</b> (a carcinoma), and it is now close to the blood and lymphatic vessels.</p>
- <table><tr><th></th><th>Benign tumor</th><th>Malignant tumor</th></tr><tr><td>Growth</td><td>Stays in one place, often with smooth borders</td><td>Invades nearby tissue, irregular borders</td></tr><tr><td>Basement membrane</td><td>Contained by it</td><td>Breaks through it</td></tr><tr><td>Spread</td><td>Does not metastasize</td><td>Can metastasize</td></tr><tr><td>"Cancer"?</td><td>Usually no</td><td>Yes</td></tr></table>`,
+ <table><tr><th></th><th>Benign tumor</th><th>Malignant tumor</th></tr><tr><td>Growth</td><td>Stays in one place, often with smooth borders</td><td>Invades nearby tissue, irregular borders</td></tr><tr><td>Basement membrane</td><td>Contained by it</td><td>Breaks through it</td></tr><tr><td>Spread</td><td>Does not metastasize</td><td>Can metastasize</td></tr><tr><td>"Cancer"?</td><td>Usually no</td><td>Yes</td></tr></table><p>When you finish the questions, a <b>challenge</b> will ask you to classify real tissue samples.</p>`,
  qs:[{q:"What does malignant mean in this model?",o:["Cells break through the membrane, invade nearby tissue, and can spread","The growth is small and stays put","The growth is shrinking"],a:0,ws:"Malignant: invades nearby tissue and can spread (metastasize)."},
  {q:"Which describes a benign tumor?",o:["It grows in one place and does not invade or spread","It always spreads to the liver","It is made of immune cells"],a:0,ws:"Benign: stays in place, does not invade or spread."},
  {q:"Why are benign tumors often not considered cancerous?",o:["Their cells do not invade other tissues or spread","They contain no DNA","They grow faster than cancer"],a:0,ws:"Not cancer because the cells don't invade or spread."}]},
@@ -172,23 +181,55 @@ function metaDone(){
  $("fin").innerHTML=`<div class="box"><h3>Secondary cancers</h3><p>The new tumors are <b>secondary tumors</b> (also called <b>metastases</b>). They are made of colon cancer cells, so a tumor in the liver that came from the colon is called <b>metastatic colon cancer</b>, not liver cancer. Cancers are named for where they <i>start</i>: the organ or cell type. The secondary tumor can crowd out normal tissue and disrupt an essential organ, which is how cancers in non-essential organs can still be deadly.</p><p><b>Challenge for your worksheet:</b> can you think of at least one more way a non-fatal tumor can indirectly cause death?</p></div>`;
  showQuiz()}
 /* ===== quiz ===== */
-function quiz(host,qs,done,key){let n=0;
+function quiz(host,qs,done,key){let n=0;if(key!=null&&window.WS)WS.mcReg("p2:"+key,qs);
  host.innerHTML=`<h3>Check your understanding</h3>`+qs.map((q,i)=>{const ord=q.o.map((_,k)=>k).sort(()=>Math.random()-.5);return `<div class="q"><p>${i+1}. ${q.q}${Array.isArray(q.a)?" <i>(Select two answers.)</i>":""}</p>${ord.map(k=>`<button class="opt" data-q="${i}" data-k="${k}">${q.o[k]}</button>`).join("")}<div class="ws hide"></div></div>`}).join("");
  host.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const i=+b.dataset.q,q=qs[i],blk=b.parentElement,A=[].concat(q.a);if(blk.dataset.ok||b.classList.contains("right")||b.classList.contains("wrong"))return;
-  if(A.includes(+b.dataset.k)){b.classList.add("right");blk.dataset.c=(+blk.dataset.c||0)+1;if(+blk.dataset.c===A.length){blk.dataset.ok=1;if(key!=null){const a=PROG.q[key]=PROG.q[key]||[];if(!a.includes(i)){a.push(i);saveP()}}const w=blk.querySelector(".ws");w.textContent="✅ Correct! Add this to your worksheet: "+q.ws;w.classList.remove("hide");if(++n===qs.length)done()}}
-  else{b.classList.add("wrong");b.textContent+="  (Not quite. Re-read the explanation and try another answer.)"}});
+  if(A.includes(+b.dataset.k)){b.classList.add("right");blk.dataset.c=(+blk.dataset.c||0)+1;if(+blk.dataset.c===A.length){blk.dataset.ok=1;if(key!=null&&window.WS)WS.mc("p2:"+key+":"+i,{d:1});if(key!=null){const a=PROG.q[key]=PROG.q[key]||[];if(!a.includes(i)){a.push(i);saveP()}}const w=blk.querySelector(".ws");w.textContent="✅ Correct! Add this to your worksheet: "+q.ws;w.classList.remove("hide");if(++n===qs.length)done()}}
+  else{b.classList.add("wrong");if(key!=null&&window.WS){const c=WS.mcGet("p2:"+key+":"+i)||{w:0};WS.mc("p2:"+key+":"+i,{w:(c.w||0)+1})}b.textContent+="  (Not quite. Re-read the explanation and try another answer.)"}});
  if(key!=null){(PROG.q[key]||[]).forEach(i=>{const blk=host.querySelectorAll(".q")[i];[].concat(qs[i].a).forEach(k=>blk.querySelector(`.opt[data-k="${k}"]`).classList.add("right"));blk.dataset.ok=1;const w=blk.querySelector(".ws");w.textContent="✅ Correct! Add this to your worksheet: "+qs[i].ws;w.classList.remove("hide");n++});if(n===qs.length)done()}}
-function showQuiz(){const i=st.step,q=$("qz");q.classList.remove("hide");quiz(q,STEPS[i].qs,()=>{S.done[i]=1;saveP();upd();if(i==4)$("fin").insertAdjacentHTML("beforeend",`<div class="banner"><b>Great work!</b> Continue to the summary.</div>`)},i)}
+const WQ={2:["p2q2"],3:["p2q3","p2q5"],4:["p2q4","p2q6","p2q7","p2q7a"]};
+function showQuiz(){const i=st.step,q=$("qz"),wr=$("wr"),cb=$("ch");q.classList.remove("hide");
+ quiz(q,STEPS[i].qs,()=>{if(i==3){PROG.qz3=1;saveP();chk3()}else{S.done[i]=1;saveP();upd();if(i==4)$("fin").insertAdjacentHTML("beforeend",`<div class="banner"><b>Great work!</b> Continue to the summary.</div>`)}},i);
+ wr.innerHTML="";wr.classList.add("hide");cb.innerHTML="";cb.classList.add("hide");
+ if(WQ[i]&&window.WS){wr.classList.remove("hide");wr.innerHTML="<h3>Written response</h3>";WQ[i].forEach(k=>WS.box(wr,k,WS.PROMPT[k]))}
+ if(i==3&&window.WS){cb.classList.remove("hide");challenge(cb)}}
+function chk3(){if(PROG.qz3&&WS.ch(1).done&&WS.ch(2).done&&!S.done[3]){S.done[3]=1;saveP();upd()}}
+/* ===== benign vs malignant challenge (0 = benign, 1 = malignant) ===== */
+const RN=[[["a1",0],["a2",0],["a3",0],["a4",1],["a5",1],["a6",1]],[["b1",0],["b2",0],["b3",0],["b4",1],["b5",1],["b6",1]]];
+function shuf(a,seed){const r=a.slice();let s=seed%2147483646+1;const rnd=()=>(s=(s*16807)%2147483647)/2147483647;for(let i=r.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[r[i],r[j]]=[r[j],r[i]]}return r}
+function zoomImg(src){const d=document.createElement("div");d.id="zm";d.innerHTML=`<img src="${src}" alt="Enlarged tissue sample">`;d.onclick=()=>d.remove();document.body.appendChild(d)}
+function challenge(host){
+ host.innerHTML=`<h3>Challenge: benign or malignant?</h3><p>Use what you learned to classify real breast tissue samples (stained purple and pink). Each round has <b>6 samples: 3 benign and 3 malignant</b>. Tap <b>Benign</b> or <b>Malignant</b> under each sample, then check. You will be told how many are correct, but not which ones, and you can try again. Tap a picture to enlarge it.</p><div class="tabs" id="rb" style="display:flex;gap:6px;margin-bottom:8px"></div><div id="cr"></div>
+ <p class="note">Sources: Levenson RM, Krupinski EA, Navarro VM, Wasserman EA (2015). Pigeons (<i>Columba livia</i>) as Trainable Observers of Pathology and Radiology Breast Cancer Images. <i>PLoS ONE</i> 10(11): e0141357. <a href="https://doi.org/10.1371/journal.pone.0141357" target="_blank" rel="noopener">doi:10.1371/journal.pone.0141357</a>. Licensed <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. Sample images were cropped from Figures 2 and 3.</p>`;
+ let cur=WS.ch(1).done?2:1;const bar=()=>{$("rb").innerHTML=[1,2].map(r=>`<button class="pbtn ${r==cur?"":"ghost"}" data-r="${r}" ${r==2&&!WS.ch(1).done&&!TEACH?"disabled":""}>${WS.ch(r).done?"✓ ":""}Round ${r}</button>`).join("");$("rb").querySelectorAll("button").forEach(b=>b.onclick=()=>{cur=+b.dataset.r;bar();render(cur)})};
+ function render(r){const T=shuf(RN[r-1],UOFF*7+r*31),sel=T.map(()=>null),c0=WS.ch(r),area=$("cr");
+  area.innerHTML=`<div class="tiles6">${T.map((t,k)=>`<figure data-k="${k}"><img src="img/${t[0]}.jpg" alt="Tissue sample ${k+1}"><figcaption>Sample ${k+1}</figcaption><div class="lb"><button data-k="${k}" data-v="0">Benign</button><button data-k="${k}" data-v="1">Malignant</button></div></figure>`).join("")}</div>
+  <div class="bar"><button class="pbtn" id="chk">Check my answers</button><button class="pbtn ghost" id="hnt" hidden>💡 Hint</button></div><div class="msg" id="cm" aria-live="polite" style="font-weight:600;min-height:24px"></div><div id="cw"></div>`;
+  const msg=(t,c)=>{const e=$("cm");e.textContent=t;e.style.color=c||""},fig=k=>area.querySelector(`figure[data-k="${k}"]`);
+  const paint=()=>{area.querySelectorAll(".lb button").forEach(b=>b.classList.toggle("on",sel[+b.dataset.k]===+b.dataset.v))};
+  const solved=()=>{T.forEach((t,k)=>{sel[k]=t[1];fig(k).classList.add("good")});paint();area.querySelectorAll(".lb button").forEach(b=>b.disabled=true);$("chk").hidden=true;$("hnt").hidden=true;
+   msg("✅ All 6 correct! You solved Round "+r+" on attempt "+WS.ch(r).att+".","#14803f");const cw=$("cw");WS.box(cw,"p2c"+r,WS.PROMPT["p2c"+r]);
+   if(r==1){const nb=document.createElement("button");nb.className="pbtn";nb.textContent="Go to Round 2 →";nb.onclick=()=>{cur=2;bar();render(2)};cw.appendChild(nb)}bar();chk3()};
+  area.querySelectorAll("figure img").forEach(im=>im.onclick=()=>zoomImg(im.src));
+  area.querySelectorAll(".lb button").forEach(b=>b.onclick=()=>{sel[+b.dataset.k]=+b.dataset.v;paint()});
+  const hintBtn=()=>{$("hnt").hidden=!(WS.ch(r).att>=3&&!WS.ch(r).done)};hintBtn();
+  $("chk").onclick=()=>{if(sel.includes(null))return msg("Label all 6 samples first.","#c0392b");
+   const nb=sel.filter(v=>v===0).length;if(nb!==3)return msg("You labeled "+nb+" benign and "+(6-nb)+" malignant, but each set has exactly 3 of each. Adjust and check again.","#c0392b");
+   const c=WS.ch(r),att=(c.att||0)+1,ok=T.filter((t,k)=>sel[k]===t[1]).length;WS.ch(r,{att,first:c.first==null?ok:c.first});
+   if(ok===6){WS.ch(r,{done:1});solved()}else{msg(ok+" of 6 correct. Look again and try again.","#c0392b");hintBtn()}};
+  $("hnt").onclick=()=>{area.querySelectorAll("figure").forEach(f=>f.classList.remove("hintring"));const k=T.findIndex((t,k)=>sel[k]!==t[1]);if(k<0)return;fig(k).classList.add("hintring");msg("Hint: look again at Sample "+(k+1)+". How organized are the cells and how evenly spaced? How large and dark are the nuclei compared with the others?","#7a5a00")};
+  if(c0.done)solved()}
+ bar();render(cur)}
 /* ===== state & flow ===== */
-const AK="cancer-cell-exploration-part2",PROG={q:{},step:0};
-function saveP(){if(!window.BVL)return;BVL.save(AK,{title:"Cancer Cell Exploration · Part 2",summary:S.done.slice(1,5).filter(Boolean).length+" of 4 stages' questions complete; "+(S.done[4]?"metastasis explored":"metastasis not yet explored"),done:S.done,q:PROG.q,step:PROG.step})}
-function loadP(){const d=window.BVL&&BVL.load(AK);if(d){S.done=d.done||S.done;PROG.q=d.q||{};PROG.step=d.step||0}}
+const AK="cancer-cell-exploration-part2",PROG={q:{},step:0,qz3:0},UOFF=(window.BVL?BVL.seed("cce-p2"):0)||0;
+function saveP(){if(!window.BVL)return;BVL.save(AK,{title:"Cancer Cell Exploration · Part 2",summary:S.done.slice(1,5).filter(Boolean).length+" of 4 stages' questions complete; "+(S.done[4]?"metastasis explored":"metastasis not yet explored"),done:S.done,q:PROG.q,step:PROG.step,qz3:PROG.qz3})}
+function loadP(){const d=window.BVL&&BVL.load(AK);if(d){S.done=d.done||S.done;PROG.q=d.q||{};PROG.step=d.step||0;PROG.qz3=d.qz3||0}}
 
 const S={done:[0,0,0,0,0,0]};const st={step:0,g:0,inv:0,anim:null,mt:[0,0],mp:[0,0],fin:[0,0],seen:0};
 function upd(){const i=st.step;$("nx").textContent=STEPS[i].nx;$("nx").disabled=i>0&&i<5&&!S.done[i]&&!TEACH;$("bk").style.visibility=i?"visible":"hidden"}
 function go(n,fwd){
  st.step=n;PROG.step=n;saveP();st.mp=[0,0];st.mt=[0,0];st.fin=[0,0];st.seen=0;st.anim=null;const C=STEPS[n];
- $("ht").textContent=C.t;$("hs").textContent=C.s;$("chip").textContent=C.chip;$("info").innerHTML=C.info;$("fin").innerHTML="";$("ctl").innerHTML="";$("qz").classList.add("hide");
+ $("ht").textContent=C.t;$("hs").textContent=C.s;$("chip").textContent=C.chip;$("info").innerHTML=C.info;$("fin").innerHTML="";$("ctl").innerHTML="";$("qz").classList.add("hide");$("wr").classList.add("hide");$("ch").classList.add("hide");
  $("dots").innerHTML=["Overview","Stage 1","Stage 2","Stage 3","Stage 4","Summary"].map((x,k)=>`<span class="dot ${k==n?"on":""}">${S.done[k]&&k&&k<5?"✓ ":""}${x}</span>`).join("");
  if(n==0){$("stage").innerHTML=scene0();$("hot").onclick=zoom}
  else if(n<4){const P=STEPS[n-1],d=n==3?3.6:2.4;
@@ -206,7 +247,7 @@ function summary(){st.mt=[1,1];
   +card("Stage 3: late adenoma turning malignant",tissue(1,1,0,1),"Cells break through the basement membrane.")
   +`<div class="pnl wide"><h3>Stage 4: metastasis (about 0–5 years)</h3><div class="pair" style="gap:0">${panel(0)}${panel(1)}</div><p class="note">Cancer cells travel by the blood and lymph highways and start secondary tumors in new places.</p></div></div>`;
  meta(0);meta(1);
- $("fin").innerHTML=`<div class="bar"><button class="pbtn ghost" id="lp">🏠 Back to landing page</button></div><div id="sv"></div>`;$("lp").onclick=()=>link(HOME_URL);if(window.BVL)BVL.mountSavePanel($("sv"))}
+ $("fin").innerHTML=`<div class="bar"><button class="pbtn ghost" id="lp">🏠 Back to landing page</button></div><div id="ex"></div><div id="sv"></div>`;$("lp").onclick=()=>link(HOME_URL);if(window.WS)WS.mountExport($("ex"));if(window.BVL)BVL.mountSavePanel($("sv"))}
 function zoom(){const o=$("og");o.style.transform="scale(7)";o.style.opacity="0";setTimeout(()=>go(1,true),800)}
 function draw(){$("stage").innerHTML=tissue(st.g,st.inv,!!st.anim)}
 $("nx").onclick=()=>{if(st.step==0)return zoom();if(st.step==5)return link(PART3_URL);go(st.step+1,true)};
