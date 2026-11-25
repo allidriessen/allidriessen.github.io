@@ -7,35 +7,57 @@ const get=k=>{try{return JSON.parse(localStorage.getItem(P+k))}catch(e){return n
 const set=(k,v)=>{try{localStorage.setItem(P+k,JSON.stringify(v));return true}catch(e){return false}};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const $=(r,s)=>r.querySelector(s);
+B.cfg.teachers=B.cfg.teachers||["Ms. Driessen","Ms. Bennett"];B.cfg.periods=B.cfg.periods||7;
 B.preview=(new URLSearchParams(location.search).get("preview")||"\0")===B.cfg.teacherCode;
 /* ---- accounts ---- */
 const norm=(f,l)=>(f.trim()+" "+l.trim()).toLowerCase().replace(/\s+/g," ");
 async function hash(s){try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("bvl|"+s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){let h=5381;for(const c of s)h=((h<<5)+h+c.charCodeAt(0))|0;return"x"+h}}
 B.user=()=>get("current");
 B.users=()=>get("users")||{};
-B.signIn=async(f,l,pin)=>{
+B.signIn=async(f,l,pin,ex)=>{
  if(!f.trim()||!l.trim())return{err:"Please enter your first and last name."};
  if(!/^\d{4}$/.test(pin))return{err:"Your PIN must be exactly 4 numbers."};
  const id=norm(f,l),us=B.users(),h=await hash(id+"|"+pin);
  if(us[id]){if(us[id].h!==h)return{err:"That PIN does not match this name.",forgot:1}}
- else{us[id]={name:f.trim()+" "+l.trim(),h,c:Date.now()};if(!set("users",us))return{err:"This browser is blocking saving (private browsing?)."}}
+ else{if(!ex||!ex.teacher||!ex.period)return{err:"New here? Please choose your teacher and class period."};us[id]={name:f.trim()+" "+l.trim(),h,c:Date.now(),teacher:ex.teacher,period:ex.period};if(!set("users",us))return{err:"This browser is blocking saving (private browsing?)."}}
+ if(ex&&ex.teacher&&ex.period&&!us[id].teacher){us[id].teacher=ex.teacher;us[id].period=ex.period;set("users",us)}
  set("current",{id,name:us[id].name});return{ok:1}};
 B.resetPin=async(f,l,pin,code)=>{
  if(code!==B.cfg.teacherCode)return{err:"Teacher code is incorrect."};
  if(!/^\d{4}$/.test(pin))return{err:"The new PIN must be exactly 4 numbers."};
  const id=norm(f,l),us=B.users();if(!us[id])return{err:"No saved profile with that name on this device."};
  us[id].h=await hash(id+"|"+pin);set("users",us);set("current",{id,name:us[id].name});return{ok:1}};
+B.profile=()=>{const u=B.user();if(!u)return null;const x=B.users()[u.id]||{};return{name:u.name,id:u.id,teacher:x.teacher||"",period:x.period||""}};
+B.setProfile=(t,p)=>{const u=B.user();if(!u)return;const us=B.users();if(us[u.id]){us[u.id].teacher=t;us[u.id].period=p;set("users",us)}};
+B.seed=salt=>{const u=B.user(),s=(u?u.id:"guest")+"|"+salt;let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0)%100000};
+B.pasteCount=()=>{const u=B.user();return u?(get("pb:"+u.id)||0):0};
+/* block pasting, dropping, and large one-shot insertions (e.g. AI writing tools) in answer boxes */
+B.noPaste=(el,onBlock)=>{let last=el.value;const hit=()=>{const u=B.user();if(u)set("pb:"+u.id,(get("pb:"+u.id)||0)+1);onBlock&&onBlock()};
+ ["paste","drop"].forEach(ev=>el.addEventListener(ev,e=>{e.preventDefault();hit()}));
+ el.addEventListener("beforeinput",e=>{const t=e.inputType||"",d=(e.data||"")+((e.dataTransfer&&e.dataTransfer.getData("text/plain"))||"");if(/FromPaste|FromDrop|FromYank/.test(t)||d.length>60){e.preventDefault();hit()}});
+ el.addEventListener("input",()=>{if(el.value.length-last.length>60){el.value=last;hit()}else last=el.value});
+ el.setAttribute("autocomplete","off");el.setAttribute("data-gramm","false")};
+/* signature box: finger or Apple Pencil. Returns {empty(),data()} where data() is a JPEG data URL */
+B.sigPad=(el,init,onCh)=>{el.innerHTML='<canvas style="width:100%;max-width:520px;height:150px;border:2px dashed #888;border-radius:10px;background:#fff;touch-action:none;display:block" aria-label="Signature box"></canvas><button type="button" class="g" style="margin-top:6px">Clear signature</button>';
+ const c=$(el,"canvas"),x=c.getContext("2d");c.width=1040;c.height=300;x.lineWidth=5;x.lineCap="round";x.lineJoin="round";x.strokeStyle="#111";let d=false,ink=!!init,last=null,pen=false;
+ if(init){const im=new Image();im.onload=()=>x.drawImage(im,0,0,c.width,c.height);im.src=init}
+ const pos=e=>{const r=c.getBoundingClientRect();return[(e.clientX-r.left)*c.width/r.width,(e.clientY-r.top)*c.height/r.height]};
+ c.addEventListener("pointerdown",e=>{if(e.pointerType==="touch"&&pen)return;if(e.pointerType==="pen")pen=true;try{c.setPointerCapture(e.pointerId)}catch(x2){}d=true;last=pos(e);x.beginPath();x.moveTo(last[0],last[1]);x.lineTo(last[0]+.1,last[1]);x.stroke();ink=true;e.preventDefault()});
+ c.addEventListener("pointermove",e=>{if(!d)return;const p=pos(e);x.beginPath();x.moveTo(last[0],last[1]);x.lineTo(p[0],p[1]);x.stroke();last=p;e.preventDefault()});
+ const end=()=>{if(d){d=false;onCh&&onCh()}};c.addEventListener("pointerup",end);c.addEventListener("pointercancel",end);
+ $(el,"button").onclick=()=>{x.clearRect(0,0,c.width,c.height);ink=false;onCh&&onCh()};
+ return{empty:()=>!ink,data:()=>{if(!ink)return"";const t=document.createElement("canvas");t.width=c.width;t.height=c.height;const q=t.getContext("2d");q.fillStyle="#fff";q.fillRect(0,0,t.width,t.height);q.drawImage(c,0,0);return t.toDataURL("image/jpeg",.8)}}};
 B.signOut=()=>{try{localStorage.removeItem(P+"current")}catch(e){}};
 B.load=k=>{const u=B.user();if(!u)return null;const d=get("data:"+u.id);return d&&d[k]||null};
 B.save=(k,v)=>{const u=B.user();if(!u)return false;const d=get("data:"+u.id)||{};d[k]={...v,t:Date.now()};return set("data:"+u.id,d)};
 /* ---- backup ---- */
-B.pack=()=>{const u=B.user();if(!u)return null;const us=B.users()[u.id]||{};return{v:1,id:u.id,name:u.name,h:us.h,data:get("data:"+u.id)||{}}};
-B.unpack=o=>{if(!o||o.v!==1||!o.id||!o.h)return false;const us=B.users();if(!us[o.id])us[o.id]={name:o.name,h:o.h,c:Date.now()};set("users",us);
+B.pack=strip=>{const u=B.user();if(!u)return null;const us=B.users()[u.id]||{},d=get("data:"+u.id)||{};if(strip)Object.keys(d).forEach(k=>{if(k.startsWith("img:"))delete d[k]});return{v:1,id:u.id,name:u.name,h:us.h,teacher:us.teacher,period:us.period,data:d}};
+B.unpack=o=>{if(!o||o.v!==1||!o.id||!o.h)return false;const us=B.users();if(!us[o.id])us[o.id]={name:o.name,h:o.h,c:Date.now(),teacher:o.teacher,period:o.period};set("users",us);
  const cur=get("data:"+o.id)||{};Object.keys(o.data||{}).forEach(k=>{if(!cur[k]||(o.data[k].t||0)>(cur[k].t||0))cur[k]=o.data[k]});
  set("data:"+o.id,cur);set("current",{id:o.id,name:us[o.id].name});return true};
-B.code=()=>"LB1."+btoa(unescape(encodeURIComponent(JSON.stringify(B.pack())))).replace(/\+/g,"-").replace(/\//g,"_");
+B.code=()=>"LB1."+btoa(unescape(encodeURIComponent(JSON.stringify(B.pack(1))))).replace(/\+/g,"-").replace(/\//g,"_");
 B.decode=c=>{try{return JSON.parse(decodeURIComponent(escape(atob(c.trim().replace(/^LB1\./,"").replace(/-/g,"+").replace(/_/g,"/")))))}catch(e){return null}};
-B.report=()=>{const p=B.pack();if(!p)return"";return`Biology Virtual Labs: progress summary\nStudent: ${p.name}\nDate: ${new Date().toLocaleString()}\n\n`+Object.keys(p.data).map(k=>`• ${p.data[k].title||k}: ${p.data[k].summary||""}`).join("\n")};
+B.report=()=>{const p=B.pack();if(!p)return"";return`Biology Virtual Labs: progress summary\nStudent: ${p.name}\nDate: ${new Date().toLocaleString()}\n\n`+Object.keys(p.data).filter(k=>!k.startsWith('img:')).map(k=>`• ${p.data[k].title||k}: ${p.data[k].summary||""}`).join("\n")};
 /* ---- styles ---- */
 const css=document.createElement("style");css.textContent=`
 .bvl-bar{position:fixed;top:8px;right:8px;z-index:45;background:rgba(36,26,56,.92);color:#fff;border-radius:999px;padding:5px 12px;font:600 13px 'Open Sans',system-ui,sans-serif;display:flex;gap:8px;align-items:center}
@@ -47,6 +69,7 @@ const css=document.createElement("style");css.textContent=`
 .bvl-box button.g{background:#fff;color:#4b2e83;border:2px solid #4b2e83}
 .bvl-box input[type=text],.bvl-box input[type=password],.bvl-box textarea{font:inherit;padding:10px;border:2px solid #ddd0ee;border-radius:10px;min-height:44px;width:100%;max-width:240px}
 .bvl-box textarea{max-width:100%;display:block;margin:6px 0}
+.bvl-box select{font:inherit;padding:10px;border:2px solid #ddd0ee;border-radius:10px;min-height:44px;background:#fff;color:#241a38}
 .bvl-msg{min-height:22px;font-weight:600;margin-top:6px}.bvl-msg.e{color:#c0392b}.bvl-msg.k{color:#14803f}
 [hidden]{display:none!important}
 .bvl-fields{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
@@ -65,23 +88,30 @@ B.bar=()=>{if(window.BVL_NOBAR)return;let d=document.querySelector(".bvl-bar");i
  const u=B.user();d.innerHTML=u?`<a href="${ROOT}home.html">Home</a> Signed in: ${esc(u.name)} <a href="${ROOT}my-work.html">My work</a> <button id="bvlso">Sign out</button>`:`<a href="${ROOT}home.html">Home</a> Not signed in <a href="${ROOT}home.html">Sign in to save</a>`;
  const so=$(d,"#bvlso");if(so)so.onclick=()=>{B.signOut();location.reload()}};
 /* ---- sign-in form ---- */
+const topts=()=>'<option value="">Teacher…</option>'+B.cfg.teachers.map(t=>`<option>${esc(t)}</option>`).join("");
+const popts=()=>'<option value="">Period…</option>'+Array.from({length:B.cfg.periods},(_,i)=>`<option>${i+1}</option>`).join("");
 B.mountSignIn=(el,done)=>{const u=B.user();
- if(u){el.innerHTML=`<div class="bvl-box"><h3>Welcome back, ${esc(u.name.split(" ")[0])}!</h3><p class="bvl-s">Your progress is saving on this device. <a href="${ROOT}my-work.html">My work</a> · <button class="g" id="so">Sign out</button></p></div>`;$(el,"#so").onclick=()=>{B.signOut();B.bar();B.mountSignIn(el,done)};return}
+ if(u){const p=B.profile();el.innerHTML=`<div class="bvl-box"><h3>Welcome back, ${esc(u.name.split(" ")[0])}!</h3><p class="bvl-s">Your progress is saving on this device. <a href="${ROOT}my-work.html">My work</a> · <button class="g" id="so">Sign out</button></p>
+ <details ${p.teacher&&p.period?"":"open"}><summary><b>Profile settings:</b> <span id="ps0">${esc(p.teacher||"no teacher chosen")}, period ${esc(p.period||"?")}</span></summary><div class="bvl-fields"><select id="pt" aria-label="Teacher">${topts()}</select><select id="pp" aria-label="Class period">${popts()}</select><button id="ps">Save</button></div><div class="bvl-msg" id="pm" aria-live="polite"></div></details></div>`;
+  $(el,"#pt").value=p.teacher;$(el,"#pp").value=p.period;
+  $(el,"#ps").onclick=()=>{const t=$(el,"#pt").value,pe=$(el,"#pp").value,m=$(el,"#pm");if(!t||!pe){m.textContent="Please choose a teacher and a period.";m.className="bvl-msg e";return}B.setProfile(t,pe);m.textContent="Saved!";m.className="bvl-msg k";$(el,"#ps0").textContent=t+", period "+pe};
+  $(el,"#so").onclick=()=>{B.signOut();B.bar();B.mountSignIn(el,done)};return}
  el.innerHTML=`<div class="bvl-box"><h3>Sign in to save your progress</h3>
- <p class="bvl-s"><b>How saving works:</b> your name and PIN create a private save file inside this iPad's web browser. Nothing is uploaded to the internet or a cloud, and your teacher cannot see it. Your progress comes back when you reopen this site on the same iPad and browser. If you clear Safari's website data, use private browsing, or switch devices, it will not come with you, so use "Save progress file" at the end of an activity as a backup. First time here? Type a name and make up a 4-number PIN you will remember.</p>
+ <p class="bvl-s"><b>How saving works:</b> your name and PIN create a private save file inside this iPad's web browser. Nothing is uploaded to the internet or a cloud, and your teacher cannot see it. Your progress comes back when you reopen this site on the same iPad and browser. If you clear Safari's website data, use private browsing, or switch devices, it will not come with you, so use "Save progress file" at the end of an activity as a backup. Your teacher and class period are printed on your PDF; you can change them later in Profile settings. First time here? Type your name, choose your teacher and period, and make up a 4-number PIN you will remember.</p>
  <div class="bvl-fields"><input type="text" id="bf" placeholder="First name" autocomplete="off" autocapitalize="words"><input type="text" id="bl" placeholder="Last name" autocomplete="off" autocapitalize="words"><input type="password" id="bp" placeholder="4-number PIN" inputmode="numeric" maxlength="4" autocomplete="off"></div>
+ <div class="bvl-fields"><select id="bte" aria-label="Teacher">${topts()}</select><select id="bpe" aria-label="Class period">${popts()}</select></div>
  <button id="bgo">Sign in / Create</button> <button class="g" id="bfg" hidden>Forgot PIN?</button>
  <div class="bvl-fields" id="bfx" hidden><input type="password" id="bt" placeholder="Teacher code"><input type="password" id="bn" placeholder="New 4-number PIN" inputmode="numeric" maxlength="4"><button id="brs">Reset PIN</button></div>
  <div class="bvl-msg" id="bm" aria-live="polite"></div></div>`;
  const m=(t,c)=>{const e=$(el,"#bm");e.textContent=t;e.className="bvl-msg "+(c||"")},v=i=>$(el,i).value;
  const fin=r=>{if(r.ok){B.bar();done&&done();B.mountSignIn(el,done)}else{m(r.err,"e");if(r.forgot)$(el,"#bfg").hidden=false}};
- $(el,"#bgo").onclick=async()=>fin(await B.signIn(v("#bf"),v("#bl"),v("#bp")));
+ $(el,"#bgo").onclick=async()=>fin(await B.signIn(v("#bf"),v("#bl"),v("#bp"),{teacher:v("#bte"),period:v("#bpe")}));
  $(el,"#bfg").onclick=()=>{$(el,"#bfx").hidden=false};
  $(el,"#brs").onclick=async()=>fin(await B.resetPin(v("#bf"),v("#bl"),v("#bn"),v("#bt")))};
 /* ---- save and hand in panel ---- */
 B.mountSavePanel=el=>{if(!el)return;const u=B.user();
  if(!u){el.innerHTML=`<div class="bvl-box"><h3>Save your work</h3><p>Sign in on the <a href="${ROOT}home.html">home page</a> so your progress is saved on this iPad.</p></div>`;return}
- const d=get("data:"+u.id)||{},ks=Object.keys(d);
+ const d=get("data:"+u.id)||{},ks=Object.keys(d).filter(k=>!k.startsWith('img:'));
  el.innerHTML=`<div class="bvl-box"><h3>Save and hand in your work</h3><p class="bvl-s">Your progress saves automatically in this browser on this device. It has not been sent to your teacher; your answers go on your worksheet.</p>
  <ul>${ks.map(k=>`<li><b>${esc(d[k].title||k)}</b>: ${esc(d[k].summary||"")}</li>`).join("")||"<li>No saved progress yet.</li>"}</ul>
  <div class="bvl-row"><button data-a="copy">Copy progress summary</button><button data-a="print">Print / save as PDF</button><button data-a="file">Save progress file</button><label class="bvl-btn">Load progress file<input type="file" accept=".json,application/json" hidden></label><button data-a="code">Get resume code</button><button class="g" data-a="reset">Start over</button></div>
