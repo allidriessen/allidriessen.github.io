@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cancer Cell Exploration</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:'Open Sans',system-ui,sans-serif;color:#241a38;min-height:100vh;background:radial-gradient(circle at 20% 10%,#4b2e83 0,#2a1656 45%,#170b33 100%);-webkit-text-size-adjust:100%;line-height:1.5}
+#bg{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.fl{animation:dr var(--d) ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
+@keyframes dr{from{transform:translate(0,0) rotate(0)}to{transform:translate(var(--x),var(--y)) rotate(var(--r))}}
+.wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:28px 16px 40px}
+header{color:#fff;margin-bottom:26px}
+h1{margin:0;font-size:clamp(38px,8vw,72px);font-weight:800;line-height:1.02}
+.q{margin:10px 0 2px;font-size:clamp(17px,2.6vw,22px);font-weight:600;color:#f6c1cf}
+.u{margin:0;font-size:15px;opacity:.8}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+.card{position:relative;background:rgba(255,255,255,.95);border-radius:18px;padding:18px 18px 16px 18px;box-shadow:0 8px 24px rgba(10,0,30,.35);border:2px solid rgba(255,255,255,.6);display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:10px;background:var(--c)}
+.dish{width:64px;height:64px;flex:none}
+.row{display:flex;gap:14px;align-items:center}
+.card h2{margin:0;font-size:20px;line-height:1.2}
+.part{font-weight:700;font-size:14px;color:var(--c)}
+.card p{margin:0;font-size:14px;color:#4a3d63;flex:1}
+.go{display:inline-block;margin-top:8px;text-align:center;text-decoration:none;background:#4b2e83;color:#fff;font-weight:700;border-radius:12px;padding:11px 16px;min-height:46px}
+.go:hover,.go:focus-visible{background:#6a46ad}
+.soon{background:#e4daf1;color:#6b5a85;cursor:default}
+.foot{margin-top:26px;color:#fff;opacity:.6;font-size:13px}
+@media(prefers-reduced-motion:reduce){.fl{animation:none}}
+.notice{background:rgba(255,255,255,.95);border-radius:14px;padding:12px 16px;margin:0 0 18px;color:#241a38;font-size:15px}
+</style></head>
+<body>
+<svg id="bg" aria-hidden="true"></svg>
+<div class="wrap">
+<header>
+<h1>Cancer Cell Exploration</h1>
+<p class="q">How are cancer cells different from normal cells?</p>
+<p class="u"><a href="home.html" style="color:#f6c1cf">← Back to Unit 3</a></p>
+<p class="u">Honors Biology · Unit 3 Cellular Dynamics: The Life &amp; Death of a Cell</p>
+</header>
+<div class="notice"><b>Your samples are unique to you.</b> The cells you examine and the numbers you work with are generated from your name, so your classmates will see different samples. Your answers and your PDF are your own work. Sign in on the home page so your progress and PDF can be saved.</div>
+<div class="grid" id="grid"></div>
+<p class="foot">Complete the parts in order. You will answer questions in each part and download a PDF of your work at the end.</p>
+</div>
+<script src="/assets/bvl.js"></script>
+<script>
+/* ===== TEACHER: PASTE YOUR LINKS HERE =====
+   Put the full web address (URL) of each part between the quotes.
+   Leave a link empty ("") and that part shows "Coming soon". */
+const LINKS={
+ 1:"",
+ 2:"",
+ 3:"",
+ 4:"",
+ 5:"",
+ 6:""
+};
+const PARTS=[
+ ["Comparison of Cell Structures and Features","Compare healthy and cancer tissue under a virtual microscope.","#a0507a"],
+ ["Tumor Growth Stages and Types","Follow a tumor from a small polyp to metastasis.","#7a5bb5"],
+ ["The Relationship Between Structure and Function","See how a growing tumor affects an organ's job.","#2f8f83"],
+ ["Histopathology","Examine tissue samples and diagnose them like a pathologist.","#c0762b"],
+ ["Summary and Key Points","Pull together the big ideas from the activity.","#3f78b5"],
+ ["Predictions: The Root Cause of Cancer","Use what you learned to infer what starts cancer.","#8a4fa8"]
+];
+function blob(x,y,r,j,k){const n=11,p=[];for(let i=0;i<n;i++){const a=i/n*6.2832,q=r*(1+j*Math.sin(k*5.7+i*2.3)*Math.cos(i*1.7+k));p.push([x+Math.cos(a)*q,y+Math.sin(a)*q])}
+ const m=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2];let s=m(p[n-1],p[0]),d=`M${s[0]},${s[1]}`;
+ for(let i=0;i<n;i++){const e=m(p[i],p[(i+1)%n]);d+=`Q${p[i][0]},${p[i][1]} ${e[0]},${e[1]}`}return d+"Z"}
+function cell(x,y,r,k,cancer){return cancer
+ ?`<path d="${blob(x,y,r,.3,k)}" fill="#dba7d2" stroke="#8a3f86" stroke-width="2"/><path d="${blob(x+r*.1,y,r*.64,.25,k+3)}" fill="#2d1458"/><circle cx="${x-r*.2}" cy="${y}" r="${r*.1}" fill="#7a5bb5"/>`
+ :`<path d="${blob(x,y,r,.07,k)}" fill="#f6c1cf" stroke="#d98aa3" stroke-width="2"/><path d="${blob(x,y,r*.34,.1,k+3)}" fill="#a78bd1"/><circle cx="${x}" cy="${y}" r="${r*.07}" fill="#5a3d8c"/>`}
+/* decorative floating cells */
+(function(){let s=7;const R=()=>(s=(s*16807)%2147483647)/2147483647;let h="";
+ for(let i=0;i<22;i++){const x=R()*1000,y=R()*700,r=22+R()*52,c=i%5==0;
+  h+=`<g class="fl" style="--d:${9+R()*10}s;--x:${(R()-.5)*50}px;--y:${(R()-.5)*50}px;--r:${(R()-.5)*30}deg" opacity="${.07+R()*.14}">${cell(x,y,r,i+1,c)}</g>`}
+ const b=document.getElementById("bg");b.setAttribute("viewBox","0 0 1000 700");b.setAttribute("preserveAspectRatio","xMidYMid slice");b.innerHTML=h})();
+document.getElementById("grid").innerHTML=PARTS.map((p,i)=>{const n=i+1,u=LINKS[n];
+ return `<div class="card" style="--c:${p[2]}"><div class="row"><svg class="dish" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29" fill="#fbe6ee" stroke="${p[2]}" stroke-width="4"/>${cell(32,32,17,n*2,n%2==0)}</svg><div><div class="part">Part ${n}</div><h2>${p[0]}</h2></div></div><p>${p[1]}</p>${u?`<a class="go" href="${u}">Open Part ${n} →</a>`:`<span class="go soon">Coming soon</span>`}</div>`}).join("");
+</script></body></html>
