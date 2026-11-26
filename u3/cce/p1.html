@@ -84,14 +84,14 @@ const PART2_URL="p2.html"; // paste the Part 2 page link here later
 const SHOT="Take a screenshot of the healthy and cancer samples side by side. On iPad: press the top button and the volume-up button together (or top button + Home button if your iPad has one). Then upload it to your worksheet.";
 const CONTENT=[
 {name:"Cell Size & Shape",tissue:"Skin tissue (squamous epithelium)",
- goal:"Healthy cells are similar in size and have regular shapes suited to their job. Cancer cells often vary widely in size and shape, with irregular, messy borders. Find the cancer cells in the right sample.",
+ goal:"How can the SIZE and SHAPE of cells differ between healthy and cancer cells? Compare the cells between the two samples and try to ID the cancer cells.",
  ws:"Cell: overall shape and size",
  qs:[
  {q:"How would you describe the healthy cells on the left?",o:["Wildly different sizes and ragged outlines","Similar in size, with regular, rounded shapes","Mostly very small with no clear outline"],a:1,ws:"Normal cells: uniform size and regular shape."},
  {q:"How do the cancer cells you flagged compare with each other?",o:["They are all identical copies","They vary widely: some are larger, some smaller, with irregular borders","They are all smaller than normal cells"],a:1,ws:"Cancer cells: variable sizes and irregular, messy borders."},
  {q:"Why does a regular, uniform cell shape help healthy tissue?",o:["Cells fit together neatly and are shaped for their job","It makes cells divide faster","It hides the cells from the microscope"],a:0,ws:"Regular shape = cells fit together and do their job."}]},
 {name:"Nucleus Size & Staining",tissue:"Breast tissue (duct lining)",
- goal:"Healthy cells usually have one evenly proportioned nucleus. Cancer nuclei are often enlarged, irregular, off-center, and stain darker (hyperchromasia) because of extra or tightly packed DNA.",
+ goal:"How do the NUCLEI of cancer cells compare to healthy cells? Compare the two samples to find out.",
  ws:"Nucleus to cytoplasm volume ratio and nucleus shape and size",
  qs:[
  {q:"What do the nuclei of the healthy cells look like?",o:["One small, round, evenly stained nucleus near the center","Several huge, dark nuclei","No visible nucleus"],a:0,ws:"Normal: single, small, round, centered, light staining."},
@@ -99,14 +99,14 @@ const CONTENT=[
  {q:"Cancer nuclei fill much more of the cell. What happens to the nucleus-to-cytoplasm ratio?",o:["It gets higher (nucleus takes up more of the cell)","It gets lower","It stays the same"],a:0,ws:"Cancer cells have a higher nucleus-to-cytoplasm ratio."},
  {q:"Hyperchromasia means the nucleus stains darker. What causes it?",o:["Extra or densely packed DNA","A thicker cell membrane","More cytoplasm"],a:0,ws:"Hyperchromasia = darker stain from extra or densely packed DNA."}]},
 {name:"Tissue Architecture & Growth",tissue:"Colon tissue (glands)",
- goal:"Healthy cells build organized structures such as glands, with orderly spacing. Cancer cells often lose that structure and appear crowded, overlapping, or invading nearby tissue.",
+ goal:"The 'architecture' (organization and layering) of cells is essential for proper organ and gland function. One of the ways that cancer harms is by disrupting organ function as a result of abnormal architecture. Analyze the samples to see how.",
  ws:"Cell-to-cell arrangement and tissue formation",
  qs:[
  {q:"How are the healthy cells arranged?",o:["Randomly scattered","In organized rings (glands) around an open center, evenly spaced","In one big overlapping pile"],a:1,ws:"Normal: organized structures (glands) with orderly spacing."},
  {q:"What best describes the cancer cell region?",o:["Crowded and overlapping, with no gland structure","Neat rings around open centers","Widely spaced single cells"],a:0,ws:"Cancer: lost structure, crowded, overlapping."},
  {q:"Cancer cells can spread into nearby healthy tissue. What is this called?",o:["Invasion","Digestion","Staining"],a:0,ws:"Cancer cells can invade nearby tissue."}]},
 {name:"Cell Division Rate",tissue:"Time-lapse of dividing cells",
- goal:"Cancer cells divide much faster than normal cells. Press Play to watch 72 hours of cell division in both samples, and compare the cell counts.",
+ goal:"What is the relationship between cell division rate and tumor formation? Press Play to watch 72 hours of cell division in both samples, and compare the cell counts.",
  ws:"Cell division rate",
  qs:[
  {q:"Which sample ended with more cells after 72 hours?",o:["Healthy","Cancer","They were equal"],a:1,ws:"Cancer cells divide much faster."},
