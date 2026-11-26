@@ -50,7 +50,8 @@ function start(){
     try{BVL.mountSignIn(document.getElementById("signin"))}catch(e){problem("The sign-in box had a problem: "+e.message)}
     try{
       if(!window.BVL_UNITS)return;
-      BVL.tiles(document.getElementById("grid"),BVL_UNITS.map(function(u){return{key:"unit"+u.n,sub:"Unit "+u.n,title:u.title,theme:u.theme,url:u.url||("/u"+u.n+"/home.html"),release:u.release}}));
+      var draw=function(){BVL.tiles(document.getElementById("grid"),BVL_UNITS.map(function(u){return{id:"u"+u.n,key:"unit"+u.n,sub:"Unit "+u.n,title:u.title,theme:u.theme,url:u.url||("/u"+u.n+"/home.html"),release:u.release}}))};
+      draw();BVL.loadSchedule(function(){try{draw()}catch(e){}});
     }catch(e){problem("Teacher: the unit buttons could not be drawn. This is usually a missing comma or quotation mark in /assets/units.js ("+e.message+").")}
   },function(){problem("Teacher: the file /assets/bvl.js could not be loaded, so sign-in and the unit buttons are unavailable. Check that the file exists at that path.")});
 }

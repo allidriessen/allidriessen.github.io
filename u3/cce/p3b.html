@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Video page</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<script src="/assets/units.js"></script>
+<script src="/assets/bvl.js"></script>
+<script src="/assets/pdf.js"></script>
+<script src="/u3/cce/ws.js"></script>
+<script src="/assets/videopage.js"></script>
+<script>
+/* ===================== TEACHER: EDIT ONLY THIS BLOCK =====================
+   To make a new video page: copy this whole file, then change the settings below.
+   Keep every quotation mark and comma. Questions are separated by commas.            */
+VP.init({
+  id:"p3b",
+  order:4,
+  releaseId:"u3/cce/p3",
+  lesson:"Cancer Cell Exploration",
+  part:"Part 3B",
+  title:"Lung Cancer: How Structure Affects Function",
+  homeUrl:"/u3/cce.html",
+  prevUrl:"/u3/cce/p3a.html",
+  nextUrl:"/u3/cce.html",
+  nextLabel:"Finish: back to the lesson home →",
+  video:{url:"https://youtu.be/vkxDGK9gF9s"},
+  intro:"Watch the video. Use it, your answers from Part 3A, and what you learned in Part 2 to answer the questions on the right.",
+  image:{src:"",alt:"Diagram or model for the lung cancer questions",credit:""},
+  points:["A tumor growing in or around the lungs can directly interfere with the lungs' ability to move air and exchange gases, which causes symptoms.","Cancers that grow in critical organs can be life-threatening even before they spread."],
+  questions:[
+    {type:"heading",text:"Lung cancer"},
+    {type:"written",id:"p3b_q9a",prompt:"9a. What are some of the symptoms of lung cancer? List at least 5.",rows:5},
+    {type:"sketch",id:"p3b_q9b",prompt:"9b. Sketch a model that shows how the growth of a tumor may directly affect the organ's ability to perform its essential functions and cause some of the symptoms you listed above. <b>Do not use Google, AI, or any external source for this. Your brain only!</b>"},
+    {type:"written",id:"p3b_q10",prompt:"10. In comparison to other types of cancers, lung cancer is statistically more likely to have metastasized by the time of diagnosis. In other words, it metastasizes more often and at an earlier stage than many other cancers, often before someone even knows they have lung cancer. Based on your previous answers, explain why in 1-3 sentences.",rows:5}
+  ]
+});
+</script>
+</body>
+</html>

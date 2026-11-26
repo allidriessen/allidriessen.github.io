@@ -1,3 +1,5 @@
+/* The Google Sheet (Release schedule) now controls when things open. The dates below are only a backup,
+   used if the sheet cannot be reached or an item is missing from it. */
 /* ===== TEACHER SETTINGS: the only file you edit during the year =====
    HOW TO EDIT SAFELY: change only the text between quotation marks and the dates.
    Every line inside a list ends with a comma, except the last one. A missing comma or
