@@ -116,6 +116,8 @@ function build(){const B_=B(),p=B_.profile(),d=new PDFDoc(),now=new Date(),id=(D
  Object.keys(D.vp).sort((x,y)=>(D.vp[x].order||0)-(D.vp[y].order||0)).forEach(pid=>{const v=D.vp[pid];
   d.gap(8);d.room(70);d.box(54,d.y,W_,22,[75,46,131]);d.y+=4;d.text(v.part+": "+v.title,{size:13,bold:true,color:[255,255,255],x:62,gap:0});d.y+=8;
   if(v.url)d.text("Video: "+v.url,{size:9.5,color:[26,80,200],link:v.url,gap:4});
+  if(v.url2)d.text((v.label2||"Additional video")+": "+v.url2,{size:9.5,color:[26,80,200],link:v.url2,gap:4});
+  if(v.cons&&v.cons.length){d.text(v.ctitle||"Important considerations",{size:11,bold:true,gap:2});v.cons.forEach(t=>d.text("\u2022 "+t,{size:9.5,x:62,w:W_-14,gap:2}));d.gap(6)}
   if(v.points&&v.points.length){d.text("Key learning points",{size:11,bold:true,gap:2});v.points.forEach(t=>d.text("\u2022 "+t,{size:9.5,x:62,w:W_-14,gap:2}));d.gap(6)}
   v.qs.forEach(q=>{if(q.type==="written")answerBox(d,strip(q.prompt),(D.ans[q.id]||"").trim());
    else if(q.type==="sketch"){const im=WS.img("sk:"+q.id);d.room(270);d.text(strip(q.prompt),{size:10,bold:true,gap:2});if(im)d.image(im,1200,800,360);else d.text("(No sketch yet)",{size:10,color:[150,150,150]});d.gap(4)}
