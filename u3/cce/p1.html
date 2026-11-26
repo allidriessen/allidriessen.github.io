@@ -159,6 +159,8 @@ function build(t,canc,seed,o){
    const o2=w.k==1?{c:1,ratio:.3+.25*o.nu+R()*.04,off:.04+.25*o.nu,dark:.15+.85*o.nu,nj:.1+.3*o.nu,cm:.2+.6*Math.max(o.sz,o.nu),pj:3+9*o.sz}
     :{c:0,ratio:w.k==3?.4:.3+(R()-.5)*.06,off:.06,dark:w.k==3?.6:R()*.2,nj:w.k==3?.25:.07,cm:0,pj:0};
    cells.push(tcell(R,P,o2))});
+ }else if(t==3){
+  return skinLayers(R,canc,o);
  }else{
   const G=canc?[[80,70],[200,60],[320,70],[75,200],[110,330]]:[[80,70],[200,60],[320,70],[75,200],[195,200],[320,205],[110,330],[250,330]];
   for(let k=0;k<45;k++){const x=R()*400,y=R()*400;if(G.some(g=>Math.hypot(g[0]-x,g[1]-y)<48)||(canc&&Math.hypot(x-275,y-250)<95))continue;extra+=`<ellipse cx="${x}" cy="${y}" rx="4.5" ry="2" transform="rotate(${R()*180} ${x} ${y})" fill="#6b4ea0" opacity=".75"/>`}
@@ -173,6 +175,40 @@ function build(t,canc,seed,o){
  }
  return{cells,extra,total};
 }
+
+/* ====== Level 4 tissue: layered skin (epidermis over dermis). Cancer = melanoma, a cancer of the pigment cells (melanocytes) ====== */
+function smoothPath(P){const m=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2],n=P.length;let s=m(P[n-1],P[0]),d=`M${s[0]},${s[1]}`;for(let i=0;i<n;i++){const e=m(P[i],P[(i+1)%n]);d+=`Q${P[i][0]},${P[i][1]} ${e[0]},${e[1]}`}return d+"Z"}
+function skinLayers(R,canc,o){
+ const cells=[],BY=[0,9,18,40,71,102,134,168],AMP=[0,0,.3,.8,1.8,3.2,5,8]; /* layer boundaries, from the surface down to the basement membrane */
+ const yb=(r,x)=>BY[r]+AMP[r]*Math.sin(x/21+r*.9)+(r==7?3*Math.sin(x/9):0);
+ const addRow=(r,w,wv,opt,after)=>{let x=-24;while(x<430){const x1=x+w*(1+(R()-.5)*wv),xm=(x+x1)/2,P=[[x,yb(r,x)],[xm,yb(r,xm)],[x1,yb(r,x1)],[x1,yb(r+1,x1)],[xm,yb(r+1,xm)],[x,yb(r+1,x)]],c=tcell(R,P,opt);if(after)after(c,x,x1,r);cells.push(c);x=x1}};
+ const dots=(c,n,col,rr)=>{let s="";for(let k=0;k<n;k++)s+=`<circle cx="${(c.x+(R()-.5)*rr*2).toFixed(1)}" cy="${(c.y+(R()-.5)*rr).toFixed(1)}" r="1.5" fill="${col}"/>`;return s};
+ /* 1 and 2: surface layer (flat, pale, dead cells) */
+ [0,1].forEach(r=>addRow(r,34,.35,{c:0,ratio:.03,off:0,dark:0,nj:.05,cm:0,pj:1},c=>{c.fill="#fae6ec";c.stroke="#e5bccb"}));
+ /* 3: granular layer (flat cells with dark granules) */
+ addRow(2,26,.3,{c:0,ratio:.2,off:.05,dark:.55,nj:.06,cm:0,pj:1},c=>{c.nuc+=dots(c,4,"#5b2c8a",12)});
+ /* 4-6: spiny layer (rounded cells) */
+ [3,4,5].forEach(r=>addRow(r,30,.3,{c:0,ratio:.3,off:.06,dark:.12,nj:.07,cm:0,pj:2.5}));
+ /* 7: basal layer (tall cells on the basement membrane); some are normal melanocytes with a clear halo and brown granules */
+ const mel=new Set();const nm=canc?3:8;while(mel.size<nm)mel.add(Math.floor(R()*30)+2);let bi=0;
+ addRow(6,13,.2,{c:0,ratio:.42,off:.03,dark:.5,nj:.06,cm:0,pj:1,sy:.3},(c,x)=>{if(mel.has(bi)){c.fill="#f7ece4";c.stroke="#b99a82";c.nuc=c.nuc.replace(/fill="[^"]+"/,'fill="#4a2f6f"')+dots(c,5,"#8a5a3c",6)}bi++});
+ /* dermis: a few spindle-shaped connective tissue cells */
+ const ell=(x,y,rx,ry,a)=>{const P=[];for(let i=0;i<8;i++){const t=i/8*6.2832,u=Math.cos(t)*rx,v=Math.sin(t)*ry;P.push([x+u*Math.cos(a)-v*Math.sin(a),y+u*Math.sin(a)+v*Math.cos(a)])}return smoothPath(P)};
+ for(let k=0;k<9;k++){const x=20+R()*360,y=190+R()*190,a=R()*3.14;cells.push({c:0,x,y,d:ell(x,y,15,4.5,a),fill:"#f3b9ca",stroke:"#cf8aa6",nuc:`<path d="${ell(x,y,8,2.4,a)}" fill="#5b3f8e" stroke="#2d1458" stroke-width="1"/>`})}
+ let total=0;
+ if(canc){
+  const nest=(x,y,r,k,pale)=>{const fillc=pale?"#d9b9a6":"#b98a72",c=mk(R,x,y,r,.28,[[R()*3-1.5,R()*3-1.5,r*.62,.38,1]],1);c.fill=fillc;c.stroke="#6e4630";c.nuc+=dots(c,6,"#5a3320",r*.7);return c};
+  const pos=[[150,150,17],[184,158,15],[236,92,15,1],[118,66,14],[205,201,15,1],[236,226,13,1]];
+  pos.slice(0,o.n).forEach(p=>{cells.push(nest(p[0]+(R()-.5)*14,p[1]+(R()-.5)*8,p[2],0,p[3]));total++});
+  /* healthy look-alikes: keratinocytes with big or dark nuclei */
+  for(let k=0;k<(o.dec||0);k++){const x=20+R()*360,y=44+R()*86;cells.push(tcell(R,[[x-14,y-13],[x,y-15],[x+14,y-13],[x+14,y+13],[x,y+15],[x-14,y+13]],{c:0,ratio:.42,off:.1,dark:.65,nj:.22,cm:0,pj:2}))}
+ }
+ let extra="";const dy=170;
+ extra+=`<rect x="-100" y="${dy}" width="620" height="260" fill="#f9d6df"/>`;
+ for(let k=0;k<44;k++){const x=R()*420-10,y=dy+8+R()*220;extra+=`<path d="M${x.toFixed(1)},${y.toFixed(1)}q${(14+R()*14).toFixed(1)},${(-5-R()*7).toFixed(1)} ${(34+R()*24).toFixed(1)},${(R()*8-4).toFixed(1)}" fill="none" stroke="#eba9be" stroke-width="1.4" opacity=".75"/>`}
+ [[60,300],[330,260]].forEach(v=>{extra+=`<circle cx="${v[0]}" cy="${v[1]}" r="14" fill="#fff6f6" stroke="#d98aa3" stroke-width="2.5"/>`;for(let k=0;k<4;k++)extra+=`<ellipse cx="${v[0]-6+k*4}" cy="${v[1]+(k%2?3:-3)}" rx="3.2" ry="2.1" fill="#d6303f"/>`});
+ extra+=`<path d="M-30,${yb(7,-30)} ${Array.from({length:48},(_,i)=>`L${-30+i*10},${yb(7,-30+i*10).toFixed(1)}`).join(" ")}" fill="none" stroke="#a8566b" stroke-width="3"/>`;
+ return{cells,extra,total}}
 /* ====== microscope ====== */
 function scope(host,o){
  const id="f"+Math.random().toString(36).slice(2,7),R=rng(o.seed+99);
@@ -197,11 +233,11 @@ function scope(host,o){
 }
 /* ====== quiz ====== */
 function quiz(host,qs,ws,done,key){let n=0;if(key&&window.WS)WS.mcReg("p1:"+key,qs);
- host.innerHTML=`<h3>Analysis questions</h3>`+qs.map((q,i)=>`<div class="q"><p>${i+1}. ${q.q}</p>${q.o.map((t,k)=>`<button class="opt" data-q="${i}" data-k="${k}">${t}</button>`).join("")}<div class="ws hide"></div></div>`).join("")+`<div class="ws" id="wsall">📝 Fill in your worksheet row: <b>${ws}</b></div>`;
+ host.innerHTML=`<h3>Analysis questions</h3>`+qs.map((q,i)=>`<div class="q"><p>${i+1}. ${q.q}</p>${q.o.map((t,k)=>`<button class="opt" data-q="${i}" data-k="${k}">${t}</button>`).join("")}<div class="ws hide"></div></div>`).join("");
  host.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const i=+b.dataset.q,k=+b.dataset.k,q=qs[i],blk=b.parentElement;if(blk.dataset.ok||b.classList.contains("wrong"))return;
-  if(k===q.a){b.classList.add("right");blk.dataset.ok=1;if(key&&window.WS)WS.mc("p1:"+key+":"+i,{d:1});if(key){const a=PROG.q[key]=PROG.q[key]||[];if(!a.includes(i)){a.push(i);saveP()}}const w=blk.querySelector(".ws");w.textContent="✅ Correct! Add this to your worksheet: "+q.ws;w.classList.remove("hide");if(++n===qs.length)done()}
+  if(k===q.a){b.classList.add("right");blk.dataset.ok=1;if(key&&window.WS)WS.mc("p1:"+key+":"+i,{d:1});if(key){const a=PROG.q[key]=PROG.q[key]||[];if(!a.includes(i)){a.push(i);saveP()}}const w=blk.querySelector(".ws");w.textContent="✅ Correct!";w.classList.remove("hide");if(++n===qs.length)done()}
   else{b.classList.add("wrong");if(key&&window.WS){const c=WS.mcGet("p1:"+key+":"+i)||{w:0};WS.mc("p1:"+key+":"+i,{w:(c.w||0)+1})}b.textContent+="  (Not quite. Look at the samples again and try another answer.)";}});
- if(key){(PROG.q[key]||[]).forEach(i=>{const blk=host.querySelectorAll(".q")[i];blk.querySelector(`.opt[data-k="${qs[i].a}"]`).classList.add("right");blk.dataset.ok=1;const w=blk.querySelector(".ws");w.textContent="✅ Correct! Add this to your worksheet: "+qs[i].ws;w.classList.remove("hide");n++});if(n===qs.length)done()}
+ if(key){(PROG.q[key]||[]).forEach(i=>{const blk=host.querySelectorAll(".q")[i];blk.querySelector(`.opt[data-k="${qs[i].a}"]`).classList.add("right");blk.dataset.ok=1;const w=blk.querySelector(".ws");w.textContent="✅ Correct!";w.classList.remove("hide");n++});if(n===qs.length)done()}
 }
 /* ====== pages ====== */
 function home(){CURV=-1;SKIPF=null;document.getElementById('savebox').innerHTML='';document.getElementById('exbox').innerHTML='';
@@ -245,14 +281,14 @@ function scopeTab(i){const C=CONTENT[i];document.getElementById("body").innerHTM
   quiz(document.getElementById("qz"),C.qs,C.ws,()=>finish(i,a),"q"+i);
   if(window.WS){WS.box(document.getElementById("wr"),"p1t"+i,WS.PROMPT["p1t"+i]);captureTab(i,info)}
   a.scrollIntoView({behavior:"smooth",block:"nearest"})})}
-const LV=[{t:0,n:3,sz:.7,nu:.6,dec:0,tis:"skin tissue"},{t:1,n:4,sz:.5,nu:.45,dec:2,tis:"breast tissue"},{t:0,n:5,sz:.35,nu:.35,dec:4,tis:"skin tissue"},{t:1,n:6,sz:.2,nu:.25,dec:6,tis:"breast tissue"}];
+const LV=[{t:0,n:3,sz:.7,nu:.6,dec:0,tis:"skin tissue"},{t:1,n:4,sz:.5,nu:.45,dec:2,tis:"breast tissue"},{t:0,n:5,sz:.35,nu:.35,dec:4,tis:"skin tissue"},{t:3,n:6,sz:.2,nu:.25,dec:6,tis:"skin layers",note:`<div class="box"><b>Level 4: layered tissue.</b> Real skin has layers. From the top: flat, pale surface cells; a thin layer with dark granules; rounded cells in the middle layers; and a single row of tall cells sitting on the <b>basement membrane</b> (the dark pink line). The pink fibers below are the dermis. Normal pigment cells (<b>melanocytes</b>) sit in the bottom layer of the skin and make small brown granules. The cancer here is <b>melanoma</b>, a cancer of those pigment cells. Think about <i>where</i> cells are, not just how they look.</div>`}];
 function chalTab(i){const C=CONTENT[i];document.getElementById("body").innerHTML=`<div class="tabs" id="lb"></div><div id="pv" style="margin-top:12px"></div><div id="after"></div>`;let cur=-1;
  function bar(){const e=document.getElementById("lb");e.innerHTML=LV.map((l,k)=>`<button class="tab ${k==cur?"on":""}" data-l="${k}" ${k>S.lv&&!TEACH?"disabled":""}>${k<S.lv?"✓ ":""}Level ${k+1}</button>`).join("");e.querySelectorAll("button").forEach(x=>x.onclick=()=>go(+x.dataset.l))}
  function go(k){cur=k;bar();const l=LV[k],a=document.getElementById("after");a.innerHTML="";
   pair(document.getElementById("pv"),l.t,300+k*17,{...l,hint:1},l.tis,()=>{S.lv=Math.max(S.lv,k+1);saveP();bar();
    if(k<LV.length-1){a.innerHTML=`<div class="banner"><b>Level ${k+1} complete! 🎉</b><p>The next sample is harder. Look for combinations of clues.</p><button class="pbtn" id="go">Start Level ${k+2} →</button></div>`;document.getElementById("go").onclick=()=>go(k+1)}
    else{a.innerHTML=`<div class="banner"><b>All levels complete! 🏆</b></div><div class="box" id="qz"></div>`;quiz(document.getElementById("qz"),C.qs,C.ws,()=>finish(i,a),"q"+i)}
-   a.scrollIntoView({behavior:"smooth",block:"nearest"})})}
+   a.scrollIntoView({behavior:"smooth",block:"nearest"})});if(l.note)document.getElementById("pv").insertAdjacentHTML("afterbegin",l.note)}
  go(Math.min(S.lv,LV.length-1))}
 /* ====== division simulation ====== */
 function simTab(i){
