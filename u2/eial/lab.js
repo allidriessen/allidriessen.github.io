@@ -47,7 +47,7 @@ const sites=document.createElement("div");sites.className="sites";p1.appendChild
  const label=()=>{const x=c.getContext("2d"),r=Math.min(window.devicePixelRatio||1,2),t=target(),tx=s/2+t[0]*sc,ty=s/2+t[1]*sc;x.save();x.setTransform(r,0,0,r,0,0);
   x.strokeStyle="#111";x.fillStyle="#111";x.lineWidth=2.5;x.beginPath();x.moveTo(tx+62,ty-48);x.lineTo(tx+8,ty-6);x.stroke();x.beginPath();x.arc(tx+8,ty-6,4,0,6.3);x.fill();
   x.font="700 15px 'Open Sans',sans-serif";x.textAlign="center";const wd=x.measureText("Active site").width+14;x.fillStyle="#fff";x.strokeStyle="#111";x.lineWidth=1.5;x.beginPath();x.rect(tx+62-wd/2,ty-68,wd,24);x.fill();x.stroke();x.fillStyle="#111";x.fillText("Active site",tx+62,ty-51);x.restore();
-  if(L.B)L.B.save("img:eial:site"+lab,{d:c.toDataURL("image/jpeg",.85),w:c.width,h:c.height})};
+  if(L.B){const t=document.createElement("canvas");t.width=c.width;t.height=c.height;const tx=t.getContext("2d");tx.fillStyle="#fff";tx.fillRect(0,0,t.width,t.height);tx.drawImage(c,0,0);L.B.save("img:eial:site"+lab,{d:t.toDataURL("image/jpeg",.85),w:t.width,h:t.height})}};
  const BV=window.BVL;L.B=BV;
  const done=()=>{fb.className="fb good site-fb";fb.textContent="✓ Correct. That is the active site"+(st.w?" (after "+(st.w+1)+" tries)":" on the first try")+"."};
  if(st.d){label();done()}
@@ -124,68 +124,77 @@ const p3=sec("p3","Part 3 · Investigation","");
 note(p3,"Use the <b>Catalase &amp; H₂O₂ Simulator</b> below for all of Part 3. Set the sliders, wait for the trial to run, then fill in the tables on this page. <a href=\"/u2/eial/sim.html\" target=\"_blank\" rel=\"noopener\">Open the simulator in its own tab ↗</a> (handy for Split View on an iPad).","info");
 const simWrap=document.createElement("details");simWrap.open=true;simWrap.className="simd";simWrap.innerHTML="<summary>Simulator (tap to hide or show)</summary>";p3.appendChild(simWrap);
 {const f=document.createElement("iframe");f.id="simf";f.src="/u2/eial/sim.html";f.title="Catalase and H2O2 simulator";f.style.cssText="width:100%;height:min(88vh,900px);min-height:560px;border:0;display:block;border-radius:10px;background:#f4f6f8";simWrap.appendChild(f)}
+/* 3A-3E tabs, directly under the simulator so students do not have to scroll back up */
+const TABS=[["3A","Baseline"],["3B","Temperature"],["3C","pH"],["3D","Substrate"],["3E","Enzyme"]],TB=document.createElement("div");TB.className="tabbar";TB.setAttribute("role","tablist");p3.appendChild(TB);
+const TP={};TABS.forEach(([k,n])=>{const b=document.createElement("button");b.type="button";b.className="tabb";b.setAttribute("role","tab");b.innerHTML="<b>"+k+"</b><span>"+n+"</span>";b.dataset.k=k;TB.appendChild(b);
+ const pn=document.createElement("div");pn.className="tabp";pn.setAttribute("role","tabpanel");pn.dataset.k=k;pn.hidden=true;p3.appendChild(pn);TP["T"+k]=pn});
+const showTab=k=>{TB.querySelectorAll(".tabb").forEach(b=>{const on=b.dataset.k===k;b.classList.toggle("on",on);b.setAttribute("aria-selected",on)});p3.querySelectorAll(".tabp").forEach(x=>x.hidden=x.dataset.k!==k);try{sessionStorage.setItem("eial:tab",k)}catch(e){}};
+TB.addEventListener("click",e=>{const b=e.target.closest(".tabb");if(b){showTab(b.dataset.k);TB.scrollIntoView({block:"nearest",behavior:"smooth"})}});
+const T3A=TP.T3A,T3B=TP.T3B,T3C=TP.T3C,T3D=TP.T3D,T3E=TP.T3E;
 /* 3A */
-sh(p3,"3A · Baseline");
-note(p3,"A <b>baseline</b> is a starting point, initial measurement, or reference standard used to compare future changes, performance, or data.<br><b>Step 1:</b> In the simulator, click <b>Reset to defaults</b>.<br><b>Step 2:</b> Let the simulation run until <b>Trial time 0:30</b>, then click <b>Pause</b>.");
-L.table(p3,"t3a",[{h:H2O2+" used",k:"s",t:"num",sim:"cS"},{h:H2O+" made",k:"w",t:"num"},{h:O2+" released",k:"o",t:"num"}],[{label:"13. Counts at 30 s"}],{first:"Question"});
-const g3a=p3.lastElementChild;
+sh(T3A,"3A · Baseline");
+note(T3A,"A <b>baseline</b> is a starting point, initial measurement, or reference standard used to compare future changes, performance, or data.<br><b>Step 1:</b> In the simulator, click <b>Reset to defaults</b>.<br><b>Step 2:</b> Let the simulation run until <b>Trial time 0:30</b>, then click <b>Pause</b>.");
+L.table(T3A,"t3a",[{h:H2O2+" used",k:"s",t:"num",sim:"cS"},{h:H2O+" made",k:"w",t:"num"},{h:O2+" released",k:"o",t:"num"}],[{label:"13. Counts at 30 s"}],{first:"Question"});
+const g3a=T3A.lastElementChild;
 {const b=document.createElement("button");b.type="button";b.className="pbtn ghost sm";b.textContent="⇣ Copy the three counts from the simulator";b.onclick=()=>{const s=L.sim();if(!s){L.flash("The simulator is still loading.");return}
-  [["s","cS"],["w","cW"],["o","cO"]].forEach(([k,id])=>{const v=s.doc.getElementById(id).textContent.trim();D.data["t3a:0:"+k]=v;const e=g3a.querySelector(`[data-k="${k}"]`);if(e)e.value=v});L.save()};p3.appendChild(b)}
-L.cloze(p3,"q14",`<div class="info"><b>14. Calculate the simplest ratio</b> of ${H2O2} used : ${H2O} made : ${O2} released. Choose the numbers.</div><div class="wr">{{1|*2|3|4}} : {{1|*2|3|4}} : {{*1|2|3|4}}</div>`,{q:"14. Simplest ratio of H2O2 used : H2O made : O2 released.",hint:"Hint: divide each count by the smallest one."});
-L.choice(p3,"q15","15. Does this ratio match the chemical reaction equation you built in Part 2?",["Yes","No"],0,{row:1,explain:"The coefficients 2 : 2 : 1 are the ratio of molecules in the reaction."});
+  [["s","cS"],["w","cW"],["o","cO"]].forEach(([k,id])=>{const v=s.doc.getElementById(id).textContent.trim();D.data["t3a:0:"+k]=v;const e=g3a.querySelector(`[data-k="${k}"]`);if(e)e.value=v});L.save()};T3A.appendChild(b)}
+L.cloze(T3A,"q14",`<div class="info"><b>14. Calculate the simplest ratio</b> of ${H2O2} used : ${H2O} made : ${O2} released. Choose the numbers.</div><div class="wr">{{1|*2|3|4}} : {{1|*2|3|4}} : {{*1|2|3|4}}</div>`,{q:"14. Simplest ratio of H2O2 used : H2O made : O2 released.",hint:"Hint: divide each count by the smallest one."});
+L.choice(T3A,"q15","15. Does this ratio match the chemical reaction equation you built in Part 2?",["Yes","No"],0,{row:1,explain:"The coefficients 2 : 2 : 1 are the ratio of molecules in the reaction."});
 
 /* 3B */
 const simNote=(t)=>`<b>SET UP:</b> ${t}`;
-sh(p3,"3B · Temperature");
-note(p3,"<b>GOAL:</b> Investigate the reaction rate at different temperatures and build a graph of enzyme activity.<br><b>Background – molecular motion:</b> all molecules are in constant, random motion, with kinetic energy that scales with temperature. As temperature rises, molecules move faster.");
+sh(T3B,"3B · Temperature");
+note(T3B,"<b>GOAL:</b> Investigate the reaction rate at different temperatures and build a graph of enzyme activity.<br><b>Background – molecular motion:</b> all molecules are in constant, random motion, with kinetic energy that scales with temperature. As temperature rises, molecules move faster.");
 const arrow=n=>`<svg viewBox="0 0 100 40" width="104" height="42" aria-hidden="true"><circle cx="16" cy="20" r="10" fill="#e23b3b" stroke="#8f1414" stroke-width="1.5"/><line x1="28" y1="20" x2="${28+n*1.25}" y2="20" stroke="#111" stroke-width="3"/><polygon points="${28+n*1.25+9},20 ${28+n*1.25-1},13 ${28+n*1.25-1},27" fill="#111"/></svg>`;
-note(p3,"<b>16.</b> Show how the motion of an oxygen atom is different in <b>cold</b>, <b>moderate</b>, and <b>hot</b> temperatures. Pick the arrow that shows how fast the atom moves.");
-[["Cold temperatures",0,"cold"],["Moderate temperatures",1,"moderate"],["Hot temperatures",2,"hot"]].forEach(([t,c,k])=>{const o=[24,46,66].map(arrow);L.choice(p3,"q16"+k,"16. "+t+": which arrow fits?",o,c,{row:1,cls:"arrows"})});
-note(p3,"<b>17.</b> Temperature, kinetic energy, and molecular motion are a delicate balancing act. If the temperature is too low, molecules may move too slowly for reactions to occur at the necessary rate. If it is too high, atoms and bonds can become unstable and the shape of a molecule can be disrupted. Predict how temperature changes reaction rate.");
-L.choice(p3,"q17a","17. At LOW temperatures, enzymatic chemical reactions would…",["decrease","increase"],null,{pred:1,row:1});
-L.choice(p3,"q17b","17. At HIGH temperatures, enzymatic chemical reactions would…",["decrease","increase"],null,{pred:1,row:1});
-L.write(p3,"w17","17. Explain your reasoning for both predictions (because…).",3);
-L.choice(p3,"q18","18. Based on what you know about the human body, which temperature do you predict will give the highest rate of reaction?",["0 °C","20 °C","40 °C","60 °C"],null,{pred:1,row:1});
-note(p3,simNote("Click <b>Reset to defaults</b>.<br><b>Step 1:</b> Use the <b>Temperature</b> slider for each trial in the table. Leave all other variables at the default setting.<br><b>Step 2:</b> Let the trial run until at least <b>Trial time 0:30</b>. While you wait, fill in the table.<br><b>Step 3:</b> After 30 seconds, click <b>Record result</b> in the simulator. The data point appears in the Variable view graph.<br><b>Step 4:</b> Repeat for all temperatures. (<i>Copy from simulator</i> reads the rate and enzyme state for you, but you still choose the molecule speed yourself.)"));
+note(T3B,"<b>16.</b> Show how the motion of an oxygen atom is different in <b>cold</b>, <b>moderate</b>, and <b>hot</b> temperatures. Pick the arrow that shows how fast the atom moves.");
+[["Cold temperatures",0,"cold"],["Moderate temperatures",1,"moderate"],["Hot temperatures",2,"hot"]].forEach(([t,c,k])=>{const o=[24,46,66].map(arrow);L.choice(T3B,"q16"+k,"16. "+t+": which arrow fits?",o,c,{row:1,cls:"arrows"})});
+note(T3B,"<b>17.</b> Temperature, kinetic energy, and molecular motion are a delicate balancing act. If the temperature is too low, molecules may move too slowly for reactions to occur at the necessary rate. If it is too high, atoms and bonds can become unstable and the shape of a molecule can be disrupted. Predict how temperature changes reaction rate.");
+L.choice(T3B,"q17a","17. At LOW temperatures, enzymatic chemical reactions would…",["decrease","increase"],null,{pred:1,row:1});
+L.choice(T3B,"q17b","17. At HIGH temperatures, enzymatic chemical reactions would…",["decrease","increase"],null,{pred:1,row:1});
+L.write(T3B,"w17","17. Explain your reasoning for both predictions (because…).",3);
+L.choice(T3B,"q18","18. Based on what you know about the human body, which temperature do you predict will give the highest rate of reaction?",["0 °C","20 °C","40 °C","60 °C"],null,{pred:1,row:1});
+note(T3B,simNote("Click <b>Reset to defaults</b>.<br><b>Step 1:</b> Use the <b>Temperature</b> slider for each trial in the table. Leave all other variables at the default setting.<br><b>Step 2:</b> Let the trial run until at least <b>Trial time 0:30</b>. While you wait, fill in the table.<br><b>Step 3:</b> After 30 seconds, click <b>Record result</b> in the simulator. The data point appears in the Variable view graph.<br><b>Step 4:</b> Repeat for all temperatures. (<i>Copy from simulator</i> reads the rate and enzyme state for you, but you still choose the molecule speed yourself.)"));
 const TS=[0,20,40,60];
-L.table(p3,"t3b",[{h:"Molecule speed",k:"sp",t:"sel",o:["Slow","Moderate","Fast"]},{h:"Enzyme state &amp; activity (%)",k:"st",t:"state"},{h:"Reaction rate ("+H2O2+" per 10 s)",k:"rate",t:"num",sim:"rate"}],TS.map(t=>({label:t+" °C ("+Math.round(t*9/5+32)+" °F)",set:{T:t}})),{first:"Temp",copy:1});
-L.captureBtn(p3,"g3b","Click <b>Record result</b> in the simulator for each trial, then capture your Variable view graph.","Temperature graph");
+L.table(T3B,"t3b",[{h:"Molecule speed",k:"sp",t:"sel",o:["Slow","Moderate","Fast"]},{h:"Enzyme state &amp; activity (%)",k:"st",t:"state"},{h:"Reaction rate ("+H2O2+" per 10 s)",k:"rate",t:"num",sim:"rate"}],TS.map(t=>({label:t+" °C ("+Math.round(t*9/5+32)+" °F)",set:{T:t}})),{first:"Temp",copy:1});
+L.captureBtn(T3B,"g3b","Click <b>Record result</b> in the simulator for each trial, then capture your Variable view graph.","Temperature graph");
 const argmax=(tid,n,vals)=>{let best=-1,bi=null;for(let i=0;i<n;i++){const v=parseFloat(D.data[tid+":"+i+":rate"]);if(isFinite(v)&&v>best){best=v;bi=i}}return bi};
-L.choice(p3,"q19","19. At what temperature was the reaction rate the highest in YOUR data?",TS.map(t=>t+" °C"),()=>argmax("t3b",4),{row:1,wait:"Fill in the Reaction rate column of your temperature table first."});
-L.choice(p3,"q20","20. What factors are balanced at this temperature?",["Enough kinetic energy for frequent collisions, and an enzyme that keeps its shape","Low kinetic energy and a denatured enzyme","High kinetic energy and an enzyme that has changed shape","No kinetic energy and an enzyme that keeps its shape"],0);
-note(p3,"<b>Connect it to kinetic energy</b> by completing each flowchart and identifying the main cause of the change in rate.");
-L.cloze(p3,"q21",`<div class="flow"><b>21. COLD (≤ 0 °C)</b><br>KE is ${sel(["low","high"],"low")} → Molecules move ${sel(["slow","fast"],"slow")} → Enzyme–substrate collisions are ${sel(["infrequent","frequent"],"infrequent")} → Reaction rate is ${sel(["low","high"],"low")}<br>Main cause of the change in rate: ${sel(["molecular collisions","enzyme shape"],"molecular collisions")}</div>`,{q:"21. COLD flowchart."});
-L.cloze(p3,"q22",`<div class="flow"><b>22. HOT (≥ 50 °C)</b><br>KE is ${sel(["low","high"],"high")} → Enzyme structure ${sel(["stays the same","unfolds (denatures)"],"unfolds (denatures)")} → Substrates fit ${sel(["decreases","increases"],"decreases")} → Reaction rate is ${sel(["low","high"],"low")}<br>Main cause of the change in rate: ${sel(["molecular collisions","enzyme shape"],"enzyme shape")}</div>`,{q:"22. HOT flowchart."});
+L.choice(T3B,"q19","19. At what temperature was the reaction rate the highest in YOUR data?",TS.map(t=>t+" °C"),()=>argmax("t3b",4),{row:1,wait:"Fill in the Reaction rate column of your temperature table first."});
+L.choice(T3B,"q20","20. What factors are balanced at this temperature?",["Enough kinetic energy for frequent collisions, and an enzyme that keeps its shape","Low kinetic energy and a denatured enzyme","High kinetic energy and an enzyme that has changed shape","No kinetic energy and an enzyme that keeps its shape"],0);
+note(T3B,"<b>Connect it to kinetic energy</b> by completing each flowchart and identifying the main cause of the change in rate.");
+L.cloze(T3B,"q21",`<div class="flow"><b>21. COLD (≤ 0 °C)</b><br>KE is ${sel(["low","high"],"low")} → Molecules move ${sel(["slow","fast"],"slow")} → Enzyme–substrate collisions are ${sel(["infrequent","frequent"],"infrequent")} → Reaction rate is ${sel(["low","high"],"low")}<br>Main cause of the change in rate: ${sel(["molecular collisions","enzyme shape"],"molecular collisions")}</div>`,{q:"21. COLD flowchart."});
+L.cloze(T3B,"q22",`<div class="flow"><b>22. HOT (≥ 50 °C)</b><br>KE is ${sel(["low","high"],"high")} → Enzyme structure ${sel(["stays the same","unfolds (denatures)"],"unfolds (denatures)")} → Substrates fit ${sel(["decreases","increases"],"decreases")} → Reaction rate is ${sel(["low","high"],"low")}<br>Main cause of the change in rate: ${sel(["molecular collisions","enzyme shape"],"enzyme shape")}</div>`,{q:"22. HOT flowchart."});
 
 /* 3C */
-sh(p3,"3C · pH");
-note(p3,"<b>pH</b> is a measure of how acidic or basic a solution is. The more H⁺ ions a solution contains, the more acidic it is. The more OH⁻ ions, the more basic (alkaline) it is.<br>Enzyme shape is determined by hydrogen bonds between different parts of the molecule. Different enzymes are built to work in different pH environments. Outside its normal range, H⁺ and/or OH⁻ ions can disrupt the enzyme’s internal hydrogen bonds, changing the shape of the enzyme and its active site.");
-L.choice(p3,"q23","23. Predict: as pH moves away from 7 in either direction, the reaction rate will…",["decrease","increase","stay the same"],null,{pred:1,row:1});
-L.write(p3,"w23","23. Because…",3);
-note(p3,simNote("Click <b>Reset to defaults</b> AND click <b>Clear table</b> twice.<br><b>Step 1:</b> Set the <b>Temperature</b> slider to the value from your temperature investigation that gave the greatest reaction rate.<br><b>Step 2:</b> Use the <b>pH</b> slider for each trial. Leave all other variables at their defaults.<br><b>Step 3:</b> Click <b>Resume</b>. Let each trial run to at least <b>Trial time 0:30</b>, filling in the table while you wait.<br><b>Step 4:</b> Click <b>Record result</b>. Repeat for all pH values, clicking <b>Resume</b> after each change."));
-L.table(p3,"t3c",[{h:"Did molecule speed change?",k:"sp",t:"sel",o:["Yes","No"]},{h:"Enzyme state &amp; activity (%)",k:"st",t:"state"},{h:"Reaction rate ("+H2O2+" per 10 s)",k:"rate",t:"num",sim:"rate"}],[1,4,7,10,14].map(v=>({label:"pH "+v+".0",set:{pH:v}})),{first:"pH",copy:1});
-L.captureBtn(p3,"g3c","Capture your pH graph from the Variable view.","pH graph");
-L.choice(p3,"q24","24. Did pH values affect molecule speed?",["Yes","No"],1,{row:1,explain:"Molecule speed depends on temperature (kinetic energy), not on pH."});
-L.write(p3,"w25","25. How does a change in pH compare to a change in temperature in terms of its effect on enzyme activity rate? Explain the science behind it using relevant vocabulary terms.",5);
+sh(T3C,"3C · pH");
+note(T3C,"<b>pH</b> is a measure of how acidic or basic a solution is. The more H⁺ ions a solution contains, the more acidic it is. The more OH⁻ ions, the more basic (alkaline) it is.<br>Enzyme shape is determined by hydrogen bonds between different parts of the molecule. Different enzymes are built to work in different pH environments. Outside its normal range, H⁺ and/or OH⁻ ions can disrupt the enzyme’s internal hydrogen bonds, changing the shape of the enzyme and its active site.");
+L.choice(T3C,"q23","23. Predict: as pH moves away from 7 in either direction, the reaction rate will…",["decrease","increase","stay the same"],null,{pred:1,row:1});
+L.write(T3C,"w23","23. Because…",3);
+note(T3C,simNote("Click <b>Reset to defaults</b> AND click <b>Clear table</b> twice.<br><b>Step 1:</b> Set the <b>Temperature</b> slider to the value from your temperature investigation that gave the greatest reaction rate.<br><b>Step 2:</b> Use the <b>pH</b> slider for each trial. Leave all other variables at their defaults.<br><b>Step 3:</b> Click <b>Resume</b>. Let each trial run to at least <b>Trial time 0:30</b>, filling in the table while you wait.<br><b>Step 4:</b> Click <b>Record result</b>. Repeat for all pH values, clicking <b>Resume</b> after each change."));
+L.table(T3C,"t3c",[{h:"Did molecule speed change?",k:"sp",t:"sel",o:["Yes","No"]},{h:"Enzyme state &amp; activity (%)",k:"st",t:"state"},{h:"Reaction rate ("+H2O2+" per 10 s)",k:"rate",t:"num",sim:"rate"}],[1,4,7,10,14].map(v=>({label:"pH "+v+".0",set:{pH:v}})),{first:"pH",copy:1});
+L.captureBtn(T3C,"g3c","Capture your pH graph from the Variable view.","pH graph");
+L.choice(T3C,"q24","24. Did pH values affect molecule speed?",["Yes","No"],1,{row:1,explain:"Molecule speed depends on temperature (kinetic energy), not on pH."});
+L.write(T3C,"w25","25. How does a change in pH compare to a change in temperature in terms of its effect on enzyme activity rate? Explain the science behind it using relevant vocabulary terms.",5);
 
 /* 3D */
-sh(p3,"3D · Substrate ("+H2O2+") concentration");
-L.choice(p3,"q26","26. Predict: if I keep adding "+H2O2+" to 8 enzymes, the reaction rate will…",["decrease","increase","stay the same"],null,{pred:1,row:1});
-L.write(p3,"w26","26. Because…",3);
-note(p3,simNote("Click <b>Reset to defaults</b> AND click <b>Clear table</b> twice.<br><b>Step 1:</b> Set the <b>Temperature</b> slider to the value that produced the greatest reaction rate in 3B. Leave the other variables at default.<br><b>Step 2:</b> Use the <b>Substrate concentration</b> slider for each trial.<br><b>Step 3:</b> Let each trial run to at least <b>Trial time 0:30</b>, filling in the table while you wait.<br><b>Step 4:</b> Click <b>Record result</b> and repeat. To see how many enzymes are busy, open the <b>Substrate</b> tab of the Variable view; the count is written under the graph."));
-L.table(p3,"t3d",[{h:"How many enzymes are busy?",k:"busy",t:"num",sim:"busy"},{h:"Reaction rate ("+H2O2+" per 10 s)",k:"rate",t:"num",sim:"rate"},{h:"Lots of free enzymes, or lots of "+H2O2+" waiting?",k:"fw",t:"sel",o:["Lots of free enzymes","Lots of substrate waiting"]}],[4,20,36,50].map(v=>({label:"Substrate "+v,set:{S:v}})),{first:"Substrate conc.",copy:1});
-L.captureBtn(p3,"g3d","Capture your substrate graph.","Substrate graph");
-L.write(p3,"w27","27. What happens to the graph at high substrate concentration? Explain the science behind why this occurs with enzymes using relevant vocabulary terms. You may use an analogy to support your reasoning.",5);
+sh(T3D,"3D · Substrate ("+H2O2+") concentration");
+L.choice(T3D,"q26","26. Predict: if I keep adding "+H2O2+" to 8 enzymes, the reaction rate will…",["decrease","increase","stay the same"],null,{pred:1,row:1});
+L.write(T3D,"w26","26. Because…",3);
+note(T3D,simNote("Click <b>Reset to defaults</b> AND click <b>Clear table</b> twice.<br><b>Step 1:</b> Set the <b>Temperature</b> slider to the value that produced the greatest reaction rate in 3B. Leave the other variables at default.<br><b>Step 2:</b> Use the <b>Substrate concentration</b> slider for each trial.<br><b>Step 3:</b> Let each trial run to at least <b>Trial time 0:30</b>, filling in the table while you wait.<br><b>Step 4:</b> Click <b>Record result</b> and repeat. To see how many enzymes are busy, open the <b>Substrate</b> tab of the Variable view; the count is written under the graph."));
+L.table(T3D,"t3d",[{h:"How many enzymes are busy?",k:"busy",t:"num",sim:"busy"},{h:"Reaction rate ("+H2O2+" per 10 s)",k:"rate",t:"num",sim:"rate"},{h:"Lots of free enzymes, or lots of "+H2O2+" waiting?",k:"fw",t:"sel",o:["Lots of free enzymes","Lots of substrate waiting"]}],[4,20,36,50].map(v=>({label:"Substrate "+v,set:{S:v}})),{first:"Substrate conc.",copy:1});
+L.captureBtn(T3D,"g3d","Capture your substrate graph.","Substrate graph");
+L.write(T3D,"w27","27. What happens to the graph at high substrate concentration? Explain the science behind why this occurs with enzymes using relevant vocabulary terms. You may use an analogy to support your reasoning.",5);
 
 /* 3E */
-sh(p3,"3E · Enzyme concentration");
-L.choice(p3,"q28a","28. Predict: as enzyme concentration DEcreases, the chemical reaction rate will…",["decrease","increase"],null,{pred:1,row:1});
-L.choice(p3,"q28b","28. Predict: as enzyme concentration INcreases, the chemical reaction rate will…",["decrease","increase"],null,{pred:1,row:1});
-note(p3,simNote("Click <b>Reset to defaults</b> AND click <b>Clear table</b> twice.<br><b>Step 1:</b> Set <b>Temperature</b> to the value that produced the greatest reaction rate in 3B. Set <b>Substrate concentration to 50</b> so that it never runs out.<br><b>Step 2:</b> Use the <b>Enzyme concentration</b> slider for each trial. Leave the other variables unchanged.<br><b>Step 3:</b> Let each trial run to at least <b>Trial time 0:30</b>, filling in the table while you wait.<br><b>Step 4:</b> Click <b>Record result</b> and repeat for all enzyme concentrations."));
-L.table(p3,"t3e",[{h:"Reaction rate ("+H2O2+" per 10 s)",k:"rate",t:"num",sim:"rate"},{h:"Calculate: Rate ÷ Enzyme =",k:"per",t:"calc",f:(g,r)=>g("rate")/r.n}],[1,4,8,12].map(v=>({label:"Enzyme "+v,n:v,set:{E:v,S:50}})),{first:"Enzyme conc.",copy:1});
-L.captureBtn(p3,"g3e","Capture your enzyme graph.","Enzyme graph");
-L.choice(p3,"q29","29. What happens to the graph at high enzyme concentration? The graph…",["decreases","increases"],1,{row:1});
-L.write(p3,"w30","30. If there is always excess substrate (more "+H2O2+" than enzymes), what do you predict would happen to the reaction rate and the graph if enzyme concentration continued to increase? Explain the science behind why this occurs with enzymes using relevant vocabulary terms. You may use an analogy.",5);
+sh(T3E,"3E · Enzyme concentration");
+L.choice(T3E,"q28a","28. Predict: as enzyme concentration DEcreases, the chemical reaction rate will…",["decrease","increase"],null,{pred:1,row:1});
+L.choice(T3E,"q28b","28. Predict: as enzyme concentration INcreases, the chemical reaction rate will…",["decrease","increase"],null,{pred:1,row:1});
+note(T3E,simNote("Click <b>Reset to defaults</b> AND click <b>Clear table</b> twice.<br><b>Step 1:</b> Set <b>Temperature</b> to the value that produced the greatest reaction rate in 3B. Set <b>Substrate concentration to 50</b> so that it never runs out.<br><b>Step 2:</b> Use the <b>Enzyme concentration</b> slider for each trial. Leave the other variables unchanged.<br><b>Step 3:</b> Let each trial run to at least <b>Trial time 0:30</b>, filling in the table while you wait.<br><b>Step 4:</b> Click <b>Record result</b> and repeat for all enzyme concentrations."));
+L.table(T3E,"t3e",[{h:"Reaction rate ("+H2O2+" per 10 s)",k:"rate",t:"num",sim:"rate"},{h:"Calculate: Rate ÷ Enzyme =",k:"per",t:"calc",f:(g,r)=>g("rate")/r.n}],[1,4,8,12].map(v=>({label:"Enzyme "+v,n:v,set:{E:v,S:50}})),{first:"Enzyme conc.",copy:1});
+L.captureBtn(T3E,"g3e","Capture your enzyme graph.","Enzyme graph");
+L.choice(T3E,"q29","29. What happens to the graph at high enzyme concentration? The graph…",["decreases","increases"],1,{row:1});
+L.write(T3E,"w30","30. If there is always excess substrate (more "+H2O2+" than enzymes), what do you predict would happen to the reaction rate and the graph if enzyme concentration continued to increase? Explain the science behind why this occurs with enzymes using relevant vocabulary terms. You may use an analogy.",5);
+
+showTab((()=>{try{return sessionStorage.getItem("eial:tab")}catch(e){return null}})()||"3A");
 
 /* ============ PART 4 ============ */
 const p4=sec("p4","Part 4 · Summarize Your Learning","<p>Complete the table to summarize what you learned in this virtual lab. <b>Optimum</b> = best value.</p>");
