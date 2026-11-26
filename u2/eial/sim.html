@@ -76,9 +76,11 @@ input[type=range]::-webkit-slider-thumb{width:26px;height:26px}
 }
 .timer{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:9px;background:var(--bg);border:1px solid var(--line);font-size:.9em;color:var(--mute)}
 .timer b{color:var(--ink);font-size:1.15em;font-variant-numeric:tabular-nums}
+.bench h1{display:none}
 </style>
 </head>
 <body>
+<script>if(/[?&]bench=1/.test(location.search))document.documentElement.classList.add("bench")</script>
 <div class="wrap">
 <h1>Catalase &amp; H₂O₂ Simulator</h1>
 <p class="sub">Catalase breaks down 2 H₂O₂ into 2 H₂O + O₂. Change one variable at a time and watch the enzyme, the molecules and the rate.</p>
