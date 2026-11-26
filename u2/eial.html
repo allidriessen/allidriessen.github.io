@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Enzymes in Action Virtual Lab DRAFT</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#16202a;--teal:#0f766e;--tl:#0e9f8e;--bg:#eef5f4;--line:#cfe0dd;--ok:#14803f;--bad:#c0392b}
+*{box-sizing:border-box}
+html{scroll-padding-top:60px}
+body{margin:0;font-family:'Open Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-text-size-adjust:100%}
+.wrap{max-width:1040px;margin:0 auto;padding:12px}
+.ph{background:linear-gradient(135deg,#0b3b44,#0f766e 65%,#2fa38f);color:#fff;border-radius:16px;padding:16px 20px;margin-bottom:10px}
+.ph a{color:#c8f1ea;font-weight:600;text-decoration:none}.ph .ey{font-size:15px;font-weight:600;opacity:.9;margin-top:6px}
+.ph h1{margin:0;font-size:clamp(26px,5vw,40px);font-weight:800;line-height:1.1}
+.draft{display:inline-block;background:#ffe27a;color:#4a3800;font-weight:800;border-radius:8px;padding:1px 10px;font-size:.55em;vertical-align:middle;margin-left:6px}
+#chips{position:sticky;top:0;z-index:20;display:flex;gap:6px;flex-wrap:wrap;background:var(--bg);padding:6px 0 8px}
+#chips a{background:#fff;border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:700;font-size:14px;color:var(--teal);text-decoration:none}
+.box{background:#fff;border:2px solid var(--line);border-radius:14px;padding:12px 18px 16px;margin:12px 0}
+.box h2{margin:6px 0 8px;font-size:clamp(20px,3vw,26px);color:var(--teal)}
+h3.sh{margin:22px 0 6px;font-size:18px;color:var(--teal);border-bottom:2px solid var(--line);padding-bottom:3px}
+.note{font-size:13px;color:#4f6a66}
+.info{background:#e8f6f3;border:1px solid #b6ddd6;border-radius:10px;padding:8px 12px;margin:8px 0;font-size:15px}
+.q{margin:12px 0}.q>p{font-weight:700;margin:0 0 6px}
+.tag{font-size:11px;background:#fff3c4;border:1px solid #e6c84a;border-radius:6px;padding:1px 6px;margin-left:4px;font-weight:700;color:#6b5400}
+.opts{display:flex;flex-direction:column;gap:6px}.opts.row{flex-direction:row;flex-wrap:wrap}
+.opt{background:#f6fbfa;border:2px solid var(--line);border-radius:10px;padding:10px 14px;min-height:46px;font:inherit;text-align:left;cursor:pointer;color:var(--ink)}
+.opts.row .opt{text-align:center;min-width:90px}
+.opt.sel{background:#d9efe9;border-color:var(--teal)}.opt.right{background:#e3f6ea;border-color:var(--ok)}.opt.wrong{background:#fdecea;border-color:var(--bad)}
+.fb{font-weight:600;margin-top:6px;font-size:14px}.fb.good,.good{color:var(--ok)}.fb.bad,.bad{color:var(--bad)}
+.pbtn{background:var(--teal);color:#fff;border:0;border-radius:12px;padding:11px 18px;font:700 16px 'Open Sans',sans-serif;min-height:46px;cursor:pointer}
+.pbtn.sm{min-height:40px;padding:6px 14px;font-size:14px}.pbtn.ghost{background:#fff;color:var(--teal);border:2px solid var(--teal)}.pbtn[disabled]{background:#a9c8c3;cursor:not-allowed}
+select,input[type=text],input[type=number],textarea{font:inherit;font-size:16px;padding:6px 8px;border:2px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);max-width:100%}
+select.bl{min-height:40px;margin:2px 3px;font-weight:600}select.ok{border-color:var(--ok);background:#e3f6ea}select.no{border-color:var(--bad);background:#fdecea}
+textarea{width:100%;border-radius:10px}
+.czr{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.mrow{display:flex;gap:10px;align-items:center;margin:8px 0;flex-wrap:wrap}.wr{font-size:20px;font-weight:700;margin:6px 0}.aw{font-size:14px;color:var(--teal)}
+.flow{font-size:16px;line-height:2.2}
+table.dt{border-collapse:collapse;width:100%;font-size:15px;margin:6px 0}.dt th,.dt td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:middle}.dt thead th{background:#e1f0ed}.dt tbody th{background:#f3f9f8;font-weight:700;min-width:110px}
+.tblw{overflow-x:auto;margin:8px 0}.mt td{text-align:center}.cp{font:600 12px 'Open Sans',sans-serif;background:#fff;border:2px solid var(--teal);color:var(--teal);border-radius:8px;padding:6px 8px;cursor:pointer;min-height:38px}
+.chk.ok{color:var(--ok);font-weight:700}.chk.no{color:var(--bad);font-weight:700}
+.sites{display:flex;gap:14px;flex-wrap:wrap}.site{flex:1;min-width:240px;text-align:center}.site canvas{max-width:100%;height:auto;border:2px solid var(--line);border-radius:12px;background:#2a7f6a}.site-fb{min-height:44px}
+.eqb{border:2px dashed var(--line);border-radius:14px;padding:10px;margin:8px 0;background:#fbfefd}
+.tray{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:10px}
+.tk{background:#fff;border:3px solid var(--line);border-radius:12px;padding:6px 10px;display:flex;flex-direction:column;align-items:center;font:700 14px 'Open Sans',sans-serif;cursor:grab;touch-action:none;color:var(--ink)}.tk.sel{border-color:var(--teal);box-shadow:0 0 0 3px #0f766e44}
+.eqrow{display:flex;gap:6px;align-items:stretch;flex-wrap:wrap}.zone{flex:1;min-width:220px;border:3px dashed var(--line);border-radius:12px;padding:6px;min-height:120px;background:#fff}.zone.tgt{border-color:var(--teal);background:#effaf8}
+.zl{font-weight:800;font-size:13px;color:var(--teal);text-transform:uppercase;letter-spacing:.04em}.zi{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.zi .zph{color:#7b9792;font-size:14px;padding:18px 6px;background:none;border:0}
+.pm{background:#f6fbfa;border:2px solid transparent;border-radius:10px;padding:2px;cursor:pointer}.pm:hover{border-color:var(--bad)}
+.arr{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:90px}.arr .ar{font-size:44px;line-height:1;color:var(--teal)}.en{display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--teal)}
+.atomc{margin:10px 0 4px;font-size:15px}.ac{display:inline-block;background:#e1f0ed;border-radius:6px;padding:1px 8px;font-weight:700}
+.dragg{position:fixed;z-index:90;pointer-events:none;opacity:.85}
+.arrows .opt,.graphs .opt{padding:6px 10px}
+.simd{border:2px solid var(--line);border-radius:12px;padding:4px 8px;margin:10px 0;background:#f4f6f8}.simd summary{font-weight:700;cursor:pointer;padding:6px 0;color:var(--teal)}
+.capw{margin:8px 0}.capv img{max-width:100%;width:420px;border:2px solid var(--line);border-radius:8px;margin-top:6px;display:block}
+.optv{display:block;margin:6px 0;font-weight:600}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#16202a;color:#fff;padding:10px 16px;border-radius:10px;z-index:80;max-width:90vw;text-align:center}
+.bvl-box{background:#fff;border:2px solid var(--line);border-radius:14px;padding:12px 16px;margin:12px 0}
+[hidden]{display:none!important}
+@media(max-width:600px){.box{padding:10px 12px}}
+</style></head><body>
+<div class="wrap">
+<header class="ph"><a href="/u2/home.html">← Unit 2: Matter &amp; Energy</a><div class="ey">Honors Biology · Unit 2 · 2.11.B</div><h1>Enzymes in Action Virtual Lab <span class="draft">DRAFT</span></h1></header>
+<div id="chips"></div>
+<div id="notin" class="info" hidden><b>Not signed in.</b> You can try the lab, but your answers will not be saved and you cannot make a PDF. <a href="/home.html">Sign in on the home page</a>.</div>
+<main id="lab"></main>
+</div>
+<script src="/assets/bvl.js"></script>
+<script src="/assets/pdf.js"></script>
+<script>if(window.BVL){BVL.guard("u2/eial","2099-01-01");if(!BVL.user())document.getElementById("notin").hidden=false}</script>
+<script src="/u2/eial/core.js"></script>
+<script src="/u2/eial/enz.js"></script>
+<script src="/u2/eial/lab.js"></script>
+<script src="/u2/eial/pdfb.js"></script>
+</body></html>
