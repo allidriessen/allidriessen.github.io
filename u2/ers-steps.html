@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Catalase Step-by-Step</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#16202a;--mute:#5d6b78;--line:#dde3e9;--acc:#0e9f8e;--warn:#d9643a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e141a;--card:#16202a;--ink:#e8eef3;--mute:#93a3b1;--line:#27343f;--acc:#2fd0bc}}
+:root[data-theme="dark"]{--bg:#0e141a;--card:#16202a;--ink:#e8eef3;--mute:#93a3b1;--line:#27343f;--acc:#2fd0bc}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:980px;margin:0 auto;padding:12px}
+h1{font-size:1.25rem;margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+canvas{display:block;width:100%;height:auto;border-radius:10px;touch-action:manipulation;cursor:pointer}
+.dots{display:flex;gap:6px;margin-bottom:8px}.dots i{flex:1;height:6px;border-radius:3px;background:var(--line)}.dots i.on{background:var(--acc)}
+.st{font-weight:700;font-size:1.05rem;margin:0 0 4px}
+.tx{margin:0 0 8px;color:var(--ink)}
+.pr{margin:0;font-weight:700;color:var(--acc);font-size:1.02rem}
+.pr.bad{color:var(--warn);animation:sh .4s}
+@keyframes sh{20%{transform:translateX(-5px)}60%{transform:translateX(5px)}}
+.eq{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-weight:700}
+.eq span.c{padding:5px 10px;border-radius:9px;border:2px dashed var(--line);color:var(--mute);transition:.3s}
+.eq span.c.on{border:2px solid var(--acc);color:var(--ink);background:color-mix(in srgb,var(--acc) 14%,transparent)}
+.eq span.c.used{border:2px solid var(--line);color:var(--mute);text-decoration:line-through}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+button{font:inherit;font-weight:600;padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button.p{background:var(--acc);border-color:var(--acc);color:#06201c}
+button:disabled{opacity:.4;cursor:default}
+label.t{display:flex;align-items:center;gap:6px;margin-left:auto;color:var(--mute)}
+</style></head><body><div class="wrap">
+
+<div class="card"><canvas id="c" width="900" height="540"></canvas></div>
+<div class="card">
+ <div class="dots" id="dots"><i></i><i></i><i></i><i></i><i></i></div>
+ <p class="st" id="st"></p><p class="tx" id="tx"></p><p class="pr" id="pr"></p>
+</div>
+<div class="card"><div class="eq" id="eq">
+ <span class="c" id="r1">H<sub>2</sub>O<sub>2</sub></span>+<span class="c" id="r2">H<sub>2</sub>O<sub>2</sub></span>→
+ <span class="c" id="p1">H<sub>2</sub>O</span>+<span class="c" id="p2">H<sub>2</sub>O</span>+<span class="c" id="p3">O<sub>2</sub></span></div>
+ <div class="row"><button id="bk">◀ Back</button><button id="rs">↺ Restart</button>
+ <label class="t"><input type="checkbox" id="lb" checked> Show labels</label></div></div>
+</div>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)},clamp=function(v,a,b){return Math.max(a,Math.min(b,v))},TAU=Math.PI*2,ER=38,SC=2.4,W=900,H=540;
+window.SS=5;
+/* ---------- atom sprites ---------- */
+function sprite(r,c1,c2,ec){var s=2,n=Math.ceil((r*2+4)*s),o=document.createElement('canvas');o.width=o.height=n;var c=o.getContext('2d');
+  var g=c.createRadialGradient(n*.38,n*.34,r*s*.1,n/2,n/2,r*s);g.addColorStop(0,c1);g.addColorStop(1,c2);
+  c.beginPath();c.arc(n/2,n/2,r*s,0,TAU);c.fillStyle=g;c.fill();c.lineWidth=1.5*s;c.strokeStyle=ec;c.stroke();return {i:o,r:r,n:n/s}}
+var SO=sprite(6.5,'#ff9a9a','#d62828','#8f1414'),SH=sprite(3.8,'#ffffff','#b9c6d3','#8796a5');
+function atom(c,sp,x,y,al){if(al!==undefined)c.globalAlpha=al;c.drawImage(sp.i,x-sp.n/2,y-sp.n/2,sp.n,sp.n)}
+function bond(c,x1,y1,x2,y2,w){c.lineCap='round';c.strokeStyle='#5b6775';c.lineWidth=w+2;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();
+  c.strokeStyle='#dbe3ea';c.lineWidth=w;c.stroke()}
+function molH2O2(c,x,y,a){c.save();c.translate(x,y);c.rotate(a);
+  bond(c,-8,0,8,0,3.5);bond(c,-8,0,-12.5,-8,2.2);bond(c,8,0,12.5,8,2.2);
+  atom(c,SH,-12.5,-8);atom(c,SH,12.5,8);atom(c,SO,-8,0);atom(c,SO,8,0);c.restore()}
+function molH2O(c,x,y,a,al){c.save();c.globalAlpha=al;c.translate(x,y);c.rotate(a);
+  bond(c,0,0,6.2,-7.9,2.2);bond(c,0,0,6.2,7.9,2.2);atom(c,SH,6.2,-7.9);atom(c,SH,6.2,7.9);atom(c,SO,0,0);c.restore()}
+function molO2(c,x,y,a,al){c.save();c.globalAlpha=al;c.translate(x,y);c.rotate(a);
+  bond(c,-7,-2,7,-2,2.2);bond(c,-7,2,7,2,2.2);atom(c,SO,-7,0);atom(c,SO,7,0);c.restore()}
+
+/* ---------- catalase ---------- */
+var HX=[[-14,-14,.6,22],[-19,10,-.7,20],[0,-25,0,16],[3,23,.2,18],[-5,-3,1.5,16],[19,-20,.9,12],[19,20,-.9,12],[-28,-2,1.57,10]];
+function drawE(c,x,y,a,sc,d,sf,tm,ph,bound,ox,bt){
+  var N=96,sg=.3+.55*d,dp=18*(1-.85*d),sh=d*.55,hue=172-d*140,sat=68-d*50,lt=50-d*8;
+  c.save();c.translate(x,y);c.rotate(a);c.scale(sc,sc);
+  if(bound){var k=1+.025*Math.sin(bt*.3);c.scale(k,k)}
+  c.lineCap='round';c.lineJoin='round';
+  if(d>.3){c.strokeStyle='hsla('+hue+','+sat+'%,'+(lt+8)+'%,'+(d*.8)+')';c.lineWidth=3.2-d;
+    for(var q=0;q<5;q++){var an=ph+q*1.3+Math.PI*.6,len=d*(30+8*q%3);c.beginPath();
+      for(var j=0;j<=10;j++){var u=ER*.85+len*j/10,w=Math.sin(j*1.1+tm*(1+sf)+q)*d*7*j/10;
+        var px=Math.cos(an)*u-Math.sin(an)*w,py=Math.sin(an)*u+Math.cos(an)*w;j?c.lineTo(px,py):c.moveTo(px,py)}c.stroke()}}
+  c.beginPath();
+  for(var i=0;i<=N;i++){var th=i/N*TAU,dt=((th-sh+Math.PI)%TAU+TAU)%TAU-Math.PI;
+    var r=ER*(1+.05*Math.sin(3*th+ph)+.03*Math.sin(5*th+ph*2));
+    r+=d*ER*(.13*Math.sin(4*th+ph+tm*(.8+sf))+.1*Math.sin(7*th+ph*2-tm*1.3)+.07*Math.sin(2*th+ph));
+    r-=dp*Math.exp(-(dt/sg)*(dt/sg));
+    var bx=Math.cos(th)*r,by=Math.sin(th)*r;i?c.lineTo(bx,by):c.moveTo(bx,by)}
+  c.closePath();
+  var g=c.createRadialGradient(-10,-12,4,0,0,ER*1.2);
+  g.addColorStop(0,'hsl('+hue+','+sat+'%,'+(lt+20)+'%)');g.addColorStop(1,'hsl('+hue+','+sat+'%,'+(lt-14)+'%)');
+  if(bound){c.shadowColor='hsl('+hue+',85%,62%)';c.shadowBlur=20}
+  c.fillStyle=g;c.fill();c.shadowBlur=0;c.lineWidth=2;c.strokeStyle='hsla('+hue+','+sat+'%,'+(lt-26)+'%,.95)';c.stroke();
+  // alpha helices: folded cylinders unravel into wavy strands
+  HX.forEach(function(h,k){
+    var L=h[3]*(1+d),A=d*10,n=12,pts=[],ca=Math.cos(h[2]),sa=Math.sin(h[2]);
+    for(var j=0;j<=n;j++){var u=(j/n-.5)*L,o=A*Math.sin(j*1.1+tm*3*d+ph+k)+d*7*Math.sin(tm*.7+k);
+      pts.push([h[0]+ca*u-sa*o+d*5*Math.sin(k+ph),h[1]+sa*u+ca*o])}
+    c.beginPath();pts.forEach(function(p,j){j?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1])});
+    c.strokeStyle='rgba(255,255,255,'+(.55-.25*d)+')';c.lineWidth=7-4*d;c.stroke();
+    if(d<.7){c.setLineDash([2,3]);c.strokeStyle='rgba(0,50,60,'+(.35*(1-d*1.4))+')';c.lineWidth=7-4*d;c.stroke();c.setLineDash([])}
+  });
+  // heme group in the active site pocket
+  c.save();c.rotate(sh);c.translate(24,0);c.rotate(.785+d*.6);
+  c.globalAlpha=1-d*.5;c.fillStyle='#b3263e';c.strokeStyle='#5c0f1d';c.lineWidth=1.2;
+  c.beginPath();c.rect(-6,-6,12,12);c.fill();c.stroke();
+  c.fillStyle='#e0566e';[[-5,-5],[5,-5],[-5,5],[5,5]].forEach(function(p){c.beginPath();c.arc(p[0],p[1],3.2,0,TAU);c.fill();c.stroke()});
+  var fg=c.createRadialGradient(-1,-1,.5,0,0,3.6);fg.addColorStop(0,'#fff3c4');fg.addColorStop(1,'#d9822b');
+  c.fillStyle=fg;c.beginPath();c.arc(0,0,3.6,0,TAU);c.fill();c.restore();
+  if(ox>0){c.save();c.rotate(sh);c.globalAlpha=ox;atom(c,SO,31,0);c.restore()}
+  c.restore();
+}
+
+
+var cv=$('c'),ctx=cv.getContext('2d'),dpr=Math.min(window.devicePixelRatio||1,2);cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+function fl(hx,hy,p){return {hx:hx,hy:hy,p:p,mode:'float',x:hx,y:hy,a:p,t:0,sx:0,sy:0,sa:0,dd:39}}
+var A=fl(170,175,0),B=fl(745,180,1),W1=fl(150,430,3),W2=fl(750,420,2),O2=fl(450,490,5);
+var E={x:450,y:305,a:-Math.PI/2},stage=0,anim=null,oxA=0,oxT=0,first=null,tm=0,glow=0,labelsOn=true;
+var ease=function(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2};
+function fpos(o){return {x:o.hx+42*Math.sin(tm*.7+o.p*2.1),y:o.hy+28*Math.cos(tm*.55+o.p*1.7),a:o.p+tm*.25*(o.p%2?1:-1)}}
+function bpos(o){return {x:E.x+Math.cos(E.a)*o.dd*SC,y:E.y+Math.sin(E.a)*o.dd*SC,a:E.a+Math.PI}}
+function setStage(n){anim=null;stage=n;glow=0;
+  [A,B].forEach(function(o){o.mode='float'});[W1,W2,O2].forEach(function(o){o.mode='none'});
+  if(n===0)first=null;var s1=first||A,s2=s1===A?B:A;oxA=oxT=0;
+  if(n>=1){s1.mode='bound';s1.dd=39}
+  if(n>=2){s1.mode='gone';W1.mode='float';oxA=oxT=1}
+  if(n>=3){s2.mode='bound';s2.dd=46}
+  if(n>=4){s2.mode='gone';W2.mode=O2.mode='float';oxA=oxT=0}
+  ui()}
+function eject(o){var p=bpos({dd:46});o.mode='eject';o.t=0;o.sx=p.x;o.sy=p.y}
+function run(dur,evs,end){anim={t:0,dur:dur,evs:evs||[],end:end}}
+function other(s){return s===A?B:A}
+function tap(x,y){
+  if(anim)return;
+  var hA=Math.hypot(x-A.x,y-A.y)<75&&A.mode==='float',hB=Math.hypot(x-B.x,y-B.y)<75&&B.mode==='float',hE=Math.hypot(x-E.x,y-E.y)<ER*SC+14;
+  if(stage===0&&(hA||hB)){var o=hA?A:B;first=o;move(o,39)}
+  else if(stage===1&&hE){run(1.9,[{at:0,f:function(){glow=1}},{at:.55,f:function(){first.mode='gone';eject(W1);oxT=1}}],function(){stage=2;ui()})}
+  else if(stage===2&&(other(first).mode==='float')&&Math.hypot(x-other(first).x,y-other(first).y)<75){move(other(first),46)}
+  else if(stage===3&&hE){var s2=other(first);run(2.1,[{at:0,f:function(){glow=1}},{at:.55,f:function(){s2.mode='gone';eject(W2);eject(O2);oxT=0}}],function(){stage=4;ui()})}
+  else nudge()}
+function move(o,dd){o.mode='moving';o.t=0;o.sx=o.x;o.sy=o.y;o.sa=o.a;o.dd=dd;run(1.1,[],function(){o.mode='bound';stage++;ui()})}
+function nudge(){var p=$('pr');p.classList.remove('bad');void p.offsetWidth;p.classList.add('bad')}
+var TXT=[['Step 1 of 5 \u00B7 Enzyme and substrate','Catalase (the green-blue protein) floats among hydrogen peroxide molecules. Its active site is a pocket with an iron-containing heme group.','Tap an H\u2082O\u2082 to send it to the active site.'],
+['Step 2 of 5 \u00B7 Binding','H\u2082O\u2082 fits into the active site next to the heme iron (Fe). Only a molecule with the right shape fits.','Tap the catalase to start the reaction.'],
+['Step 3 of 5 \u00B7 First product released','Catalase breaks H\u2082O\u2082 apart. One water molecule (H\u2082O) leaves, and one oxygen atom stays attached to the iron.','Tap the second H\u2082O\u2082.'],
+['Step 4 of 5 \u00B7 Second binding','The second H\u2082O\u2082 binds right next to the oxygen atom that is still held on the heme.','Tap the catalase.'],
+['Step 5 of 5 \u00B7 Products released','A second H\u2082O leaves, and the oxygen atom joins an oxygen from H\u2082O\u2082 to make O\u2082 gas. Catalase is unchanged and ready to work again. Net reaction: 2 H\u2082O\u2082 \u2192 2 H\u2082O + O\u2082.','Reaction complete. Press Restart to run it again.']];
+function ui(){var t=TXT[stage];$('st').textContent=t[0];$('tx').textContent=t[1];$('pr').textContent=t[2];$('pr').classList.remove('bad');
+  [].forEach.call($('dots').children,function(d,i){d.className=i<=stage?'on':''});
+  var set=function(id,c){$(id).className='c '+c};
+  set('r1',stage>=2?'used':(stage===1?'on':''));set('r2',stage>=4?'used':(stage===3?'on':''));
+  set('p1',stage>=2?'on':'');set('p2',stage>=4?'on':'');set('p3',stage>=4?'on':'');
+  $('bk').disabled=stage===0;$('rs').className=stage===4?'p':''}
+function targets(){if(anim)return[];if(stage===0)return[A,B];if(stage===2)return[other(first)];return[]}
+function update(dt){
+  tm+=dt;E.x=450+6*Math.sin(tm*.9);E.y=305+7*Math.sin(tm*.7+1);E.a=-Math.PI/2+.04*Math.sin(tm*.6);
+  if(anim){anim.t+=dt;anim.evs.forEach(function(e){if(!e.d&&anim.t>=e.at){e.d=1;e.f()}});if(anim.t>=anim.dur){var f=anim.end;anim=null;if(f)f()}}
+  oxA+=(oxT-oxA)*Math.min(1,dt*4);glow+=((anim&&anim.evs.length?1:(stage===1||stage===3?.55:0))-glow)*Math.min(1,dt*5);
+  [A,B,W1,W2,O2].forEach(function(o){var p;
+    if(o.mode==='float'){p=fpos(o)}
+    else if(o.mode==='moving'){o.t+=dt/1.1;var e=ease(clamp(o.t,0,1)),b=bpos(o),d=((b.a-o.sa+Math.PI)%TAU+TAU)%TAU-Math.PI;p={x:o.sx+(b.x-o.sx)*e,y:o.sy+(b.y-o.sy)*e,a:o.sa+d*e}}
+    else if(o.mode==='bound'){p=bpos(o)}
+    else if(o.mode==='eject'){o.t+=dt/1.5;var f=fpos(o),k=ease(clamp(o.t,0,1));p={x:o.sx+(f.x-o.sx)*k,y:o.sy+(f.y-o.sy)*k,a:f.a}}
+    if(p){o.x=p.x;o.y=p.y;o.a=p.a}})}
+function pill(txt,x,y,tx,ty){ctx.save();ctx.font='600 17px system-ui,sans-serif';var w=ctx.measureText(txt).width+18;
+  ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(x,y);ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.95)';ctx.beginPath();ctx.roundRect?ctx.roundRect(x-w/2,y-15,w,30,15):ctx.rect(x-w/2,y-15,w,30);ctx.fill();
+  ctx.fillStyle='#16202a';ctx.textAlign='center';ctx.fillText(txt,x,y+6);ctx.beginPath();ctx.arc(tx,ty,4,0,TAU);ctx.fillStyle='#fff';ctx.fill();ctx.restore()}
+function draw(){
+  var g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#2a7f6a');g.addColorStop(1,'#12503f');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  for(var i=0;i<4;i++){var lx=(i*260+tm*10)%(W+300)-150,rg=ctx.createRadialGradient(lx,160+i*90,0,lx,160+i*90,200);rg.addColorStop(0,'rgba(255,255,255,.06)');rg.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=rg;ctx.fillRect(lx-200,i*90-40,400,400)}
+  ctx.globalAlpha=1;
+  function mol(o,fn){if(o.mode==='none'||o.mode==='gone')return;ctx.save();ctx.globalAlpha=o.mode==='eject'?Math.min(1,o.t*4):1;ctx.translate(o.x,o.y);ctx.scale(SC,SC);fn(ctx,0,0,o.a);ctx.restore()}
+  mol(W1,function(c,x,y,a){molH2O(c,x,y,a,1)});mol(W2,function(c,x,y,a){molH2O(c,x,y,a,1)});mol(O2,function(c,x,y,a){molO2(c,x,y,a,1)});
+  ctx.globalAlpha=1;drawE(ctx,E.x,E.y,E.a,SC,0,1,tm,1.7,glow>.05,oxA,tm*60);
+  mol(A,molH2O2);mol(B,molH2O2);ctx.globalAlpha=1;
+  targets().forEach(function(o){var r=62+6*Math.sin(tm*5);ctx.strokeStyle='rgba(255,236,150,.95)';ctx.lineWidth=4;ctx.setLineDash([10,8]);ctx.beginPath();ctx.arc(o.x,o.y,r,0,TAU);ctx.stroke();ctx.setLineDash([]);pill('Tap',o.x,o.y-r-22+4*Math.sin(tm*5),o.x,o.y-r)});
+  if(!anim&&(stage===1||stage===3)){var r=ER*SC+12+6*Math.sin(tm*5);ctx.strokeStyle='rgba(255,236,150,.95)';ctx.lineWidth=4;ctx.setLineDash([10,8]);ctx.beginPath();ctx.arc(E.x,E.y,r,0,TAU);ctx.stroke();ctx.setLineDash([]);pill('Tap catalase',E.x,E.y+r+24,E.x,E.y+r)}
+  if(labelsOn){pill('Active site',E.x+185,E.y-150,E.x+24,E.y-78);pill('Heme group (Fe)',E.x-205,E.y-20,E.x-8,E.y-56);
+    if(oxA>.6)pill('Oxygen atom held on Fe',E.x+215,E.y-95,E.x+4,E.y-74);
+    if(stage>=2){ctx.save();ctx.font='600 15px system-ui';ctx.fillStyle='rgba(255,255,255,.9)';ctx.textAlign='center';if(W1.mode==='float')ctx.fillText('H\u2082O',W1.x,W1.y+58);if(W2.mode==='float')ctx.fillText('H\u2082O',W2.x,W2.y+58);if(O2.mode==='float')ctx.fillText('O\u2082 gas',O2.x,O2.y+50);ctx.restore()}}
+}
+cv.addEventListener('pointerdown',function(e){var r=cv.getBoundingClientRect();tap((e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height);e.preventDefault()});
+$('bk').onclick=function(){if(stage>0)setStage(stage-1)};
+$('rs').onclick=function(){setStage(0)};
+$('lb').onchange=function(){labelsOn=this.checked};
+var last=performance.now();function loop(n){var dt=Math.min(.05,(n-last)/1000);last=n;update(dt);draw();requestAnimationFrame(loop)}
+setStage(0);requestAnimationFrame(loop);
+})();
+</script>
+<script>(function(){function p(){try{parent.postMessage({ssH:Math.ceil(document.querySelector(".wrap").getBoundingClientRect().height)+8},location.origin)}catch(e){}}
+addEventListener('load',p);addEventListener('resize',p);if(window.ResizeObserver)new ResizeObserver(p).observe(document.body)})()</script></body></html>
