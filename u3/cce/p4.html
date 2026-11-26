@@ -44,7 +44,9 @@ const CANCER_HINT="Look again at Sample X. Compare it with normal samples A and 
 PG.classify($("c4a"),{key:"4a",labels:["Normal","Cancer"],counts:[2,4],seed:SEED*3+1,noun:"sample",
  items:H4.map(t=>({html:'<img src="img/h_'+t[0]+'.jpg" alt="Tissue sample '+t[0].toUpperCase()+'">',cap:"Sample "+t[0].toUpperCase(),truth:t[1]})),
  hint:(k,T)=>(T[k].truth?CANCER_HINT:NORMAL_HINT).replace("Sample X",T[k].cap),
- onSolved:cw=>{WS.box(cw,"p4a1",WS.PROMPT.p4a1);WS.box(cw,"p4a2",WS.PROMPT.p4a2);show4b()}});
+ onSolved:cw=>{const op=L=>L.map(x=>({id:x,cap:"Sample "+x.toUpperCase(),html:'<img src="img/h_'+x+'.jpg" alt="Sample '+x.toUpperCase()+'">',url:"img/h_"+x+".jpg"}));
+  PG.pick(cw,{key:"p4an",title:"Tap the normal sample you will describe:",opts:op(["a","b","d","f"])});WS.box(cw,"p4a1",WS.PROMPT.p4a1);
+  PG.pick(cw,{key:"p4ac",title:"Tap the cancer sample you will describe:",opts:op(["c","e","g","h"])});WS.box(cw,"p4a2",WS.PROMPT.p4a2);show4b()}});
 
 PG.onTeacher=()=>{show4b();$("r2").hidden=false;if(!$("c4b2").children.length)round(2)};
 if(PG.TEACH)PG.onTeacher();

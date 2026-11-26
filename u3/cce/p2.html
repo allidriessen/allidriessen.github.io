@@ -60,6 +60,16 @@ th{background:#efe8f8}
 .tb button{border:0;border-radius:8px;padding:8px 12px;font-weight:700;min-height:40px}
 .toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:#241a38;color:#fff;padding:10px 16px;border-radius:10px;z-index:60}
 .hd{background:#fff;color:var(--ink);border:2px solid #ddd0ee}.hd h1{font-size:clamp(22px,4.5vw,30px)}.chip{background:#efe8f8}
+.slots,.tray{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px;margin:8px 0}
+.slot .sl{font-weight:800;color:#4b2e83;margin:0 0 2px}
+.drop{aspect-ratio:5/3;border:3px dashed #bcaedb;border-radius:10px;background:#faf7fd;overflow:hidden}
+.slot.good .drop{border:3px solid #14803f;background:#fff}
+.slot .cap{font-size:13px;margin-top:3px}
+.tile{background:#fff;border:2px solid #ddd0ee;border-radius:10px;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;overflow:hidden}
+.tile svg{width:100%;height:auto;display:block;pointer-events:none}
+.tile.sel{outline:4px solid #f5b700}.tile.locked{cursor:default;border:0;border-radius:0}
+.drop .tile{width:100%;height:100%}
+.tile.shake{animation:shk .35s}@keyframes shk{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 </style></head>
 <body><div class="wrap"><header class="ph"><div><div class="ey">Cancer Cell Exploration</div><h1>Part 2: Tumor Growth Stages and Types</h1></div><button class="pbtn ghost" id="hm">🏠 All parts</button></header>
 <div class="hd"><div><h1 id="ht"></h1><div class="sub" id="hs"></div></div><span class="chip" id="chip"></span></div>
@@ -200,16 +210,18 @@ function challenge(host){
  const items=[[0,1],[0,2],[0,3],[1,1],[1,2],[1,3]].map((t,i)=>({html:GFX.tumor(t[0],t[1],UOFF%97+i*3,"c"+i),truth:t[0]}));
  PG.classify($("cr"),{key:1,items,labels:["Benign","Malignant"],counts:[3,3],seed:UOFF*7+31,noun:"diagram",
   hint:k=>"Hint: look again at Diagram "+(k+1)+". Does the growth stay inside its borders, or do cells break through the dark pink membrane? Are the cells all alike, or do their sizes, shapes, and nuclei vary?",
-  onSolved:cw=>{WS.box(cw,"p2c1",WS.PROMPT.p2c1);WS.box(cw,"p2c2",WS.PROMPT.p2c2);chk3()}})}
+  onSolved:(cw,T)=>{const opts=v=>T.map((t,k)=>({t,k})).filter(o=>o.t.truth===v).map(o=>({id:"d"+o.k,cap:"Diagram "+(o.k+1),html:o.t.html,svg:o.t.html}));
+   PG.pick(cw,{key:"p2pm",title:"Tap the malignant diagram you will describe:",opts:opts(1),px:360,ph:312});WS.box(cw,"p2c1",WS.PROMPT.p2c1);
+   PG.pick(cw,{key:"p2pb",title:"Tap the benign diagram you will describe:",opts:opts(0),px:360,ph:312});WS.box(cw,"p2c2",WS.PROMPT.p2c2);chk3()}})}
 /* ===== state & flow ===== */
 const AK="cancer-cell-exploration-part2",PROG={q:{},step:0,qz3:0},UOFF=(window.BVL?BVL.seed("cce-p2"):0)||0;
 function saveP(){if(!window.BVL)return;BVL.save(AK,{title:"Cancer Cell Exploration · Part 2",summary:S.done.slice(1,5).filter(Boolean).length+" of 4 stages' questions complete; "+(S.done[4]?"metastasis explored":"metastasis not yet explored"),done:S.done,q:PROG.q,step:PROG.step,qz3:PROG.qz3})}
 function loadP(){const d=window.BVL&&BVL.load(AK);if(d){S.done=d.done||S.done;PROG.q=d.q||{};PROG.step=d.step||0;PROG.qz3=d.qz3||0}}
 
 const S={done:[0,0,0,0,0,0]};const st={step:0,g:0,inv:0,anim:null,mt:[0,0],mp:[0,0],fin:[0,0],seen:0};
-function upd(){const i=st.step;$("nx").textContent=STEPS[i].nx;$("nx").disabled=i>0&&i<5&&!S.done[i]&&!TEACH;$("bk").style.visibility=i?"visible":"hidden"}
+function upd(){const i=st.step;$("nx").textContent=STEPS[i].nx;$("nx").disabled=i>0&&i<6&&!S.done[i]&&!TEACH;$("bk").style.visibility=i?"visible":"hidden"}
 function go(n,fwd){
- st.step=n;PROG.step=n;saveP();st.mp=[0,0];st.mt=[0,0];st.fin=[0,0];st.seen=0;st.anim=null;const C=STEPS[n];
+ $("stage").hidden=false;st.step=n;PROG.step=n;saveP();st.mp=[0,0];st.mt=[0,0];st.fin=[0,0];st.seen=0;st.anim=null;const C=STEPS[n];
  $("ht").textContent=C.t;$("hs").textContent=C.s;$("chip").textContent=C.chip;$("info").innerHTML=C.info;$("fin").innerHTML="";$("ctl").innerHTML="";$("qz").classList.add("hide");$("wr").classList.add("hide");$("ch").classList.add("hide");
  $("dots").innerHTML=["Overview","Stage 1","Stage 2","Stage 3","Stage 4","Summary"].map((x,k)=>`<span class="dot ${k==n?"on":""}">${S.done[k]&&k&&k<5?"✓ ":""}${x}</span>`).join("");
  if(n==0){$("stage").innerHTML=scene0();$("hot").onclick=zoom}
@@ -220,14 +232,42 @@ function go(n,fwd){
  else if(n==4){metaScene();if(S.done[4])showQuiz()}
  else summary();
  upd();scrollTo(0,0)}
-function summary(){st.mt=[1,1];
- const card=(h,svg,t)=>`<div class="pnl"><h3>${h}</h3>${svg}<p class="note">${t}</p></div>`;
- $("stage").innerHTML=`<div class="sum">`+card("Healthy colon",`<svg viewBox="0 0 800 480">${organ()}<circle cx="497" cy="381" r="36" fill="none" stroke="#c0392b" stroke-width="6"/></svg>`,"We zoom in on the sigmoid colon wall.")
-  +card("Stage 1: small benign polyp",tissue(.3,0,0,1),"About 10–20 years. Benign, stays on the surface.")
-  +card("Stage 2: large benign growth",tissue(.65,0,0,1),"Bigger early adenoma, still contained.")
-  +card("Stage 3: late adenoma turning malignant",tissue(1,1,0,1),"Cells break through the basement membrane.")
-  +`<div class="pnl wide"><h3>Stage 4: metastasis (about 0–5 years)</h3><div class="pair" style="gap:0">${panel(0)}${panel(1)}</div><p class="note">Cancer cells travel by the blood and lymph highways and start secondary tumors in new places.</p></div></div>`;
+/* ===== summary: put the five diagrams in order (drag and drop, or tap a diagram and then tap a box) ===== */
+const SUM=[["Healthy","Healthy colon","We zoom in on the sigmoid colon wall."],["Stage 1","Stage 1: small benign polyp","About 10–20 years. Benign, stays on the surface."],["Stage 2","Stage 2: large benign growth","Bigger early adenoma, still contained."],["Stage 3","Stage 3: late adenoma turning malignant","Cells break through the basement membrane."],["Stage 4","Stage 4: metastasis (about 0–5 years)","Cancer cells travel by the blood and lymph highways and start secondary tumors in new places."]];
+function sumSvg(k){
+ if(k==0)return `<svg viewBox="0 0 800 480">${organ()}<circle cx="497" cy="381" r="36" fill="none" stroke="#c0392b" stroke-width="6"/></svg>`;
+ if(k<4)return tissue([.3,.65,1][k-1],k==3?1:0,0,1).replace(/<g class="fl" data-x="([^"]+)" data-y="([^"]+)" data-v="[^"]+">/g,'<g class="fl" transform="translate($1 $2)">');
+ const P=i=>panel(i).replace('<svg viewBox="0 0 400 440">',`<svg x="${i*400}" y="20" width="400" height="440" viewBox="0 0 400 440">`);
+ return `<svg viewBox="0 0 800 480"><rect width="800" height="480" fill="#fff"/>${P(0)}${P(1)}</svg>`}
+const svgOf=k=>{const el=document.querySelector('.tile[data-k="'+k+'"] > svg');return el.outerHTML.replace(/^<svg/,'<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480"').replace('>','><style>.t{font:700 13px sans-serif;fill:#2a1d3f;paint-order:stroke;stroke:#fff;stroke-width:3.5px;stroke-linejoin:round}.t2{font:800 14px sans-serif;fill:#fff}</style>')};
+function summary(){
+ st.mt=[1,1];$("stage").innerHTML="";$("stage").hidden=true;
+ $("ctl").innerHTML=`<div class="box" id="pz"><h3>Put the stages in order</h3><p>Drag each diagram into the box where it belongs, from the <b>healthy colon</b> to <b>Stage 4</b>. On an iPad you can also tap a diagram, then tap a box. Correct matches lock in place. When you finish, this visual summary is added to your PDF.</p>
+ <div class="slots" id="slots">${SUM.map((x,k)=>`<div class="slot" data-k="${k}"><div class="sl">${x[0]}</div><div class="drop" data-k="${k}"></div><div class="cap" hidden></div></div>`).join("")}</div>
+ <div id="trayw"><p class="note" style="margin:10px 0 0"><b>Diagrams (mixed up):</b></p><div class="tray" id="tray"></div></div><div class="note" id="pm" aria-live="polite" style="font-weight:600;min-height:22px"></div></div>`;
+ let order=PG.shuf([0,1,2,3,4],UOFF*5+11);if(order.every((v,i)=>v===i))order=[1,0,2,3,4];
+ const tray=$("tray");let sel=null,placed=0;const done0=!!WS.ch("2s").done;
+ order.forEach(k=>{const c=document.createElement("div");c.className="cell";c.innerHTML=`<div class="tile" data-k="${k}" role="button" tabindex="0" aria-label="Stage diagram. Drag it to a box.">${sumSvg(k)}</div>`;tray.appendChild(c)});
  meta(0);meta(1);
+ const msg=t=>{$("pm").textContent=t};
+ function finish(first){SUM.forEach((x,k)=>{const c=document.querySelector(`.slot[data-k="${k}"] .cap`);c.textContent=x[1]+": "+x[2];c.hidden=false});$("trayw").hidden=true;
+  msg("✅ All five stages are in order! This visual summary will be added to your PDF.");
+  if(first){WS.ch("2s",{done:1});S.done[5]=1;saveP();upd()}
+  SUM.forEach((x,k)=>WS.capture("p2s"+k,svgOf(k),480,288))}
+ function put(tile,drop){const cell=tile.parentElement;drop.appendChild(tile);tile.style.cssText="";tile.classList.remove("sel");tile.classList.add("locked");drop.parentElement.classList.add("good");if(cell.classList.contains("cell"))cell.remove()}
+ function attempt(tile,drop){if(drop.querySelector(".tile"))return;
+  if(+tile.dataset.k===+drop.dataset.k){put(tile,drop);sel=null;msg("✅ Correct!");if(++placed===5)finish(true)}
+  else{const c=WS.ch("2s");WS.ch("2s",{w:(c.w||0)+1});msg("Not quite. Look at the size of the growth and whether cells have broken through the basement membrane. Try another box.");tile.classList.remove("shake");void tile.offsetWidth;tile.classList.add("shake")}}
+ document.querySelectorAll(".drop").forEach(d=>d.onclick=()=>{if(sel)attempt(sel,d)});
+ document.querySelectorAll(".tile").forEach(tile=>tile.addEventListener("pointerdown",e=>{if(tile.classList.contains("locked"))return;
+  const r=tile.getBoundingClientRect(),cell=tile.parentElement;let sx=e.clientX,sy=e.clientY,drag=false;try{tile.setPointerCapture(e.pointerId)}catch(z){}
+  const mv=ev=>{if(!drag&&Math.hypot(ev.clientX-sx,ev.clientY-sy)<8)return;if(!drag){drag=true;cell.style.minHeight=r.height+"px";Object.assign(tile.style,{width:r.width+"px",position:"fixed",zIndex:70,opacity:.92,boxShadow:"0 8px 24px rgba(0,0,0,.35)"})}tile.style.left=(r.left+ev.clientX-sx)+"px";tile.style.top=(r.top+ev.clientY-sy)+"px"};
+  const up=ev=>{tile.removeEventListener("pointermove",mv);tile.removeEventListener("pointerup",up);tile.removeEventListener("pointercancel",up);
+   if(!drag){if(sel&&sel!==tile)sel.classList.remove("sel");sel=sel===tile?null:tile;tile.classList.toggle("sel",sel===tile);msg(sel?"Now tap the box where this diagram belongs.":"");return}
+   tile.style.display="none";const el=document.elementFromPoint(ev.clientX,ev.clientY);tile.style.display="";const drop=el&&el.closest&&el.closest(".drop");
+   tile.style.cssText="";cell.style.minHeight="";if(drop)attempt(tile,drop)};
+  tile.addEventListener("pointermove",mv);tile.addEventListener("pointerup",up);tile.addEventListener("pointercancel",up)}));
+ if(done0){document.querySelectorAll(".tile").forEach(t=>put(t,document.querySelector(`.drop[data-k="${t.dataset.k}"]`)));placed=5;finish(false)}
  $("fin").innerHTML=`<div class="bar"><button class="pbtn ghost" id="lp">🏠 Back to landing page</button></div><div id="ex"></div><div id="sv"></div>`;$("lp").onclick=()=>link(HOME_URL);if(window.WS)WS.mountExport($("ex"),"p2");if(window.BVL)BVL.mountSavePanel($("sv"))}
 function zoom(){const o=$("og");o.style.transform="scale(7)";o.style.opacity="0";setTimeout(()=>go(1,true),800)}
 function draw(){$("stage").innerHTML=tissue(st.g,st.inv,!!st.anim)}

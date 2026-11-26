@@ -32,11 +32,11 @@ PDFDoc.prototype={
   const idx=this.imgs.push({by,pw,ph})-1,h=w*ph/pw;this.room(h+4);x=x==null?M:x;
   this.p.ims.push(idx);this.p.ops.push(`q ${w} 0 0 ${h.toFixed(1)} ${x} ${(H-this.y-h).toFixed(1)} cm /Im${idx} Do Q`);this.y+=h+4;return h},
  /* a row of images with captions: items [{src,pw,ph,cap}] */
- row(items,w){const capH=14,h=w+capH+6;this.room(h);const top=this.y;let x=M;
-  items.forEach(it=>{if(it.src){const hh=w*it.ph/it.pw,idx=this.imgs.push({by:(()=>{const bin=atob(it.src.split(",")[1]),a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return a})(),pw:it.pw,ph:it.ph})-1;
+ row(items,w,bh){bh=bh||w;const capH=14,h=bh+capH+6;this.room(h);const top=this.y;let x=M;
+  items.forEach(it=>{if(it.src){const hh=Math.min(bh,w*it.ph/it.pw),idx=this.imgs.push({by:(()=>{const bin=atob(it.src.split(",")[1]),a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return a})(),pw:it.pw,ph:it.ph})-1;
     this.p.ims.push(idx);this.p.ops.push(`q ${w} 0 0 ${hh.toFixed(1)} ${x} ${(H-top-hh).toFixed(1)} cm /Im${idx} Do Q`)}
-   else{this.box(x,top,w,w,[245,245,245],[190,190,190]);this.p.ops.push(`BT /F1 9 Tf 0.4 0.4 0.4 rg ${x+6} ${(H-top-w/2).toFixed(1)} Td (Image not available yet) Tj ET`)}
-   this.p.ops.push(`BT /F1 9 Tf 0.25 0.25 0.25 rg ${x} ${(H-top-w-11).toFixed(1)} Td (${esc(enc(it.cap||""))}) Tj ET`);x+=w+16});
+   else{this.box(x,top,w,bh,[245,245,245],[190,190,190]);this.p.ops.push(`BT /F1 9 Tf 0.4 0.4 0.4 rg ${x+6} ${(H-top-bh/2).toFixed(1)} Td (Not completed yet) Tj ET`)}
+   this.p.ops.push(`BT /F1 9 Tf 0.25 0.25 0.25 rg ${x} ${(H-top-bh-11).toFixed(1)} Td (${esc(enc(it.cap||""))}) Tj ET`);x+=w+16});
   this.y=top+h},
  bytes(foot){const N=this.pages.length;
   this.pages.forEach((p,i)=>p.ops.push(`BT /F1 8 Tf 0.4 0.4 0.4 rg ${M} 28 Td (${esc(enc(foot?foot(i+1,N):""))}) Tj ET`));

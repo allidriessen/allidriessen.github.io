@@ -23,9 +23,11 @@ const WS=window.WS={
   host.appendChild(w);D.pr[key]=prompt;const t=w.querySelector("textarea");t.value=D.ans[key]||"";if(B())B().noPaste(t,()=>{w.querySelector(".note").textContent="Pasting is turned off. Please type or handwrite your own words."});
   let tm;const flush=()=>{clearTimeout(tm);D.ans[key]=t.value;save()};t.addEventListener("input",()=>{D.ans[key]=t.value;clearTimeout(tm);tm=setTimeout(save,500)});t.addEventListener("blur",flush);addEventListener("pagehide",flush);document.addEventListener("visibilitychange",()=>{if(document.hidden)flush()});return t},
  /* render an SVG string to a small JPEG and store it for the PDF */
- capture(key,svg,px){return new Promise(res=>{try{const im=new Image(),s=px||360;im.onload=()=>{const c=document.createElement("canvas");c.width=c.height=s;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,s,s);x.drawImage(im,0,0,s,s);
+ capture(key,svg,px,ph){return new Promise(res=>{try{const im=new Image(),s=px||360,hh=ph||s;im.onload=()=>{const c=document.createElement("canvas");c.width=s;c.height=hh;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,s,hh);x.drawImage(im,0,0,s,hh);
    if(B())B().save("img:"+key,{d:c.toDataURL("image/jpeg",.82)});res(1)};im.onerror=()=>res(0);
    im.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg)}catch(e){res(0)}})},
+ /* store a picture file (a normal image on this site) as a small square JPEG for the PDF */
+ captureUrl(key,url,px){return new Promise(res=>{try{const im=new Image(),s=px||360;im.onload=()=>{const c=document.createElement("canvas");c.width=c.height=s;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,s,s);const r=Math.min(s/im.width,s/im.height),w=im.width*r,h=im.height*r;x.drawImage(im,(s-w)/2,(s-h)/2,w,h);if(B())B().save("img:"+key,{d:c.toDataURL("image/jpeg",.85)});res(1)};im.onerror=()=>res(0);im.src=url}catch(e){res(0)}})},
  vp(pid,o){D.vp[pid]=o;save()},
  hasSketch:k=>!!D.sk[k],
  FINAL:FINAL_PART,
@@ -93,6 +95,7 @@ function answerBox(d,prompt,v){const h=Math.max(40,d.wrap(v||" ",10.5,false,W_-1
  const y0=d.y;d.y+=6;d.text(v||"(No answer yet)",{size:10.5,x:62,w:W_-16,color:v?[20,20,20]:[150,150,150],gap:0});d.y=y0+h+8}
 function answers(d,keys){keys.forEach(k=>answerBox(d,strip(PROMPT[k]||D.pr[k]||k),(D.ans[k]||"").trim()))}
 const W_=504;
+const pickCap=(k,def)=>((D.sec["pick:"+k]||{}).cap)||def;
 function chLine(key,label){const c=D.ch[key]||{};D._d.text(label+": "+(c.done?"solved on attempt "+c.att+" (first attempt: "+c.first+" of "+(c.n||6)+" correct)":c.att?"in progress ("+c.att+" attempts)":"not started"),{size:10,x:62,gap:2})}
 function build(){const B_=B(),p=B_.profile(),d=new PDFDoc(),now=new Date();D._d=d;const banner=t=>{d.gap(8);d.room(70);d.box(54,d.y,W_,22,[75,46,131]);d.y+=4;d.text(t,{size:13,bold:true,color:[255,255,255],x:62,gap:0});d.y+=8};const pts=k=>{d.text("Key learning points",{size:11,bold:true,gap:2});POINTS[k].forEach(t=>d.text("\u2022 "+t,{size:9.5,x:62,w:W_-14,gap:2}));d.gap(6)},id=(Date.now().toString(36)+Math.random().toString(36).slice(2,5)).toUpperCase();
  const url=location.origin+HOME_PATH,a1=B_.load("cancer-cell-exploration-part1"),a2=B_.load("cancer-cell-exploration-part2");
@@ -119,8 +122,14 @@ function build(){const B_=B(),p=B_.profile(),d=new PDFDoc(),now=new Date();D._d=
    P2.forEach(it=>{if(!Object.keys(D.mc).some(k=>k.startsWith("p2:"+it.k+":"))&&!it.ans.some(k=>D.ans[k]))return;
     d.text(it.t,{size:11.5,bold:true,color:[75,46,131],gap:3});mcBlock(d,"p2:"+it.k+":");
     if(it.chal){d.text("Benign or malignant? challenge (tissue diagrams)",{size:10.5,bold:true,gap:2});chLine(1,"Benign or malignant diagrams");
+     d.row([{src:WS.img("p2pb"),pw:360,ph:312,cap:"Benign diagram you described: "+pickCap("p2pb","(not chosen yet)")},{src:WS.img("p2pm"),pw:360,ph:312,cap:"Malignant diagram you described: "+pickCap("p2pm","(not chosen yet)")}],150,130);
      answers(d,["p2c1","p2c2"])}
-    answers(d,it.ans);d.gap(4)})}
+    answers(d,it.ans);d.gap(4)});
+   if(key==="p2"){d.text("Summary: put the stages in order",{size:11.5,bold:true,color:[75,46,131],gap:3});
+    const c=D.ch["2s"]||{},labs=["Healthy colon","Stage 1: small benign polyp","Stage 2: large benign growth","Stage 3: late adenoma turning malignant","Stage 4: metastasis"];
+    d.text(c.done?"Matched all five stages in order ("+(c.w||0)+" incorrect placement"+((c.w||0)==1?"":"s")+" along the way).":"Not completed yet.",{size:10,x:62,gap:3});
+    d.row([0,1,2].map(k=>({src:WS.img("p2s"+k),pw:480,ph:288,cap:labs[k]})),152,92);
+    d.row([3,4].map(k=>({src:WS.img("p2s"+k),pw:480,ph:288,cap:labs[k]})),152,92);d.gap(4)}}
  });
  Object.keys(D.vp).sort((x,y)=>(D.vp[x].order||0)-(D.vp[y].order||0)).forEach(pid=>{const v=D.vp[pid];
   d.gap(8);d.room(70);d.box(54,d.y,W_,22,[75,46,131]);d.y+=4;d.text(v.part+": "+v.title,{size:13,bold:true,color:[255,255,255],x:62,gap:0});d.y+=8;
@@ -134,7 +143,9 @@ function build(){const B_=B(),p=B_.profile(),d=new PDFDoc(),now=new Date();D._d=
  /* Part 4: histopathology */
  if(D.ch["4a"]||D.ch["4b1"]||D.ans.p4a1||D.ans.p4a2||D.ans.p4b1||D.ans.p4b2){
   banner("Part 4: Histopathology");pts("p4");
-  d.text("4A: Diagnose healthy vs. cancer samples",{size:11.5,bold:true,color:[75,46,131],gap:3});chLine("4a","Samples C\u2013H classified");answers(d,["p4a1","p4a2"]);d.gap(4);
+  d.text("4A: Diagnose healthy vs. cancer samples",{size:11.5,bold:true,color:[75,46,131],gap:3});chLine("4a","Samples C\u2013H classified");
+  d.row([{src:WS.img("p4an"),pw:360,ph:360,cap:"Normal sample you described: "+pickCap("p4an","(not chosen yet)")},{src:WS.img("p4ac"),pw:360,ph:360,cap:"Cancer sample you described: "+pickCap("p4ac","(not chosen yet)")}],150,150);
+  answers(d,["p4a1","p4a2"]);d.gap(4);
   d.text("4B: Benign or malignant? Real tissue slides",{size:11.5,bold:true,color:[75,46,131],gap:3});chLine("4b1","Round 1");chLine("4b2","Round 2");answers(d,["p4b1","p4b2"]);
   d.text("Slide images in 4B: Levenson RM, Krupinski EA, Navarro VM, Wasserman EA (2015). Pigeons (Columba livia) as Trainable Observers of Pathology and Radiology Breast Cancer Images. PLoS ONE 10(11): e0141357. doi:10.1371/journal.pone.0141357. CC BY 4.0. Images cropped.",{size:7.5,color:[100,100,100],gap:6})}
  /* Part 5: summary */

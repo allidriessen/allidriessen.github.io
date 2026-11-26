@@ -44,6 +44,10 @@ table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid 
 .toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:#241a38;color:#fff;padding:10px 16px;border-radius:10px;z-index:60}
 .pill{display:inline-block;background:#efe8f8;color:#4b2e83;font-weight:700;border-radius:999px;padding:3px 12px;font-size:13px}
 .cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}.cards3>div{background:#faf7fd;border:2px solid #ddd0ee;border-radius:12px;padding:10px 14px}.cards3 h3{margin:0 0 4px;font-size:16px;color:#4b2e83}
+.prow{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 6px}
+.pk{width:112px;border:3px solid #ddd0ee;border-radius:10px;background:#fff;padding:3px;font:600 12px 'Open Sans',sans-serif;color:#4b2e83;text-align:center;cursor:pointer}
+.pk.on{border-color:#4b2e83;box-shadow:0 0 0 2px #4b2e83}
+.pk .pkg svg,.pk .pkg img{width:100%;height:auto;display:block;pointer-events:none}
 `;document.head.appendChild(css);
 
 const $=id=>document.getElementById(id);
@@ -89,6 +93,15 @@ PG.quiz=(host,qs,opts)=>{opts=opts||{};const key=opts.key;let n=0;if(window.WS)W
  if(window.WS)qs.forEach((q,i)=>{const c=WS.mcGet(key+":"+i);if(c&&c.d){const blk=host.querySelectorAll(".q")[i];[].concat(q.a).forEach(k=>blk.querySelector(`.opt[data-k="${k}"]`).classList.add("right"));blk.dataset.ok=1;ok(blk);n++}});
  if(n===qs.length&&opts.onDone)opts.onDone()};
 
+/* "which one are you describing?" picker: the chosen picture is saved for the PDF.
+   cfg:{key, title, opts:[{id, cap, html, svg | url}], px, ph}  (svg = SVG text, url = image address) */
+PG.pick=(host,cfg)=>{const w=document.createElement("div");
+ w.innerHTML=`<p style="font-weight:700;margin:12px 0 2px">${cfg.title}</p><div class="prow">${cfg.opts.map((o,i)=>`<button type="button" class="pk" data-i="${i}" aria-label="${o.cap}"><span class="pkg">${o.html}</span>${o.cap}</button>`).join("")}</div><p class="note" style="margin:0 0 4px">The picture you choose is added to your PDF.</p>`;
+ host.appendChild(w);const cur=WS.sec("pick:"+cfg.key).id;
+ const apply=i=>{w.querySelectorAll(".pk").forEach((b,k)=>b.classList.toggle("on",k===i));const o=cfg.opts[i];WS.sec("pick:"+cfg.key,{id:o.id,cap:o.cap});if(o.svg)WS.capture(cfg.key,o.svg,cfg.px||360,cfg.ph);else WS.captureUrl(cfg.key,o.url,cfg.px||360)};
+ w.querySelectorAll(".pk").forEach((b,i)=>b.onclick=()=>apply(i));
+ const k0=cfg.opts.findIndex(o=>o.id===cur);apply(k0>=0?k0:0)};
+
 /* sorting challenge. cfg:{key, items:[{html, cap, truth:0|1}], labels:["Benign","Malignant"], counts:[3,3], seed, nounPlural:"samples",
    hint:(k,items)=>"text", onSolved, solvedExtra:(box)=>{}}  Progress is kept in WS.ch(key). */
 PG.classify=(host,cfg)=>{
@@ -98,7 +111,7 @@ PG.classify=(host,cfg)=>{
  const q=s=>host.querySelector(s),msg=(t,c)=>{const e=q("#cm"+cfg.key);e.textContent=t;e.style.color=c||""},fig=k=>host.querySelector(`figure[data-k="${k}"]`);
  const paint=()=>host.querySelectorAll(".lb button").forEach(b=>b.classList.toggle("on",sel[+b.dataset.k]===+b.dataset.v));
  const solved=()=>{T.forEach((t,k)=>{sel[k]=t.truth;fig(k).classList.add("good")});paint();host.querySelectorAll(".lb button").forEach(b=>b.disabled=true);q("#chk"+cfg.key).hidden=true;q("#hnt"+cfg.key).hidden=true;
-  msg("✅ All "+N+" correct! You solved it on attempt "+WS.ch(cfg.key).att+".","#14803f");if(cfg.onSolved)cfg.onSolved(q("#cw"+cfg.key))};
+  msg("✅ All "+N+" correct! You solved it on attempt "+WS.ch(cfg.key).att+".","#14803f");if(cfg.onSolved)cfg.onSolved(q("#cw"+cfg.key),T)};
  host.querySelectorAll(".gfx").forEach(g=>g.onclick=()=>PG.zoom(g.firstElementChild));
  host.querySelectorAll(".lb button").forEach(b=>b.onclick=()=>{sel[+b.dataset.k]=+b.dataset.v;paint()});
  const hintBtn=()=>{q("#hnt"+cfg.key).hidden=!(WS.ch(cfg.key).att>=3&&!WS.ch(cfg.key).done)};hintBtn();
