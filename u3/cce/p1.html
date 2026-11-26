@@ -77,6 +77,7 @@ select{font:inherit;padding:10px;border-radius:10px;border:2px solid var(--pur);
 <script src="/assets/bvl.js"></script>
 <script src="/assets/pdf.js"></script>
 <script src="/u3/cce/ws.js"></script>
+<script>if(window.BVL)BVL.guard("u3/cce/p1")</script>
 <script>
 /* ====== EDITABLE CONTENT (change questions here without touching the simulation) ====== */
 const PART2_URL="p2.html"; // paste the Part 2 page link here later
@@ -209,7 +210,7 @@ function home(){CURV=-1;SKIPF=null;document.getElementById('savebox').innerHTML=
  <div class="cards">${CONTENT.map((c,i)=>`<button class="card ${S.done[i]?"done":""}" data-i="${i}"><span style="font-size:28px">${["⬡","◉","▦","⏱","★"][i]}</span><h3>${c.name}</h3><small>${c.tissue}</small><br><span class="st">${S.done[i]?"✓ Complete":"Not started"}</span></button>`).join("")}</div>
  <div class="top"><button class="pbtn" id="nx" ${(S.done.slice(0,4).every(x=>x)||TEACH)?"":"disabled"}>Next: Part 2 →</button><button class="pbtn ghost" id="lp">🏠 Back to landing page</button><span class="note">${(S.done.slice(0,4).every(x=>x)||TEACH)?"All four tabs are complete!":"Finish the first four tabs to unlock Part 2. The bonus challenge is optional."}</span></div>`;
  app.querySelectorAll(".card").forEach(b=>b.onclick=()=>tab(+b.dataset.i));
- document.getElementById("nx").onclick=()=>link(PART2_URL);document.getElementById("lp").onclick=()=>link(HOME_URL);if(window.WS)WS.mountExport(document.getElementById("exbox"));if(window.BVL)BVL.mountSavePanel(document.getElementById("savebox"));
+ document.getElementById("nx").onclick=()=>link(PART2_URL);document.getElementById("lp").onclick=()=>link(HOME_URL);if(window.WS)WS.mountExport(document.getElementById("exbox"),"p1");if(window.BVL)BVL.mountSavePanel(document.getElementById("savebox"));
 }
 function nav(i){return`<div class="top"><button class="tab" id="mn">← Part 1 menu</button><div class="tabs">${CONTENT.map((c,k)=>`<button class="tab ${k==i?"on":""}" data-k="${k}">${S.done[k]?"✓ ":""}${c.name}</button>`).join("")}</div></div>`}
 function wire(i){document.getElementById("mn").onclick=home;app.querySelectorAll(".tab[data-k]").forEach(b=>b.onclick=()=>tab(+b.dataset.k))}

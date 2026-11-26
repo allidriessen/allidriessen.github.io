@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" data-unit="5">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Exploratory Biology: Unit 5</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#faf8f4;--ink:#1f1b2e;--muted:#6a647a;--card:#fff;--line:#e6e0d4;--teal:#1f7a8c;--magenta:#b5338a;--shadow:0 1px 2px rgba(31,27,46,.06),0 8px 24px rgba(31,27,46,.06)}
+@media(prefers-color-scheme:dark){:root{--bg:#14111d;--ink:#f3f0fa;--muted:#a79fbd;--card:#1d1829;--line:#322b45;--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Open Sans',system-ui,sans-serif;line-height:1.5}
+.glow{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(520px 320px at 12% 6%,color-mix(in srgb,var(--teal) 22%,transparent),transparent 70%),radial-gradient(480px 300px at 88% 10%,color-mix(in srgb,var(--magenta) 18%,transparent),transparent 70%)}
+.wrap{position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:0 20px}
+header{padding:56px 0 28px}
+header a{color:var(--muted);font-weight:600;text-decoration:none}
+.un{margin:18px 0 0;color:var(--muted);font-weight:700;font-size:16px}
+h1{margin:2px 0 0;font-size:clamp(30px,6vw,56px);font-weight:800;line-height:1.08;letter-spacing:-.02em}
+#grid{padding-bottom:40px}
+.note{color:var(--muted);font-weight:600;padding-bottom:40px}
+.err{background:#fdecea;border:2px solid #c0392b;color:#7a1f16;border-radius:12px;padding:12px 16px;margin:12px 0;font-weight:600}
+</style>
+</head>
+<body>
+<div class="glow" aria-hidden="true"></div>
+<div class="wrap">
+<header>
+  <a href="/home.html">← Home</a>
+  <p class="un" id="un"></p>
+  <h1 id="ut"></h1>
+</header>
+<div id="msg"></div>
+<main><nav class="tiles" id="grid" aria-label="Activities"></nav></main>
+</div>
+<script>
+/* Unit page. The unit number is the data-unit value on the <html> tag above.
+   Titles and fallback dates come from /assets/units.js; the Google Sheet controls release. */
+var N=+document.documentElement.dataset.unit;
+function problem(t){document.getElementById("msg").insertAdjacentHTML("beforeend",'<div class="err">'+t+'</div>')}
+function load(src,ok,bad){var s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=bad;document.body.appendChild(s)}
+document.getElementById("un").textContent="Unit "+N;
+load("/assets/units.js",function(){
+  load("/assets/bvl.js",function(){
+    function render(){
+      document.getElementById("msg").innerHTML="";
+      try{
+        var U=BVL_UNITS.find(function(u){return u.n===N});if(!U)throw new Error("Unit "+N+" is not in units.js");
+        if(!BVL.released({id:"u"+N,release:U.release})){document.getElementById("ut").textContent="Not yet discovered";document.getElementById("grid").innerHTML="";document.getElementById("msg").innerHTML='<p class="note">This unit opens later in the year. <a href="/home.html">Back to home</a></p>';return}
+        var rw=BVL.row("u"+N),title=(rw&&rw.title)||U.title;
+        document.getElementById("ut").textContent=title;document.title=title+" · "+(BVL_CFG.siteTitle||"Exploratory Biology");
+        var A=(U.activities||[]).map(function(a){var o={};for(var k in a)o[k]=a[k];o.theme=a.theme||U.theme;o.id=a.id||("u"+N+"/"+a.key);return o});
+        if(!A.length){document.getElementById("grid").innerHTML="";document.getElementById("msg").innerHTML='<p class="note">Activities for this unit are on the way.</p>';return}
+        BVL.tiles(document.getElementById("grid"),A);
+      }catch(e){problem("Teacher: this page could not read its settings from /assets/units.js ("+e.message+").")}
+    }
+    render();BVL.loadSchedule(render);
+  },function(){problem("Teacher: /assets/bvl.js could not be loaded.")});
+},function(){problem("Teacher: /assets/units.js could not be loaded.")});
+</script>
+</body>
+</html>

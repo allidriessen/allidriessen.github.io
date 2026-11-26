@@ -51,7 +51,7 @@ h1{margin:0;font-size:clamp(38px,8vw,72px);font-weight:800;line-height:1.02}
 const LINKS={
  1:"cce/p1.html",
  2:"cce/p2.html",
- 3:"",
+ 3:"cce/p3a.html",
  4:"",
  5:"",
  6:""
@@ -75,6 +75,7 @@ function cell(x,y,r,k,cancer){return cancer
  for(let i=0;i<22;i++){const x=R()*1000,y=R()*700,r=22+R()*52,c=i%5==0;
   h+=`<g class="fl" style="--d:${9+R()*10}s;--x:${(R()-.5)*50}px;--y:${(R()-.5)*50}px;--r:${(R()-.5)*30}deg" opacity="${.07+R()*.14}">${cell(x,y,r,i+1,c)}</g>`}
  const b=document.getElementById("bg");b.setAttribute("viewBox","0 0 1000 700");b.setAttribute("preserveAspectRatio","xMidYMid slice");b.innerHTML=h})();
-document.getElementById("grid").innerHTML=PARTS.map((p,i)=>{const n=i+1,u=LINKS[n];
- return `<div class="card" style="--c:${p[2]}"><div class="row"><svg class="dish" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29" fill="#fbe6ee" stroke="${p[2]}" stroke-width="4"/>${cell(32,32,17,n*2,n%2==0)}</svg><div><div class="part">Part ${n}</div><h2>${p[0]}</h2></div></div><p>${p[1]}</p>${u?`<a class="go" href="${u}">Open Part ${n} →</a>`:`<span class="go soon">Coming soon</span>`}</div>`}).join("");
+function drawParts(){document.getElementById("grid").innerHTML=PARTS.map((p,i)=>{const n=i+1,u=LINKS[n],open=u&&(!window.BVL||BVL.released({id:"u3/cce/p"+n}));
+ return `<div class="card" style="--c:${p[2]}"><div class="row"><svg class="dish" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="29" fill="#fbe6ee" stroke="${p[2]}" stroke-width="4"/>${cell(32,32,17,n*2,n%2==0)}</svg><div><div class="part">Part ${n}</div><h2>${p[0]}</h2></div></div><p>${p[1]}</p>${open?`<a class="go" href="${u}">Open Part ${n} →</a>`:`<span class="go soon">${u?"Not yet discovered":"Coming soon"}</span>`}</div>`}).join("")}
+drawParts();if(window.BVL){BVL.guard("u3/cce");BVL.loadSchedule(drawParts)}
 </script></body></html>

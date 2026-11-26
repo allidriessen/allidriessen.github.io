@@ -82,8 +82,9 @@ th{background:#efe8f8}
 <script src="/assets/bvl.js"></script>
 <script src="/assets/pdf.js"></script>
 <script src="/u3/cce/ws.js"></script>
+<script>if(window.BVL)BVL.guard("u3/cce/p2")</script>
 <script>
-const PART3_URL=""; // when Part 3 is ready, change to "p3.html"
+const PART3_URL="p3a.html";
 const HOME_URL="../cce.html";
 const TEACHER_CODE="teacher"; // teacher: change this code (tap the faint gear at the bottom right of any page)
 let TEACH=false;
@@ -247,7 +248,7 @@ function summary(){st.mt=[1,1];
   +card("Stage 3: late adenoma turning malignant",tissue(1,1,0,1),"Cells break through the basement membrane.")
   +`<div class="pnl wide"><h3>Stage 4: metastasis (about 0–5 years)</h3><div class="pair" style="gap:0">${panel(0)}${panel(1)}</div><p class="note">Cancer cells travel by the blood and lymph highways and start secondary tumors in new places.</p></div></div>`;
  meta(0);meta(1);
- $("fin").innerHTML=`<div class="bar"><button class="pbtn ghost" id="lp">🏠 Back to landing page</button></div><div id="ex"></div><div id="sv"></div>`;$("lp").onclick=()=>link(HOME_URL);if(window.WS)WS.mountExport($("ex"));if(window.BVL)BVL.mountSavePanel($("sv"))}
+ $("fin").innerHTML=`<div class="bar"><button class="pbtn ghost" id="lp">🏠 Back to landing page</button></div><div id="ex"></div><div id="sv"></div>`;$("lp").onclick=()=>link(HOME_URL);if(window.WS)WS.mountExport($("ex"),"p2");if(window.BVL)BVL.mountSavePanel($("sv"))}
 function zoom(){const o=$("og");o.style.transform="scale(7)";o.style.opacity="0";setTimeout(()=>go(1,true),800)}
 function draw(){$("stage").innerHTML=tissue(st.g,st.inv,!!st.anim)}
 $("nx").onclick=()=>{if(st.step==0)return zoom();if(st.step==5)return link(PART3_URL);go(st.step+1,true)};

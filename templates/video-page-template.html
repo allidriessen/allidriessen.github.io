@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Video page template</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<script src="/assets/units.js"></script>
+<script src="/assets/bvl.js"></script>
+<script src="/assets/pdf.js"></script>
+<script src="/u3/cce/ws.js"></script>
+<script src="/assets/videopage.js"></script>
+<script>
+/* ===================== TEACHER: EDIT ONLY THIS BLOCK =====================
+   To make a new video page: copy this whole file, then change the settings below.
+   Keep every quotation mark and comma. Questions are separated by commas.            */
+VP.init({
+  id:"p3a",                      /* unique short name for this page (no spaces) */
+  order:3,                       /* position of this page's section in the PDF */
+  releaseId:"u3/cce/p3",         /* the ID of its row in the Google Sheet */
+  lesson:"Cancer Cell Exploration",
+  part:"Part 3A",
+  title:"Healthy Lungs: Structure and Function",
+  homeUrl:"/u3/cce.html",
+  prevUrl:"/u3/cce/p2.html",
+  nextUrl:"/u3/cce/p3b.html",
+  nextLabel:"Next: Part 3B, Lung Cancer →",
+  /* VIDEO: paste a Google Drive share link ("Anyone with the link can view"), a YouTube link, or a direct .mp4 address */
+  video:{url:"https://youtu.be/uirINayrSJs"},
+  intro:"Watch the video. You can pause and rewind as often as you need. Answer the questions on the right while you watch.",
+  /* IMAGE (optional): put your picture in /u3/cce/img/ and type its address here. Leave src empty for no image. */
+  image:{src:"",alt:"Diagram of the respiratory system",credit:""},
+  /* Shown in the PDF under "Key learning points". Delete the lines for none. */
+  points:["The lungs are a branching system: air travels through the trachea, bronchi, and bronchioles to tiny air sacs called alveoli.","The lungs' structure is closely matched to their essential job of exchanging oxygen and carbon dioxide with the blood."],
+  questions:[
+    {type:"heading",text:"Healthy lungs"},
+    {type:"written",id:"p3a_q8a",prompt:"8a. In 1-2 sentences, describe the overall structure of the lungs.",rows:4},
+    {type:"written",id:"p3a_q8b",prompt:"8b. In 1-2 sentences, explain the relationship between the organ's structure and its essential functions.",rows:4}
+    /* More question types you can copy:
+    ,{type:"mc",id:"q_example",prompt:"Question text?",o:["Choice A","Choice B","Choice C"],a:1,note:"Optional explanation shown after a correct answer."}   (a = number of the correct choice, starting at 0)
+    ,{type:"sketch",id:"q_draw",prompt:"Draw a model of ..."}
+    */
+  ]
+});
+</script>
+</body>
+</html>

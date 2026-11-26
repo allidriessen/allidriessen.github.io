@@ -2,11 +2,12 @@
    Everything stays in this browser. Load after /assets/bvl.js and /assets/pdf.js. */
 (function(){
 const K="cce-ws",HOME_PATH="/u3/cce.html";
-let D={ans:{},mc:{},ch:{},sec:{},sig:""};
+const FINAL_PART="p3b"; /* the last page of the lesson: the signature and PDF download appear ONLY here. Change to "p6" when Part 6 exists. */
+let D={ans:{},mc:{},ch:{},sec:{},sig:"",pr:{},vp:{},sk:{}};
 const B=()=>window.BVL;
-function load(){const d=B()&&B().load(K);if(d)D={ans:d.ans||{},mc:d.mc||{},ch:d.ch||{},sec:d.sec||{},sig:d.sig||""}}
+function load(){const d=B()&&B().load(K);if(d)D={ans:d.ans||{},mc:d.mc||{},ch:d.ch||{},sec:d.sec||{},sig:d.sig||"",pr:d.pr||{},vp:d.vp||{},sk:d.sk||{}}}
 function save(){if(!B())return;const n=Object.values(D.ans).filter(v=>v&&v.trim()).length,m=Object.values(D.mc).filter(q=>q.d).length;
- B().save(K,{title:"Cancer Cell Exploration · worksheet",summary:n+" written answers, "+m+" questions answered",ans:D.ans,mc:D.mc,ch:D.ch,sec:D.sec,sig:D.sig})}
+ B().save(K,{title:"Cancer Cell Exploration · worksheet",summary:n+" written answers, "+m+" questions answered",ans:D.ans,mc:D.mc,ch:D.ch,sec:D.sec,sig:D.sig,pr:D.pr,vp:D.vp,sk:D.sk})}
 const WS=window.WS={
  load,save,
  ans:k=>D.ans[k]||"",
@@ -19,12 +20,32 @@ const WS=window.WS={
  /* written answer box (typed or Apple Pencil handwriting converted by Scribble; pasting is blocked) */
  box(host,key,prompt,rows){const w=document.createElement("div");w.className="wsq";
   w.innerHTML=`<p style="font-weight:700;margin:12px 0 6px">${prompt}</p><textarea rows="${rows||4}" style="width:100%;font:inherit;font-size:16px;padding:10px;border:2px solid #ddd0ee;border-radius:10px" aria-label="Your written answer"></textarea><div class="note" style="font-size:12px;color:#6b5a85">Type, or write with your Apple Pencil. Pasting is turned off. Your answer saves automatically.</div>`;
-  host.appendChild(w);const t=w.querySelector("textarea");t.value=D.ans[key]||"";if(B())B().noPaste(t,()=>{w.querySelector(".note").textContent="Pasting is turned off. Please type or handwrite your own words."});
-  let tm;t.addEventListener("input",()=>{D.ans[key]=t.value;clearTimeout(tm);tm=setTimeout(save,500)});return t},
+  host.appendChild(w);D.pr[key]=prompt;const t=w.querySelector("textarea");t.value=D.ans[key]||"";if(B())B().noPaste(t,()=>{w.querySelector(".note").textContent="Pasting is turned off. Please type or handwrite your own words."});
+  let tm;const flush=()=>{clearTimeout(tm);D.ans[key]=t.value;save()};t.addEventListener("input",()=>{D.ans[key]=t.value;clearTimeout(tm);tm=setTimeout(save,500)});t.addEventListener("blur",flush);addEventListener("pagehide",flush);document.addEventListener("visibilitychange",()=>{if(document.hidden)flush()});return t},
  /* render an SVG string to a small JPEG and store it for the PDF */
  capture(key,svg,px){return new Promise(res=>{try{const im=new Image(),s=px||360;im.onload=()=>{const c=document.createElement("canvas");c.width=c.height=s;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,s,s);x.drawImage(im,0,0,s,s);
    if(B())B().save("img:"+key,{d:c.toDataURL("image/jpeg",.82)});res(1)};im.onerror=()=>res(0);
    im.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg)}catch(e){res(0)}})},
+ vp(pid,o){D.vp[pid]=o;save()},
+ hasSketch:k=>!!D.sk[k],
+ FINAL:FINAL_PART,
+ /* drawing box (Apple Pencil or finger) with colors, pen sizes, eraser, undo, clear; saved as a picture for the PDF */
+ sketch(host,key,prompt){const w=document.createElement("div");w.className="wsq";const cols=["#111111","#d92d20","#1a73e8","#188038","#f29900","#8e24aa","#8d5524","#e91e8c"];
+  w.innerHTML=`<p style="font-weight:700;margin:12px 0 6px">${prompt}</p><div class="skb">${cols.map((c,i)=>`<button type="button" class="skc${i?"":" on"}" data-c="${c}" style="background:${c}" aria-label="Color ${i+1}"></button>`).join("")}<select class="sks" aria-label="Pen size"><option value="3">Thin</option><option value="6" selected>Medium</option><option value="12">Thick</option></select><button type="button" class="skt" data-a="erase">Eraser</button><button type="button" class="skt" data-a="undo">Undo</button><button type="button" class="skt" data-a="clear">Clear</button></div><canvas style="width:100%;aspect-ratio:3/2;border:2px solid #ddd0ee;border-radius:10px;background:#fff;touch-action:none;display:block" aria-label="Sketch area"></canvas><div class="note" style="font-size:12px;color:#6b5a85">Draw with your Apple Pencil or finger. Choose colors above. Your sketch saves automatically.</div>`;
+  host.appendChild(w);D.pr[key]=prompt;const cv=w.querySelector("canvas"),x=cv.getContext("2d");cv.width=1200;cv.height=800;x.fillStyle="#fff";x.fillRect(0,0,1200,800);x.lineCap="round";x.lineJoin="round";
+  let col=cols[0],er=false,dn=false,last=null,pen=false,hist=[],ink=!!D.sk[key];
+  const sv=B()&&B().load("img:sk:"+key);if(sv&&sv.d){const im=new Image();im.onload=()=>x.drawImage(im,0,0,1200,800);im.src=sv.d}
+  const persist=()=>{if(B())B().save("img:sk:"+key,{d:ink?cv.toDataURL("image/jpeg",.85):""});D.sk[key]=ink?1:0;save()};
+  const pos=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*1200/r.width,(e.clientY-r.top)*800/r.height]};
+  const size=()=>+w.querySelector(".sks").value*(er?3:1);
+  cv.addEventListener("pointerdown",e=>{if(e.pointerType==="touch"&&pen)return;if(e.pointerType==="pen")pen=true;try{cv.setPointerCapture(e.pointerId)}catch(z){}hist.push(x.getImageData(0,0,1200,800));if(hist.length>15)hist.shift();dn=true;last=pos(e);x.strokeStyle=er?"#fff":col;x.lineWidth=size();x.beginPath();x.moveTo(last[0],last[1]);x.lineTo(last[0]+.1,last[1]);x.stroke();ink=true;e.preventDefault()});
+  cv.addEventListener("pointermove",e=>{if(!dn)return;const p=pos(e);x.lineWidth=size()*(e.pointerType==="pen"&&e.pressure?.5+e.pressure:1);x.strokeStyle=er?"#fff":col;x.beginPath();x.moveTo(last[0],last[1]);x.lineTo(p[0],p[1]);x.stroke();last=p;e.preventDefault()});
+  const end=()=>{if(dn){dn=false;persist()}};cv.addEventListener("pointerup",end);cv.addEventListener("pointercancel",end);
+  w.querySelectorAll(".skc").forEach(b=>b.onclick=()=>{col=b.dataset.c;er=false;w.querySelectorAll(".skc").forEach(o=>o.classList.toggle("on",o===b));w.querySelector('[data-a="erase"]').classList.remove("on")});
+  w.querySelector('[data-a="erase"]').onclick=function(){er=!er;this.classList.toggle("on",er)};
+  w.querySelector('[data-a="undo"]').onclick=()=>{const h=hist.pop();if(h){x.putImageData(h,0,0);persist()}};
+  w.querySelector('[data-a="clear"]').onclick=()=>{hist.push(x.getImageData(0,0,1200,800));x.fillStyle="#fff";x.fillRect(0,0,1200,800);ink=false;persist()};
+  return cv},
  img:k=>{const d=B()&&B().load("img:"+k);return d?d.d:""}
 };
 /* ===== PDF content ===== */
@@ -58,8 +79,10 @@ function mcBlock(d,prefix){const L=ids(prefix);if(!L.length)return{n:0,s:0};let 
   d.text(q.q,{size:10,bold:true,gap:1});
   d.text("   "+(q.d?(ok?"Correct on the first try":"Correct after "+(q.w+1)+" tries"):"Not answered yet")+(q.d?"   (answer: "+q.a+")":""),{size:9.5,color:q.d?(ok?[20,120,60]:[160,90,20]):[150,60,50],gap:3})});
  return{n:L.length,s}}
-function answers(d,keys){keys.forEach(k=>{const v=(D.ans[k]||"").trim(),h=Math.max(40,d.wrap(v||" ",10.5,false,W_-16).length*14+12);d.room(h+d.wrap(PROMPT[k],10,true,W_).length*14+14);d.text(PROMPT[k],{size:10,bold:true,gap:1});d.box(54,d.y,W_,h,[250,249,253],[190,180,215]);
- const y0=d.y;d.y+=6;d.text(v||"(No answer yet)",{size:10.5,x:62,w:W_-16,color:v?[20,20,20]:[150,150,150],gap:0});d.y=y0+h+8})}
+const strip=t=>String(t||"").replace(/<[^>]+>/g,"");
+function answerBox(d,prompt,v){const h=Math.max(40,d.wrap(v||" ",10.5,false,W_-16).length*14+12);d.room(h+d.wrap(prompt,10,true,W_).length*14+14);d.text(prompt,{size:10,bold:true,gap:1});d.room(h+6);d.box(54,d.y,W_,h,[250,249,253],[190,180,215]);
+ const y0=d.y;d.y+=6;d.text(v||"(No answer yet)",{size:10.5,x:62,w:W_-16,color:v?[20,20,20]:[150,150,150],gap:0});d.y=y0+h+8}
+function answers(d,keys){keys.forEach(k=>answerBox(d,strip(PROMPT[k]||D.pr[k]||k),(D.ans[k]||"").trim()))}
 const W_=504;
 function build(){const B_=B(),p=B_.profile(),d=new PDFDoc(),now=new Date(),id=(Date.now().toString(36)+Math.random().toString(36).slice(2,5)).toUpperCase();
  const url=location.origin+HOME_PATH,a1=B_.load("cancer-cell-exploration-part1"),a2=B_.load("cancer-cell-exploration-part2");
@@ -90,17 +113,25 @@ function build(){const B_=B(),p=B_.profile(),d=new PDFDoc(),now=new Date(),id=(D
      d.text("Sample images: Levenson RM, Krupinski EA, Navarro VM, Wasserman EA (2015). Pigeons (Columba livia) as Trainable Observers of Pathology and Radiology Breast Cancer Images. PLoS ONE 10(11): e0141357. doi:10.1371/journal.pone.0141357. CC BY 4.0. Images cropped.",{size:7.5,color:[100,100,100],gap:6})}
     answers(d,it.ans);d.gap(4)})}
  });
+ Object.keys(D.vp).sort((x,y)=>(D.vp[x].order||0)-(D.vp[y].order||0)).forEach(pid=>{const v=D.vp[pid];
+  d.gap(8);d.room(70);d.box(54,d.y,W_,22,[75,46,131]);d.y+=4;d.text(v.part+": "+v.title,{size:13,bold:true,color:[255,255,255],x:62,gap:0});d.y+=8;
+  if(v.url)d.text("Video: "+v.url,{size:9.5,color:[26,80,200],link:v.url,gap:4});
+  if(v.points&&v.points.length){d.text("Key learning points",{size:11,bold:true,gap:2});v.points.forEach(t=>d.text("\u2022 "+t,{size:9.5,x:62,w:W_-14,gap:2}));d.gap(6)}
+  v.qs.forEach(q=>{if(q.type==="written")answerBox(d,strip(q.prompt),(D.ans[q.id]||"").trim());
+   else if(q.type==="sketch"){const im=WS.img("sk:"+q.id);d.room(270);d.text(strip(q.prompt),{size:10,bold:true,gap:2});if(im)d.image(im,1200,800,360);else d.text("(No sketch yet)",{size:10,color:[150,150,150]});d.gap(4)}
+   else if(q.type==="mc"){const c=D.mc["vp:"+pid+":"+q.id]||{},ok=c.d&&!c.w;d.text(strip(q.prompt),{size:10,bold:true,gap:1});d.text("   "+(c.d?(ok?"Correct on the first try":"Correct after "+((c.w||0)+1)+" tries"):"Not answered yet"),{size:9.5,color:c.d?(ok?[20,120,60]:[160,90,20]):[150,60,50],gap:3})}});d.gap(4)});
  /* score summary */
- const all=Object.keys(D.mc).filter(k=>/^p[12]:/.test(k)&&!/^p1:q4:/.test(k)),tot=all.length,first=all.filter(k=>D.mc[k].d&&!D.mc[k].w).length,done=all.filter(k=>D.mc[k].d).length;
- d.gap(6);d.rule();d.text("Multiple-choice summary: "+first+" of "+tot+" correct on the first try ("+done+" of "+tot+" answered).",{size:11,bold:true,gap:6});
+ const all=Object.keys(D.mc).filter(k=>/^(p[12]|vp):/.test(k)&&!/^p1:q4:/.test(k)),tot=all.length,first=all.filter(k=>D.mc[k].d&&!D.mc[k].w).length,done=all.filter(k=>D.mc[k].d).length;
+ d.gap(6);d.rule();if(tot)d.text("Multiple-choice summary: "+first+" of "+tot+" correct on the first try ("+done+" of "+tot+" answered).",{size:11,bold:true,gap:6});
  d.room(120);
  d.text("Honor statement: I completed this work myself, using my own samples and my own words.",{size:10.5,bold:true,gap:4});
  if(D.sig)d.image(D.sig,1040,300,170);else d.text("(No signature)",{size:10,gap:4});
  d.text("Signed by "+p.name+" on "+now.toLocaleString(),{size:9.5,gap:2});
  if(pc>0)d.text("Note: "+pc+" attempt(s) to paste text were blocked while completing this worksheet.",{size:8.5,color:[110,110,110]});
  return{d,id,p}}
-const css=document.createElement("style");css.textContent=".wsblue{background:#1a73e8!important;color:#fff!important;border:0!important;font-size:16px!important}.wsblue[disabled]{background:#9db9e6!important;cursor:not-allowed}.wscheck li{margin:2px 0}";document.head.appendChild(css);
-WS.mountExport=host=>{if(!host)return;const b=B();
+const css=document.createElement("style");css.textContent=".wsblue{background:#1a73e8!important;color:#fff!important;border:0!important;font-size:16px!important}.wsblue[disabled]{background:#9db9e6!important;cursor:not-allowed}.wscheck li{margin:2px 0}.skb{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:6px 0}.skc{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px #bbb;cursor:pointer;padding:0}.skc.on{box-shadow:0 0 0 3px #4b2e83}.skt,.sks{font:600 14px 'Open Sans',sans-serif;min-height:38px;padding:4px 10px;border:2px solid #4b2e83;border-radius:10px;background:#fff;color:#4b2e83;cursor:pointer}.skt.on{background:#4b2e83;color:#fff}";document.head.appendChild(css);
+WS.mountExport=(host,pid)=>{if(!host)return;const b=B();
+ if(pid&&pid!==FINAL_PART){host.innerHTML='<div class="bvl-box"><h3>Your PDF</h3><p class="bvl-s">Your answers are saving automatically. You will sign and download your PDF once, on the last page of this lesson.</p></div>';return}
  if(!b||!b.user()){host.innerHTML='<div class="bvl-box"><h3>Download your worksheet</h3><p>Sign in on the <a href="/home.html">home page</a> to create your PDF.</p></div>';return}
  const p=b.profile(),need=[];if(!p.teacher||!p.period)need.push("Choose your teacher and period in Profile settings on the home page.");
  const mcs=Object.values(D.mc).filter(q=>q.d).length;

@@ -7,8 +7,10 @@ const get=k=>{try{return JSON.parse(localStorage.getItem(P+k))}catch(e){return n
 const set=(k,v)=>{try{localStorage.setItem(P+k,JSON.stringify(v));return true}catch(e){return false}};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const $=(r,s)=>r.querySelector(s);
+B.cfg.sheetUrl=B.cfg.sheetUrl||"https://docs.google.com/spreadsheets/d/e/2PACX-1vRGoDKJrgFC0DdbtCc21l52gNYcXwonDIJwHQYxC_IvpXx9j5Y9Kzo1zUhP8CPOOwwqX5mFFDosfTKh/pub?output=csv";
 B.cfg.teachers=B.cfg.teachers||["Ms. Driessen","Ms. Bennett"];B.cfg.periods=B.cfg.periods||7;
 B.preview=(new URLSearchParams(location.search).get("preview")||"\0")===B.cfg.teacherCode;
+try{if(B.preview)sessionStorage.setItem("bvl:preview","1");else if(sessionStorage.getItem("bvl:preview"))B.preview=true}catch(e){}
 /* ---- accounts ---- */
 const norm=(f,l)=>(f.trim()+" "+l.trim()).toLowerCase().replace(/\s+/g," ");
 async function hash(s){try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("bvl|"+s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){let h=5381;for(const c of s)h=((h<<5)+h+c.charCodeAt(0))|0;return"x"+h}}
@@ -128,7 +130,25 @@ B.mountSavePanel=el=>{if(!el)return;const u=B.user();
  $(el,"input[type=file]").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{let o=null;try{o=JSON.parse(r.result)}catch(x){}if(B.unpack(o))location.reload();else m("That file could not be read.","e")};r.readAsText(f)}};
 /* ---- reveal tiles ---- */
 const COLORS=["#1f7a8c","#d99a1e","#b5338a","#6a46ad","#2f8f6b","#c4572b","#3f78b5","#8a4fa8","#b5335a"];
-B.released=it=>B.preview||!it.release||new Date(it.release+"T00:00:00")<=new Date();
+/* ---- release schedule: published Google Sheet (CSV). Falls back to the last saved copy, then to dates in units.js ---- */
+B.sched=(get("sched")||{}).o||{};B.schedLoaded=false;
+function parseCSV(t){const rows=[];let r=[],c="",q=false;for(let i=0;i<t.length;i++){const ch=t[i];if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}else if(ch==='"')q=true;else if(ch===","){r.push(c);c=""}else if(ch==="\n"||ch==="\r"){if(ch==="\r"&&t[i+1]==="\n")i++;r.push(c);rows.push(r);r=[];c=""}else c+=ch}if(c||r.length){r.push(c);rows.push(r)}return rows}
+function pdate(s){s=(s||"").trim();let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return new Date(+m[1],m[2]-1,+m[3]);m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(m)return new Date(+m[3],m[1]-1,+m[2]);return null}
+function ingest(t){const rows=parseCSV(t).filter(r=>r.some(x=>x.trim()));if(rows.length<2)return null;const h=rows[0].map(x=>x.trim().toLowerCase().replace(/[^a-z]/g,"")),ix=n=>h.indexOf(n),o={};
+ if(ix("id")<0)return null;
+ rows.slice(1).forEach(r=>{const id=(r[ix("id")]||"").trim().toLowerCase().replace(/^\/+|\/+$/g,"");if(!id)return;const g=n=>(ix(n)<0?"":(r[ix(n)]||"")).trim();o[id]={title:g("title"),desc:g("description"),rel:g("releasedate"),close:g("closedate"),ov:g("override").toLowerCase()}});return o}
+let SQ=[],SL=false;
+B.loadSchedule=cb=>{if(B.schedLoaded){cb&&cb();return}if(cb)SQ.push(cb);if(SL)return;SL=true;
+ const done=()=>{B.schedLoaded=true;SQ.splice(0).forEach(f=>f())},url=B.cfg.sheetUrl;if(!url||!window.fetch)return done();
+ const ctl=window.AbortController?new AbortController():null,tm=setTimeout(()=>ctl&&ctl.abort(),4000);
+ fetch(url+(url.includes("?")?"&":"?")+"cb="+Math.floor(Date.now()/60000),{cache:"no-store",signal:ctl&&ctl.signal}).then(r=>r.ok?r.text():Promise.reject()).then(t=>{const o=ingest(t);if(o){B.sched=o;set("sched",{t:Date.now(),o})}}).catch(()=>{}).then(()=>{clearTimeout(tm);done()})};
+B.row=id=>id?B.sched[String(id).toLowerCase()]:null;
+/* an item is open if the sheet says so (override, then release/close dates); items missing from the sheet use it.release from units.js */
+B.released=it=>{if(B.preview)return true;const r=B.row(it.id);
+ if(r){if(r.ov==="hide")return false;if(r.ov==="open now")return true;const a=pdate(r.rel);if(!a)return false;const b=pdate(r.close),now=new Date();return now>=a&&(!b||now<new Date(b.getFullYear(),b.getMonth(),b.getDate()+1))}
+ return !it.release||new Date(it.release+"T00:00:00")<=new Date()};
+/* put at the top of a page that should be locked until released */
+B.guard=(id,fallback)=>{const chk=()=>{if(B.released({id,release:fallback}))return;document.body.innerHTML='<div style="font-family:\'Open Sans\',system-ui,sans-serif;max-width:560px;margin:90px auto;padding:0 20px"><h1>Not yet discovered</h1><p>This opens later. <a href="/home.html">Back to home</a></p></div>'};chk();B.loadSchedule(chk)};
 const BG='<rect width="100" height="100" fill="#fbe6ee"/>';
 const TH={
  earth:()=>'<rect width="100" height="100" fill="#cfe9f7"/><circle cx="42" cy="42" r="27" fill="#3b82c4"/><path d="M28 34q8-8 15-1t3 9q-9 5-16 0z" fill="#4caf6a"/><path d="M46 48q9-3 13 4t-6 11q-9-3-7-15z" fill="#4caf6a"/>',
@@ -141,11 +161,11 @@ const TH={
  tree:()=>BG+'<path d="M42 70V50M42 50L26 34M42 50L58 34M26 34L18 18M26 34L34 18M58 34L50 18M58 34L66 18" stroke="#2f8f6b" stroke-width="4" fill="none" stroke-linecap="round"/>'+[[18,18],[34,18],[50,18],[66,18]].map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="${["#b5338a","#d99a1e","#1f7a8c","#6a46ad"][i]}"/>`).join(""),
  body:()=>BG+'<path d="M42 64C18 48 20 26 33 26c6 0 9 4 9 7 0-3 3-7 9-7 13 0 15 22-9 38z" fill="#d6303f"/><path d="M14 44h14l5-9 7 18 5-9h16" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'
 };
-B.lens=(c,s,t)=>`<div class="lw"><svg class="lin" viewBox="0 0 100 100"><defs><clipPath id="lc${s}"><circle cx="42" cy="42" r="32"/></clipPath></defs><g clip-path="url(#lc${s})">${(TH[t]||TH.cells)(c,s)}</g></svg><svg viewBox="0 0 100 100"><circle cx="42" cy="42" r="32" fill="none" stroke="${c}" stroke-width="6"/><path d="M66 66L92 92" stroke="${c}" stroke-width="10" stroke-linecap="round"/></svg></div>`;
+B.lens=(c,s,t)=>`<div class="lw" aria-hidden="true"><svg class="lin" viewBox="0 0 100 100"><defs><clipPath id="lc${s}"><circle cx="42" cy="42" r="32"/></clipPath></defs><g clip-path="url(#lc${s})">${(TH[t]||TH.cells)(c,s)}</g></svg><svg viewBox="0 0 100 100"><circle cx="42" cy="42" r="32" fill="none" stroke="${c}" stroke-width="6"/><path d="M66 66L92 92" stroke="${c}" stroke-width="10" stroke-linecap="round"/></svg></div>`;
 B.tiles=(el,items)=>{const seen=get("seen")||{},fresh=[];
- el.innerHTML=items.map((it,i)=>{const c=it.color||COLORS[i%COLORS.length],open=B.released(it),k=it.key||("t"+i),isNew=open&&!seen[k];if(isNew)fresh.push(k);
+ el.innerHTML=items.map((it,i)=>{const rw=B.row(it.id),ti=(rw&&rw.title)||it.title,ds=(rw&&rw.desc)||it.desc,c=it.color||COLORS[i%COLORS.length],open=B.released(it),k=it.key||("t"+i),isNew=open&&!seen[k];if(isNew)fresh.push(k);
   if(!open)return`<div class="tile locked" style="--c:${c}" aria-label="Not yet discovered">${B.lens(c,i+1,it.theme)}<div class="tt"><b>Not yet discovered</b></div></div>`;
-  return`<a class="tile${isNew?" fresh":""}" style="--c:${c}" href="${it.url}">${B.lens(c,i+1,it.theme)}<div class="tt">${it.sub?`<small>${esc(it.sub)}</small>`:""}<b>${esc(it.title)}</b>${it.desc?`<span>${esc(it.desc)}</span>`:""}</div></a>`}).join("");
+  return`<a class="tile${isNew?" fresh":""}" style="--c:${c}" href="${it.url}">${B.lens(c,i+1,it.theme)}<div class="tt">${it.sub?`<small>${esc(it.sub)}</small>`:""}<b>${esc(ti)}</b>${ds?`<span>${esc(ds)}</span>`:""}</div></a>`}).join("");
  if(fresh.length)setTimeout(()=>{el.querySelectorAll(".fresh").forEach(t=>t.classList.remove("fresh"));fresh.forEach(k=>seen[k]=1);set("seen",seen)},700)};
 document.addEventListener("DOMContentLoaded",B.bar);
 })();

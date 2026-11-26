@@ -34,21 +34,26 @@ h1{margin:2px 0 0;font-size:clamp(30px,6vw,56px);font-weight:800;line-height:1.0
 </div>
 <script>
 /* Unit page. The unit number is the data-unit value on the <html> tag above.
-   Titles, activities, and release dates all come from /assets/units.js. */
+   Titles and fallback dates come from /assets/units.js; the Google Sheet controls release. */
 var N=+document.documentElement.dataset.unit;
 function problem(t){document.getElementById("msg").insertAdjacentHTML("beforeend",'<div class="err">'+t+'</div>')}
 function load(src,ok,bad){var s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=bad;document.body.appendChild(s)}
 document.getElementById("un").textContent="Unit "+N;
 load("/assets/units.js",function(){
   load("/assets/bvl.js",function(){
-    try{
-      var U=BVL_UNITS.find(function(u){return u.n===N});if(!U)throw new Error("Unit "+N+" is not in units.js");
-      if(!BVL.released(U)){document.getElementById("ut").textContent="Not yet discovered";document.getElementById("msg").innerHTML='<p class="note">This unit opens later in the year. <a href="/home.html">Back to home</a></p>';return}
-      document.getElementById("ut").textContent=U.title;document.title=U.title+" · "+(BVL_CFG.siteTitle||"Exploratory Biology");
-      var A=(U.activities||[]).map(function(a){a.theme=a.theme||U.theme;return a});
-      if(!A.length){document.getElementById("msg").innerHTML='<p class="note">Activities for this unit are on the way.</p>';return}
-      BVL.tiles(document.getElementById("grid"),A);
-    }catch(e){problem("Teacher: this page could not read its settings from /assets/units.js ("+e.message+").")}
+    function render(){
+      document.getElementById("msg").innerHTML="";
+      try{
+        var U=BVL_UNITS.find(function(u){return u.n===N});if(!U)throw new Error("Unit "+N+" is not in units.js");
+        if(!BVL.released({id:"u"+N,release:U.release})){document.getElementById("ut").textContent="Not yet discovered";document.getElementById("grid").innerHTML="";document.getElementById("msg").innerHTML='<p class="note">This unit opens later in the year. <a href="/home.html">Back to home</a></p>';return}
+        var rw=BVL.row("u"+N),title=(rw&&rw.title)||U.title;
+        document.getElementById("ut").textContent=title;document.title=title+" · "+(BVL_CFG.siteTitle||"Exploratory Biology");
+        var A=(U.activities||[]).map(function(a){var o={};for(var k in a)o[k]=a[k];o.theme=a.theme||U.theme;o.id=a.id||("u"+N+"/"+a.key);return o});
+        if(!A.length){document.getElementById("grid").innerHTML="";document.getElementById("msg").innerHTML='<p class="note">Activities for this unit are on the way.</p>';return}
+        BVL.tiles(document.getElementById("grid"),A);
+      }catch(e){problem("Teacher: this page could not read its settings from /assets/units.js ("+e.message+").")}
+    }
+    render();BVL.loadSchedule(render);
   },function(){problem("Teacher: /assets/bvl.js could not be loaded.")});
 },function(){problem("Teacher: /assets/units.js could not be loaded.")});
 </script>
