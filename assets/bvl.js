@@ -65,7 +65,7 @@ const css=document.createElement("style");css.textContent=`
 .bvl-bar{position:fixed;top:8px;right:8px;z-index:45;background:rgba(36,26,56,.92);color:#fff;border-radius:999px;padding:5px 12px;font:600 13px 'Open Sans',system-ui,sans-serif;display:flex;gap:8px;align-items:center}
 .bvl-bar a,.bvl-bar button{color:#f6c1cf;background:none;border:0;font:inherit;cursor:pointer;text-decoration:underline;padding:4px}
 .bvl-box{background:#fff;color:#241a38;border:2px solid #ddd0ee;border-radius:14px;padding:14px 16px;margin:14px 0;font-family:'Open Sans',system-ui,sans-serif;line-height:1.5}
-.bvl-box h3{margin:0 0 6px}.bvl-s{font-size:14px;color:#6b5a85}
+.bvl-box h3{margin:0 0 6px}.bvl-help{margin-top:12px;border:2px solid #ddd0ee;border-radius:12px;background:#faf7fd;padding:4px 12px}.bvl-help summary{cursor:pointer;font-weight:700;color:#4b2e83;padding:8px 0;min-height:36px}.bvl-help p,.bvl-help ol{margin:6px 0}.bvl-help ol{padding-left:22px}.bvl-help li{margin:4px 0}.bvl-s{font-size:14px;color:#6b5a85}
 .bvl-row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
 .bvl-box button,.bvl-btn{font:700 15px 'Open Sans',sans-serif;background:#4b2e83;color:#fff;border:0;border-radius:10px;padding:10px 14px;min-height:44px;cursor:pointer;display:inline-flex;align-items:center}
 .bvl-box button.g{background:#fff;color:#4b2e83;border:2px solid #4b2e83}
@@ -117,7 +117,17 @@ B.mountSavePanel=el=>{if(!el)return;const u=B.user();
  el.innerHTML=`<div class="bvl-box"><h3>Save and hand in your work</h3><p class="bvl-s">Your progress saves automatically in this browser on this device. It has not been sent to your teacher; your answers go on your worksheet.</p>
  <ul>${ks.map(k=>`<li><b>${esc(d[k].title||k)}</b>: ${esc(d[k].summary||"")}</li>`).join("")||"<li>No saved progress yet.</li>"}</ul>
  <div class="bvl-row"><button data-a="copy">Copy progress summary</button><button data-a="print">Print / save as PDF</button><button data-a="file">Save progress file</button><label class="bvl-btn">Load progress file<input type="file" accept=".json,application/json" hidden></label><button data-a="code">Get resume code</button><button class="g" data-a="reset">Start over</button></div>
- <textarea rows="3" placeholder="Resume code (starts with LB1.): copy it, or paste one here"></textarea><button class="g" data-a="load">Load resume code</button><div class="bvl-msg" aria-live="polite"></div></div>`;
+ <textarea rows="3" placeholder="Resume code (starts with LB1.): copy it, or paste one here"></textarea><button class="g" data-a="load">Load resume code</button><div class="bvl-msg" aria-live="polite"></div>
+ <details class="bvl-help"><summary>What do "Save" and "Load" progress file mean? How do I move my work to another device?</summary>
+ <p><b>Your work lives on this device.</b> Everything you type, draw, and answer is saved inside this browser on this iPad or computer. If you use a different device, or clear your browser data, it will not be there.</p>
+ <p><b>Save progress file</b> makes a small backup file of your work (your answers, sketches, sample pictures, and signature) and puts it in your Downloads or Files app. <b>Load progress file</b> reads that file and puts your work back.</p>
+ <p><b>To move your work to another device:</b></p>
+ <ol><li>On the first device, tap <b>Save progress file</b>.</li>
+ <li>Send the file to yourself. Either <b>email it to yourself</b> (attach it), or <b>upload it to Google Drive</b> (or another cloud folder you use, such as OneDrive).</li>
+ <li>On the second device, open this website and <b>sign in with the same first name, last name, and PIN</b>. If it is a new device, choose your teacher and period.</li>
+ <li>Download the file from your email or Drive. On an iPad it goes to the Files app.</li>
+ <li>Come back to this page, tap <b>Load progress file</b>, and choose the file.</li></ol>
+ <p class="bvl-s"><b>Tips:</b> Save a new file whenever you finish a part, and keep it somewhere you can find it. Loading a file replaces the work on that device with the work in the file, so load the newest one. <b>Get resume code</b> is a shorter text version of your work. It leaves out sketches, sample pictures, and your signature, so use the file when you want everything.</p></details></div>`;
  const m=(t,c)=>{const e=$(el,".bvl-msg");e.textContent=t;e.className="bvl-msg "+(c||"")},ta=$(el,"textarea");
  const A={
   copy(){const t=B.report();(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>m("Copied!","k"),()=>{ta.value=t;ta.select();m("Select and copy the text in the box.","k")})},
