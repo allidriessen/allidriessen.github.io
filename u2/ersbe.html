@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Enzymatic Reaction Simulator: Build the Equation</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#16202a;--mute:#5d6b78;--line:#dde3e9;--acc:#0e9f8e;--warn:#d9822b;--ok:#2fae66;--r:#4a7bd8;--p:#e0566e;--q:#d9822b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e141a;--card:#16202a;--ink:#e8eef3;--mute:#93a3b1;--line:#27343f;--acc:#2fd0bc;--r:#7da3f0;--p:#f0788c;--q:#f0a24e}}
+:root[data-theme="dark"]{--bg:#0e141a;--card:#16202a;--ink:#e8eef3;--mute:#93a3b1;--line:#27343f;--acc:#2fd0bc;--r:#7da3f0;--p:#f0788c;--q:#f0a24e}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font:14px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+body{padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+#stage{position:absolute;left:50%;top:50%;transform-origin:center center;padding:10px;display:flex;flex-direction:column;overflow:hidden}
+h1{font-size:1.05rem;margin:0 0 6px;flex:none;line-height:1.2}
+h2{font-size:.82rem;margin:0 0 4px}
+.cols{flex:1;min-height:0;display:grid;gap:10px}
+.land .cols{grid-template-columns:250px 1fr}.port .cols{grid-template-columns:185px 1fr}
+.col{display:flex;flex-direction:column;gap:8px;min-height:0}
+.R{display:grid;gap:8px;min-height:0}
+.land .R{grid-template-columns:430px 1fr;grid-template-rows:auto 1fr}
+.port .R{grid-template-columns:1fr;grid-template-rows:auto auto 1fr}
+.stack{display:flex;flex-direction:column;gap:8px;min-height:0}
+.land .c{grid-column:1/-1}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px}
+.mol{display:grid;grid-template-columns:52px 1fr;column-gap:8px;align-items:center;padding:4px 0}
+.mol+.mol{border-top:1px solid var(--line)}
+.mol img{grid-row:1/3;width:52px;height:40px;object-fit:contain}
+.nm{font-weight:700;font-size:.8rem;line-height:1.15}.fm{color:var(--mute);font-size:.75rem}
+.nmw{display:flex;flex-direction:column}
+.ctr{display:flex;align-items:center;gap:5px;grid-column:2}
+.cn{min-width:1.3em;text-align:center;font-weight:800;font-size:1rem;font-variant-numeric:tabular-nums}
+button{font:inherit;font-weight:700;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;padding:5px 9px}
+button.add{background:var(--acc);border-color:var(--acc);color:#06201c;padding:5px 7px;white-space:nowrap}
+.port .ctr{gap:3px}.port button{padding:5px 7px}.port .nm{font-size:.76rem}
+button:disabled{opacity:.35;cursor:default}
+.coach{border:2px solid var(--acc);flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.coach p{margin:0 0 6px;font-size:.85rem;flex:1;min-height:0;overflow:hidden}
+.coach.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,var(--card))}
+.coach.warn{border-color:var(--warn)}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+canvas{display:block;width:100%;height:auto;border-radius:8px}
+.eq{display:flex;align-items:stretch;gap:5px}
+.side{flex:1;min-width:0;border:2px dashed var(--line);border-radius:10px;padding:5px;min-height:118px}
+.side>b{display:block;font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin-bottom:2px}
+.arr{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:50px;font-size:1.8rem;line-height:1}
+.arr .cat{font-size:.6rem;color:var(--acc);font-weight:700;text-align:center}
+.arr .cat img{height:26px;display:block;margin:0 auto}
+.arr .slot{font-size:.6rem;border:1.5px dashed var(--line);border-radius:8px;padding:2px 4px;color:var(--mute);text-align:center}
+.term{display:flex;align-items:center;gap:4px;padding:1px 0}
+.coef{font-size:1.9rem;font-weight:900;line-height:1;min-width:.9em;text-align:center;font-variant-numeric:tabular-nums}
+.term img{height:30px;max-width:56px;object-fit:contain}
+.term span{font-weight:700;font-size:.8rem}
+.plus{text-align:center;color:var(--mute);font-weight:800;line-height:1}
+.empty{color:var(--mute);font-size:.76rem;padding:4px 2px}
+.t-h2o2 .coef,.t-h2o2 span{color:var(--r)}.t-h2o .coef,.t-h2o span{color:var(--p)}.t-o2 .coef,.t-o2 span{color:var(--q)}
+table{width:100%;border-collapse:collapse}
+th{font-size:.66rem;color:var(--mute);text-align:center;font-weight:700;padding-bottom:2px}
+td{text-align:center;padding:3px 2px;border-top:1px solid var(--line);vertical-align:middle}
+td.el{font-weight:900;font-size:1rem;width:1.8em}
+.num{font-size:1.2rem;font-weight:800;display:block;line-height:1.1;font-variant-numeric:tabular-nums}
+.dots{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;max-width:90px;margin:1px auto 0;min-height:9px}
+.dot{width:8px;height:8px;border-radius:50%;border:1.5px solid #8796a5;background:#fff}.dot.o{background:#e63946;border-color:#9a1818}
+.st{font-weight:800;font-size:.85rem}.st.m{color:var(--ok)}.st.x{color:var(--warn)}
+.rat{display:flex;align-items:center;justify-content:center;gap:4px}
+.rb{flex:1;text-align:center;border:2px solid var(--line);border-radius:10px;padding:2px}
+.rb b{font-size:1.7rem;font-weight:900;display:block;line-height:1.1;font-variant-numeric:tabular-nums}
+.rb small{font-weight:700;font-size:.75rem}
+.rb:nth-child(1) b,.rb:nth-child(1) small{color:var(--r)}.rb:nth-child(3) b,.rb:nth-child(3) small{color:var(--p)}.rb:nth-child(5) b,.rb:nth-child(5) small{color:var(--q)}
+.sep{font-size:1.4rem;font-weight:900;color:var(--mute)}
+.note{font-size:.74rem;color:var(--mute);margin:3px 0 0;line-height:1.25}
+.c{overflow:hidden;font-size:.8rem}
+.c h2{font-size:.9rem}.c ul{margin:3px 0 0;padding-left:16px}.c li{margin:2px 0;line-height:1.3}
+.c.success{border:2px solid var(--ok)}.c.success h2{color:var(--ok)}
+.pop{animation:pop .5s}@keyframes pop{0%{transform:scale(.97)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
+.bvl-back{position:fixed;top:max(6px,env(safe-area-inset-top));left:8px;z-index:50;font:600 13px system-ui,sans-serif;background:rgba(255,255,255,.92);color:#1f1b2e;border:1px solid #d9d2e6;border-radius:99px;padding:5px 12px;text-decoration:none;box-shadow:0 1px 4px #0003}
+</style></head><body><a class="bvl-back" href="/u2/home.html">← Unit 2</a> <a class="bvl-back" style="left:96px" href="/u2/ers.html">Simulator →</a><div id="stage" class="land">
+<h1>Balance the equation: catalase and hydrogen peroxide</h1>
+<div class="cols">
+<aside class="col">
+ <div class="card"><h2>1. Add molecules</h2><div id="cards"></div></div>
+ <div class="card coach" id="coach"><h2>&#128161; Coach</h2><p id="ct"></p>
+  <div class="row"><button id="hint">Give me a hint</button><button id="reset">Start over</button></div></div>
+</aside>
+<main class="R">
+ <div class="stack a">
+  <div class="card"><h2>Cytoplasm</h2><canvas id="cy" width="430" height="170"></canvas></div>
+  <div class="card"><h2>2. The equation you built</h2><div class="eq" id="eq"></div></div>
+ </div>
+ <div class="stack b">
+  <div class="card"><h2>3. Atom counter</h2><div id="atoms"></div></div>
+  <div class="card"><h2>4. Coefficient ratio</h2><div id="ratio"></div></div>
+ </div>
+ <div class="card c" id="ok"></div>
+</main></div></div>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)},clamp=function(v,a,b){return Math.max(a,Math.min(b,v))},TAU=Math.PI*2,ER=38,R=Math.random;
+window.SS=4;
+/* ---------- atom sprites ---------- */
+function sprite(r,c1,c2,ec){var s=2,n=Math.ceil((r*2+4)*s),o=document.createElement('canvas');o.width=o.height=n;var c=o.getContext('2d');
+  var g=c.createRadialGradient(n*.38,n*.34,r*s*.1,n/2,n/2,r*s);g.addColorStop(0,c1);g.addColorStop(1,c2);
+  c.beginPath();c.arc(n/2,n/2,r*s,0,TAU);c.fillStyle=g;c.fill();c.lineWidth=1.5*s;c.strokeStyle=ec;c.stroke();return {i:o,r:r,n:n/s}}
+var SO=sprite(6.5,'#ff9a9a','#d62828','#8f1414'),SH=sprite(3.8,'#ffffff','#b9c6d3','#8796a5');
+function atom(c,sp,x,y,al){if(al!==undefined)c.globalAlpha=al;c.drawImage(sp.i,x-sp.n/2,y-sp.n/2,sp.n,sp.n)}
+function bond(c,x1,y1,x2,y2,w){c.lineCap='round';c.strokeStyle='#5b6775';c.lineWidth=w+2;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();
+  c.strokeStyle='#dbe3ea';c.lineWidth=w;c.stroke()}
+function molH2O2(c,x,y,a){c.save();c.translate(x,y);c.rotate(a);
+  bond(c,-8,0,8,0,3.5);bond(c,-8,0,-12.5,-8,2.2);bond(c,8,0,12.5,8,2.2);
+  atom(c,SH,-12.5,-8);atom(c,SH,12.5,8);atom(c,SO,-8,0);atom(c,SO,8,0);c.restore()}
+function molH2O(c,x,y,a,al){c.save();c.globalAlpha=al;c.translate(x,y);c.rotate(a);
+  bond(c,0,0,6.2,-7.9,2.2);bond(c,0,0,6.2,7.9,2.2);atom(c,SH,6.2,-7.9);atom(c,SH,6.2,7.9);atom(c,SO,0,0);c.restore()}
+function molO2(c,x,y,a,al){c.save();c.globalAlpha=al;c.translate(x,y);c.rotate(a);
+  bond(c,-7,-2,7,-2,2.2);bond(c,-7,2,7,2,2.2);atom(c,SO,-7,0);atom(c,SO,7,0);c.restore()}
+
+/* ---------- catalase ---------- */
+var HX=[[-14,-14,.6,22],[-19,10,-.7,20],[0,-25,0,16],[3,23,.2,18],[-5,-3,1.5,16],[19,-20,.9,12],[19,20,-.9,12],[-28,-2,1.57,10]];
+function drawE(c,x,y,a,sc,d,sf,tm,ph,bound,ox,bt){
+  var N=96,sg=.3+.55*d,dp=18*(1-.85*d),sh=d*.55,hue=172-d*140,sat=68-d*50,lt=50-d*8;
+  c.save();c.translate(x,y);c.rotate(a);c.scale(sc,sc);
+  if(bound){var k=1+.025*Math.sin(bt*.3);c.scale(k,k)}
+  c.lineCap='round';c.lineJoin='round';
+  if(d>.3){c.strokeStyle='hsla('+hue+','+sat+'%,'+(lt+8)+'%,'+(d*.8)+')';c.lineWidth=3.2-d;
+    for(var q=0;q<5;q++){var an=ph+q*1.3+Math.PI*.6,len=d*(30+8*q%3);c.beginPath();
+      for(var j=0;j<=10;j++){var u=ER*.85+len*j/10,w=Math.sin(j*1.1+tm*(1+sf)+q)*d*7*j/10;
+        var px=Math.cos(an)*u-Math.sin(an)*w,py=Math.sin(an)*u+Math.cos(an)*w;j?c.lineTo(px,py):c.moveTo(px,py)}c.stroke()}}
+  c.beginPath();
+  for(var i=0;i<=N;i++){var th=i/N*TAU,dt=((th-sh+Math.PI)%TAU+TAU)%TAU-Math.PI;
+    var r=ER*(1+.05*Math.sin(3*th+ph)+.03*Math.sin(5*th+ph*2));
+    r+=d*ER*(.13*Math.sin(4*th+ph+tm*(.8+sf))+.1*Math.sin(7*th+ph*2-tm*1.3)+.07*Math.sin(2*th+ph));
+    r-=dp*Math.exp(-(dt/sg)*(dt/sg));
+    var bx=Math.cos(th)*r,by=Math.sin(th)*r;i?c.lineTo(bx,by):c.moveTo(bx,by)}
+  c.closePath();
+  var g=c.createRadialGradient(-10,-12,4,0,0,ER*1.2);
+  g.addColorStop(0,'hsl('+hue+','+sat+'%,'+(lt+20)+'%)');g.addColorStop(1,'hsl('+hue+','+sat+'%,'+(lt-14)+'%)');
+  if(bound){c.shadowColor='hsl('+hue+',85%,62%)';c.shadowBlur=20}
+  c.fillStyle=g;c.fill();c.shadowBlur=0;c.lineWidth=2;c.strokeStyle='hsla('+hue+','+sat+'%,'+(lt-26)+'%,.95)';c.stroke();
+  // alpha helices: folded cylinders unravel into wavy strands
+  HX.forEach(function(h,k){
+    var L=h[3]*(1+d),A=d*10,n=12,pts=[],ca=Math.cos(h[2]),sa=Math.sin(h[2]);
+    for(var j=0;j<=n;j++){var u=(j/n-.5)*L,o=A*Math.sin(j*1.1+tm*3*d+ph+k)+d*7*Math.sin(tm*.7+k);
+      pts.push([h[0]+ca*u-sa*o+d*5*Math.sin(k+ph),h[1]+sa*u+ca*o])}
+    c.beginPath();pts.forEach(function(p,j){j?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1])});
+    c.strokeStyle='rgba(255,255,255,'+(.55-.25*d)+')';c.lineWidth=7-4*d;c.stroke();
+    if(d<.7){c.setLineDash([2,3]);c.strokeStyle='rgba(0,50,60,'+(.35*(1-d*1.4))+')';c.lineWidth=7-4*d;c.stroke();c.setLineDash([])}
+  });
+  // heme group in the active site pocket
+  c.save();c.rotate(sh);c.translate(24,0);c.rotate(.785+d*.6);
+  c.globalAlpha=1-d*.5;c.fillStyle='#b3263e';c.strokeStyle='#5c0f1d';c.lineWidth=1.2;
+  c.beginPath();c.rect(-6,-6,12,12);c.fill();c.stroke();
+  c.fillStyle='#e0566e';[[-5,-5],[5,-5],[-5,5],[5,5]].forEach(function(p){c.beginPath();c.arc(p[0],p[1],3.2,0,TAU);c.fill();c.stroke()});
+  var fg=c.createRadialGradient(-1,-1,.5,0,0,3.6);fg.addColorStop(0,'#fff3c4');fg.addColorStop(1,'#d9822b');
+  c.fillStyle=fg;c.beginPath();c.arc(0,0,3.6,0,TAU);c.fill();c.restore();
+  if(ox>0){c.save();c.rotate(sh);c.globalAlpha=ox;atom(c,SO,31,0);c.restore()}
+  c.restore();
+}
+
+
+function icon(k){var Z=4,D={h2o2:[38,28],h2o:[21,27],o2:[31,18],cat:[104,104]}[k],cv=document.createElement('canvas');cv.width=D[0]*Z;cv.height=D[1]*Z;
+  var c=cv.getContext('2d');c.translate(cv.width/2,cv.height/2);c.scale(Z,Z);
+  if(k==='h2o2')molH2O2(c,0,0,0);if(k==='h2o')molH2O(c,-1.7,0,0,1);if(k==='o2')molO2(c,0,0,0,1);if(k==='cat')drawE(c,0,0,-Math.PI/2,1,0,1,1.2,1.7,false,0,0);
+  return {img:cv,url:cv.toDataURL(),w:D[0],h:D[1]}}
+var INFO={h2o2:{name:'Hydrogen peroxide',f:'H<sub>2</sub>O<sub>2</sub>',ft:'H\u2082O\u2082',S:1.15,max:8},h2o:{name:'Water',f:'H<sub>2</sub>O',ft:'H\u2082O',S:1.15,max:8},
+ o2:{name:'Oxygen gas',f:'O<sub>2</sub>',ft:'O\u2082',S:1.15,max:5},cat:{name:'Catalase enzyme',f:'catalase',ft:'catalase',S:.72,max:3}};
+var KS=['h2o2','h2o','o2','cat'],N={h2o2:0,h2o:0,o2:0,cat:0},ICON={};
+KS.forEach(function(k){ICON[k]=icon(k)});
+/* ----- cards ----- */
+KS.forEach(function(k){var d=document.createElement('div');d.className='mol';
+  d.innerHTML='<img alt="'+INFO[k].name+'" src="'+ICON[k].url+'"><div class="nm">'+INFO[k].name+'</div><div class="fm">'+INFO[k].f+'</div><div class="ctr"><button data-k="'+k+'" data-d="-1" aria-label="Remove one '+INFO[k].name+'">\u2212</button><span class="cn" id="n_'+k+'">0</span><button class="add" data-k="'+k+'" data-d="1">+ Add</button></div>';
+  $('cards').appendChild(d)});
+$('cards').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;change(b.dataset.k,+b.dataset.d)});
+/* ----- cytoplasm ----- */
+var cv=$('cy'),ctx=cv.getContext('2d'),CW=430,CH=170,dpr=1;
+function setCy(w,h,sc){CW=w;CH=h;dpr=Math.min((window.devicePixelRatio||1)*Math.max(1,sc),3);cv.width=Math.round(CW*dpr);cv.height=Math.round(CH*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}
+var M=[],tm=0,deco=[];for(var i=0;i<46;i++)deco.push({x:R(),y:R(),r:2+R()*4,k:R()});
+function spawn(k){var s=k==='cat'?{x:CW/2,y:CH/2}:{x:40+R()*(CW-80),y:40+R()*(CH-80)};M.push({k:k,x:s.x,y:s.y,vx:(R()-.5)*.8,vy:(R()-.5)*.8,a:R()*TAU,va:(R()-.5)*.02,born:tm})}
+function unspawn(k){for(var i=M.length-1;i>=0;i--)if(M[i].k===k){M.splice(i,1);return}}
+function drawCy(dt){tm+=dt;
+  var g=ctx.createLinearGradient(0,0,CW,CH);g.addColorStop(0,'#eef5d9');g.addColorStop(1,'#d9e9b9');ctx.fillStyle=g;ctx.fillRect(0,0,CW,CH);
+  deco.forEach(function(d){ctx.fillStyle=d.k<.5?'rgba(120,150,70,.18)':'rgba(190,150,60,.15)';ctx.beginPath();ctx.arc(d.x*CW,d.y*CH,d.r,0,TAU);ctx.fill()});
+  ctx.strokeStyle='rgba(90,120,50,.35)';ctx.lineWidth=6;ctx.strokeRect(3,3,CW-6,CH-6);
+  M.forEach(function(m){var ic=ICON[m.k],S=INFO[m.k].S,sp=m.k==='cat'?.3:1;
+    m.vx+=(R()-.5)*.06;m.vy+=(R()-.5)*.06;var v=Math.hypot(m.vx,m.vy),mx=.9*sp;if(v>mx){m.vx*=mx/v;m.vy*=mx/v}
+    m.x+=m.vx;m.y+=m.vy;m.a+=m.va*(m.k==='cat'?.3:1);var mw=ic.w*S/2+8,mh=Math.max(ic.h*S/2,ic.w*S/2*.6)+8;
+    if(m.x<mw||m.x>CW-mw)m.vx*=-1;if(m.y<mh||m.y>CH-mh)m.vy*=-1;m.x=clamp(m.x,mw,CW-mw);m.y=clamp(m.y,mh,CH-mh);
+    var t=clamp((tm-m.born)/.4,0,1),sc=t<1?1+2.7*Math.pow(t-1,3)+1.7*Math.pow(t-1,2):1;
+    ctx.save();ctx.translate(m.x,m.y);if(m.k!=='cat')ctx.rotate(m.a);ctx.scale(sc,sc);ctx.drawImage(ic.img,-ic.w*S/2,-ic.h*S/2,ic.w*S,ic.h*S);ctx.restore()});
+  if(!M.length){ctx.fillStyle='rgba(60,80,30,.65)';ctx.font='600 16px system-ui,sans-serif';ctx.textAlign='center';ctx.fillText('Molecules you add will appear here',CW/2,CH/2);ctx.textAlign='start'}
+}
+/* ----- chemistry ----- */
+function gcd(a,b){return b?gcd(b,a%b):a}
+function state(){var a=N.h2o2,w=N.h2o,o=N.o2,c=N.cat;
+  return {a:a,w:w,o:o,c:c,Hl:2*a,Hr:2*w,Ol:2*a,Or:w+2*o,any:a+w+o>0}}
+function isBal(s){return s.any&&s.Hl===s.Hr&&s.Ol===s.Or}
+function isDone(s){return s.a===2&&s.w===2&&s.o===1&&s.c>=1}
+/* ----- renders ----- */
+function term(k,n){return '<div class="term t-'+k+'"><b class="coef">'+n+'</b><img alt="" src="'+ICON[k].url+'"><span>'+INFO[k].f+'</span></div>'}
+function renderEq(s){var L=s.a>0?term('h2o2',s.a):'<div class="empty">Add H<sub>2</sub>O<sub>2</sub> to see it here</div>';
+  var P='';if(s.w>0)P+=term('h2o',s.w);if(s.w>0&&s.o>0)P+='<div class="plus">+</div>';if(s.o>0)P+=term('o2',s.o);if(!P)P='<div class="empty">Products will appear here</div>';
+  var A=s.c>0?'<div class="cat"><img alt="" src="'+ICON.cat.url+'">catalase</div>':'<div class="slot">enzyme?</div>';
+  $('eq').innerHTML='<div class="side"><b>Reactants</b>'+L+'</div><div class="arr">'+A+'<div>\u2192</div></div><div class="side"><b>Products</b>'+P+'</div>'}
+function dots(n,cls){var h='';for(var i=0;i<Math.min(n,16);i++)h+='<i class="dot '+cls+'"></i>';return '<span class="dots">'+h+'</span>'}
+function renderAtoms(s){function row(el,l,r,cls){var st=!s.any?'\u2013':(l===r?'<span class="st m">\u2713 equal</span>':'<span class="st x">\u2260</span>');
+  return '<tr><td class="el">'+el+'</td><td><span class="num">'+l+'</span>'+dots(l,cls)+'</td><td><span class="num">'+r+'</span>'+dots(r,cls)+'</td><td>'+st+'</td></tr>'}
+  $('atoms').innerHTML='<table><tr><th></th><th>Reactant side</th><th>Product side</th><th></th></tr>'+row('H',s.Hl,s.Hr,'')+row('O',s.Ol,s.Or,'o')+'</table><p class="note">Atoms are never created or destroyed, so both sides must match.</p>'}
+function renderRatio(s){var f=function(n){return s.any?n:'\u2013'};
+  var h='<div class="rat"><div class="rb"><b>'+f(s.a)+'</b><small>H<sub>2</sub>O<sub>2</sub></small></div><span class="sep">:</span><div class="rb"><b>'+f(s.w)+'</b><small>H<sub>2</sub>O</small></div><span class="sep">:</span><div class="rb"><b>'+f(s.o)+'</b><small>O<sub>2</sub></small></div></div>';
+  var g=gcd(gcd(s.a,s.w),s.o);if(s.any&&g>1&&s.a&&s.w&&s.o)h+='<p class="note">These can be simplified. The simplest whole-number ratio is '+(s.a/g)+' : '+(s.w/g)+' : '+(s.o/g)+'.</p>';
+  else h+='<p class="note">Coefficients show how many of each molecule take part. Chemists use the smallest whole numbers.</p>';
+  $('ratio').innerHTML=h}
+function renderCards(){KS.forEach(function(k){$('n_'+k).textContent=N[k];var b=document.querySelectorAll('button[data-k="'+k+'"]');b[0].disabled=N[k]<=0;b[1].disabled=N[k]>=INFO[k].max})}
+/* ----- coach ----- */
+var lvl=0,lastKey='',sameN=0,idle=0,helpOn=false,tipShown=false;
+function msg(s){var K,T;var a=s.a,w=s.w,o=s.o,L=function(i){return Math.min(lvl,2)===i};
+  function pick(x,y,z){return lvl===0?x:(lvl===1?y:z)}
+  if(isDone(s))return ['done','Excellent! You balanced it. Read the explanation in the green box.','ok'];
+  if(!s.any){return ['empty',pick('Start by adding a molecule. Which molecule does catalase break down?','Catalase breaks down hydrogen peroxide. Tap \u201c+ Add\u201d under H\u2082O\u2082.','Tap \u201c+ Add\u201d under Hydrogen peroxide (H\u2082O\u2082) to begin.')]}
+  if(a===0)return ['noreact',pick('Those are products. What did they come from? Every reaction needs a reactant.','Products come from a reactant. Add Hydrogen peroxide (H\u2082O\u2082) so it appears on the reactant side.','Add Hydrogen peroxide (H\u2082O\u2082).')];
+  if(w===0&&o===0)return ['onlyr',pick('You have the reactant. Catalase breaks H\u2082O\u2082 into two simpler molecules. What might they be?','H\u2082O\u2082 contains only hydrogen and oxygen atoms. Try adding water (H\u2082O) and oxygen gas (O\u2082) as products.','Add one H\u2082O and one O\u2082, then check the atom counter.')];
+  if(isBal(s)&&s.c<1&&a===2)return ['needcat','The atoms are balanced! One piece is missing: what speeds up this reaction without being used up? Add it.','warn'];
+  if(isBal(s)&&!(a===2&&w===2&&o===1))return ['simp',pick('Balanced! But chemists use the smallest whole numbers. Can you get there with fewer molecules?','Look at your ratio: can every coefficient be divided by the same number?','Try 2 H\u2082O\u2082, 2 H\u2082O and 1 O\u2082.'),'warn'];
+  if(s.Hl!==s.Hr){var d=s.Hl-s.Hr;return ['H'+(d>0?'+':'-'),pick('Check the H row of the atom counter: '+s.Hl+' on the left, '+s.Hr+' on the right.','Each H\u2082O\u2082 has 2 H and each H\u2082O has 2 H. How should the number of H\u2082O compare with the number of H\u2082O\u2082?','Make the number of H\u2082O equal to the number of H\u2082O\u2082 so the H atoms match.'),'warn']}
+  var d2=s.Ol-s.Or;
+  if(a%2===1&&(w===a)&&o*2<a+1&&o*2>=a-1)return ['odd',pick('H atoms match, so check O: '+s.Ol+' on the left, '+s.Or+' on the right.','Think about it: each H\u2082O\u2082 leaves one spare O after making H\u2082O, and O\u2082 needs two spare O atoms. What if you have an odd number of H\u2082O\u2082?','You cannot make half an O\u2082 molecule. Double everything: use an even number of H\u2082O\u2082 and H\u2082O.'),'warn'];
+  if(d2<0)return ['Omore',pick('Oxygen is out of balance: '+s.Ol+' on the left but '+s.Or+' on the right. Atoms cannot appear from nowhere.','There are more O atoms on the product side. How many O\u2082 molecules can your H\u2082O\u2082 really supply?','Each H\u2082O takes one O. The O atoms left over must pair up into O\u2082. Remove an O\u2082.'),'warn'];
+  return ['Oless',pick('Oxygen is out of balance: '+s.Ol+' on the left but only '+s.Or+' on the right. Where did the missing O atoms go?','Each H\u2082O keeps one O of the two in H\u2082O\u2082. The leftover O atoms must go somewhere. What molecule could hold them?','Add an O\u2082 to hold the leftover oxygen atoms.'),'warn']}
+function coach(){var s=state(),m=msg(s);if(m[0]!==lastKey){lastKey=m[0];lvl=0;sameN=0;m=msg(s)}
+  var el=$('coach'),txt=m[1],cls=m[2]||'';if(typeof cls!=='string'||cls.length>5)cls='';if(m[0]==='needcat'||m[0]==='simp'||m[0]==='H+'||m[0]==='H-'||m[0]==='Omore'||m[0]==='Oless'||m[0]==='odd')cls='warn';if(m[0]==='done')cls='ok';
+  if(s.c>0&&!tipShown&&!isDone(s)&&m[0]!=='done'){tipShown=true;txt+=' (Tip: catalase appears above the arrow because it is a catalyst, not a reactant or product.)'}
+  el.className='card coach '+cls;$('ct').textContent=txt}
+/* ----- success ----- */
+var okState=null;
+function renderOk(s){var d=isDone(s),o=$('ok');if(okState===d)return;okState=d;
+  o.className='card c'+(d?' success':'');
+  o.innerHTML=d?'<h2>\u2713 Balanced! 2 H<sub>2</sub>O<sub>2</sub> \u2192 2 H<sub>2</sub>O + O<sub>2</sub></h2><ul>'+
+  '<li><b>Atoms are conserved:</b> 4 H and 4 O on each side. Nothing is created or destroyed.</li>'+
+  '<li><b>Why 2, 2, 1?</b> Each H<sub>2</sub>O<sub>2</sub> makes one H<sub>2</sub>O and leaves one spare O atom. O<sub>2</sub> needs two O atoms, so it takes 2 H<sub>2</sub>O<sub>2</sub> to make 1 O<sub>2</sub>. Ratio 2 : 2 : 1, just like the simulation counters.</li>'+
+  '<li><b>Catalase is above the arrow:</b> it speeds up the reaction but is not used up, so it is not counted.</li>'+
+  '<li><b>You changed coefficients</b> (how many molecules), never subscripts (what each molecule is).</li></ul>'
+  :'<h2>Your goal</h2><p style="margin:0">Build the balanced chemical equation for what catalase does to hydrogen peroxide. Add molecules on the left, then use the atom counter to check that both sides match. Make the coefficients the smallest whole numbers, and don\u2019t forget the enzyme.</p>';
+  if(d){o.classList.remove('pop');void o.offsetWidth;o.classList.add('pop')}}
+/* ----- state changes ----- */
+function render(){var s=state();renderEq(s);renderAtoms(s);renderRatio(s);renderCards();coach();renderOk(s)}
+function change(k,d){var n=N[k]+d;if(n<0||n>INFO[k].max)return;N[k]=n;if(d>0)spawn(k);else unspawn(k);idle=0;
+  var before=lastKey;render();if(lastKey===before&&lastKey!=='done'){sameN++;if(sameN>=3&&lvl<2){lvl++;sameN=0;render()}}else sameN=0}
+$('hint').onclick=function(){lvl=Math.min(2,lvl+1);sameN=0;render();idle=0};
+$('reset').onclick=function(){KS.forEach(function(k){N[k]=0});M=[];lvl=0;lastKey='';sameN=0;tipShown=false;idle=0;render()};
+setInterval(function(){idle++;if(idle===22&&!isDone(state())&&lvl<2){lvl++;render()}if(idle>=22)idle=0},1000);
+var last=performance.now();function loop(n){var dt=Math.min(.05,(n-last)/1000);last=n;drawCy(dt);requestAnimationFrame(loop)}
+var st=$('stage'),LAND={w:1040,h:700},PORT={w:600,h:900};
+function fit(){var vv=window.visualViewport,vw=vv?vv.width:innerWidth,vh=vv?vv.height:innerHeight;
+  var sl=Math.min(vw/LAND.w,vh/LAND.h),sp=Math.min(vw/PORT.w,vh/PORT.h),land=sl>=sp,S=land?LAND:PORT,sc=Math.min(land?sl:sp,1.6);
+  st.className=land?'land':'port';st.style.width=S.w+'px';st.style.height=S.h+'px';st.style.transform='translate(-50%,-50%) scale('+sc+')';
+  var w=land?430:380;setCy(w,170,sc)}
+window.addEventListener('resize',fit);if(window.visualViewport)window.visualViewport.addEventListener('resize',fit);
+fit();
+render();requestAnimationFrame(loop);
+})();
+</script><script src="/assets/bvl.js"></script>
+<script>if(window.BVL)BVL.guard("u2/ersbe")</script>
+</body></html>
