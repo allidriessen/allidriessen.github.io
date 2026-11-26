@@ -2,7 +2,7 @@
    Everything stays in this browser. Load after /assets/bvl.js and /assets/pdf.js. */
 (function(){
 const K="cce-ws",HOME_PATH="/u3/cce.html";
-const FINAL_PART="p3b"; /* the last page of the lesson: the signature and PDF download appear ONLY here. Change to "p6" when Part 6 exists. */
+const FINAL_PART="p6"; /* the last page of the lesson: the signature and PDF download appear ONLY here. */
 let D={ans:{},mc:{},ch:{},sec:{},sig:"",pr:{},vp:{},sk:{}};
 const B=()=>window.BVL;
 function load(){const d=B()&&B().load(K);if(d)D={ans:d.ans||{},mc:d.mc||{},ch:d.ch||{},sec:d.sec||{},sig:d.sig||"",pr:d.pr||{},vp:d.vp||{},sk:d.sk||{}}}
@@ -51,6 +51,7 @@ const WS=window.WS={
 /* ===== PDF content ===== */
 const POINTS={
  p1:["Healthy cells in a tissue are similar in size and shape and fit together neatly. Cancer cells vary widely in size and shape, with irregular borders.","Cancer cell nuclei are often enlarged, irregular, off-center, and darker when stained (hyperchromasia) because of extra or densely packed DNA, so the nucleus-to-cytoplasm ratio is higher.","Healthy tissue has an organized structure (like glands) with orderly spacing. Cancer cells lose that organization and appear crowded, overlapping, or invading nearby tissue.","Cancer cells divide much faster than normal cells, so their numbers grow far more quickly."],
+ p4:["Histology is the study of the microscopic structure of tissues. Pathology is the study of disease. Histopathology is the diagnosis and study of diseases of the tissues by examining tissues and cells under a microscope.","Pathologists look for the same clues you used in Part 1: cell size and shape, the nucleus, and how organized the tissue is. Cancer tissue is usually crowded and disorganized, with cells that vary in size and shape and have large, dark nuclei.","A malignant tumor invades the tissue around it. A benign tumor stays in one place with a smooth border."],
  p2:["Tumors grow slowly over many years (about 10-20 years per stage). Stage numbers describe tumor size, location, and how far it has spread.","A benign tumor stays in place and is not usually called cancer. A malignant tumor breaks through the basement membrane, invades nearby tissue, and can spread.","Metastasis is when cancer cells travel through blood or lymph vessels and form secondary tumors in other parts of the body. Different cancers favor different routes.","Cancers are named for where they start (the organ or cell type). A tumor that spreads keeps the original name."]
 };
 const P1=[
@@ -70,8 +71,16 @@ const PROMPT={p1t0:"Describe the overall shape and size of the healthy cells and
  p2q6:"How do cancers typically get their names?",
  p2q7:"Some tumors occur in parts of the body that are non-essential for survival, yet can still, indirectly, result in death. Examples include breast and testicular cancer. Based on what you learned from this model, explain why these cancers can still indirectly cause death.",
  p2q7a:"Challenge: Can you think of at least one more way that these non-fatal tumors can indirectly cause death?",
- p2c1:"Round 1: Choose one malignant sample and describe two features that told you it was malignant.",
- p2c2:"Round 2: Choose one benign sample and describe two features that told you it was benign."};
+ p2c1:"Choose one malignant diagram and describe two features that told you it was malignant.",
+ p2c2:"Choose one benign diagram and describe two features that told you it was benign.",
+ p4a1:"Choose at least one <b>normal</b> sample (A\u2013H). Justify your answer by citing at least one defining characteristic or observation.",
+ p4a2:"Choose at least one <b>cancer</b> sample (A\u2013H). Justify your answer by citing at least one defining characteristic or observation.",
+ p4b1:"Choose one malignant sample from the real tissue slides and describe two features that told you it was malignant.",
+ p4b2:"Choose one benign sample from the real tissue slides and describe two features that told you it was benign.",
+ p5w:"In your own words, explain how cancer cells and tissues differ from healthy ones, and how a tumor can harm the body. Use at least three ideas from this activity.",
+ p6q1:"Throughout our day-to-day lives, we\u2019ve frequently heard about things that cause cancer, such as the chemicals in cigarettes. List at least 4 other examples of things you\u2019ve heard can cause cancer.",
+ p6q2:"Predict: When we say these things \u201Ccause cancer,\u201D we aren\u2019t exactly getting to the root cause. At the molecular and cellular scale, what specifically causes a cell to become cancerous? Use at least one piece of evidence from earlier parts of this activity to support your prediction.",
+ p6q3:"What questions about cancer do you still wonder about? Write at least two."};
 WS.PROMPT=PROMPT;
 const ids=p=>Object.keys(D.mc).filter(k=>k.startsWith(p)).sort((a,b)=>+a.split(":").pop()-+b.split(":").pop());
 function mcBlock(d,prefix){const L=ids(prefix);if(!L.length)return{n:0,s:0};let s=0;
@@ -84,7 +93,8 @@ function answerBox(d,prompt,v){const h=Math.max(40,d.wrap(v||" ",10.5,false,W_-1
  const y0=d.y;d.y+=6;d.text(v||"(No answer yet)",{size:10.5,x:62,w:W_-16,color:v?[20,20,20]:[150,150,150],gap:0});d.y=y0+h+8}
 function answers(d,keys){keys.forEach(k=>answerBox(d,strip(PROMPT[k]||D.pr[k]||k),(D.ans[k]||"").trim()))}
 const W_=504;
-function build(){const B_=B(),p=B_.profile(),d=new PDFDoc(),now=new Date(),id=(Date.now().toString(36)+Math.random().toString(36).slice(2,5)).toUpperCase();
+function chLine(key,label){const c=D.ch[key]||{};D._d.text(label+": "+(c.done?"solved on attempt "+c.att+" (first attempt: "+c.first+" of "+(c.n||6)+" correct)":c.att?"in progress ("+c.att+" attempts)":"not started"),{size:10,x:62,gap:2})}
+function build(){const B_=B(),p=B_.profile(),d=new PDFDoc(),now=new Date();D._d=d;const banner=t=>{d.gap(8);d.room(70);d.box(54,d.y,W_,22,[75,46,131]);d.y+=4;d.text(t,{size:13,bold:true,color:[255,255,255],x:62,gap:0});d.y+=8};const pts=k=>{d.text("Key learning points",{size:11,bold:true,gap:2});POINTS[k].forEach(t=>d.text("\u2022 "+t,{size:9.5,x:62,w:W_-14,gap:2}));d.gap(6)},id=(Date.now().toString(36)+Math.random().toString(36).slice(2,5)).toUpperCase();
  const url=location.origin+HOME_PATH,a1=B_.load("cancer-cell-exploration-part1"),a2=B_.load("cancer-cell-exploration-part2");
  d.text("Cancer Cell Exploration",{size:20,bold:true,gap:2});
  d.text("Click to return to the Cancer Cell Exploration home page: "+url,{size:9.5,color:[26,80,200],link:url,gap:6});
@@ -108,9 +118,8 @@ function build(){const B_=B(),p=B_.profile(),d=new PDFDoc(),now=new Date(),id=(D
   }else{
    P2.forEach(it=>{if(!Object.keys(D.mc).some(k=>k.startsWith("p2:"+it.k+":"))&&!it.ans.some(k=>D.ans[k]))return;
     d.text(it.t,{size:11.5,bold:true,color:[75,46,131],gap:3});mcBlock(d,"p2:"+it.k+":");
-    if(it.chal){d.text("Benign or malignant? challenge",{size:10.5,bold:true,gap:2});[1,2].forEach(r=>{const c=D.ch[r]||{};d.text("Round "+r+": "+(c.done?"solved on attempt "+c.att+" (first attempt: "+c.first+" of 6 correct)":c.att?"in progress ("+c.att+" attempts)":"not started"),{size:10,x:62,gap:2})});
-     answers(d,["p2c1","p2c2"]);
-     d.text("Sample images: Levenson RM, Krupinski EA, Navarro VM, Wasserman EA (2015). Pigeons (Columba livia) as Trainable Observers of Pathology and Radiology Breast Cancer Images. PLoS ONE 10(11): e0141357. doi:10.1371/journal.pone.0141357. CC BY 4.0. Images cropped.",{size:7.5,color:[100,100,100],gap:6})}
+    if(it.chal){d.text("Benign or malignant? challenge (tissue diagrams)",{size:10.5,bold:true,gap:2});chLine(1,"Benign or malignant diagrams");
+     answers(d,["p2c1","p2c2"])}
     answers(d,it.ans);d.gap(4)})}
  });
  Object.keys(D.vp).sort((x,y)=>(D.vp[x].order||0)-(D.vp[y].order||0)).forEach(pid=>{const v=D.vp[pid];
@@ -122,8 +131,18 @@ function build(){const B_=B(),p=B_.profile(),d=new PDFDoc(),now=new Date(),id=(D
   v.qs.forEach(q=>{if(q.type==="written")answerBox(d,strip(q.prompt),(D.ans[q.id]||"").trim());
    else if(q.type==="sketch"){const im=WS.img("sk:"+q.id);d.room(270);d.text(strip(q.prompt),{size:10,bold:true,gap:2});if(im)d.image(im,1200,800,360);else d.text("(No sketch yet)",{size:10,color:[150,150,150]});d.gap(4)}
    else if(q.type==="mc"){const c=D.mc["vp:"+pid+":"+q.id]||{},ok=c.d&&!c.w;d.text(strip(q.prompt),{size:10,bold:true,gap:1});d.text("   "+(c.d?(ok?"Correct on the first try":"Correct after "+((c.w||0)+1)+" tries"):"Not answered yet"),{size:9.5,color:c.d?(ok?[20,120,60]:[160,90,20]):[150,60,50],gap:3})}});d.gap(4)});
+ /* Part 4: histopathology */
+ if(D.ch["4a"]||D.ch["4b1"]||D.ans.p4a1||D.ans.p4a2||D.ans.p4b1||D.ans.p4b2){
+  banner("Part 4: Histopathology");pts("p4");
+  d.text("4A: Diagnose healthy vs. cancer samples",{size:11.5,bold:true,color:[75,46,131],gap:3});chLine("4a","Samples C\u2013H classified");answers(d,["p4a1","p4a2"]);d.gap(4);
+  d.text("4B: Benign or malignant? Real tissue slides",{size:11.5,bold:true,color:[75,46,131],gap:3});chLine("4b1","Round 1");chLine("4b2","Round 2");answers(d,["p4b1","p4b2"]);
+  d.text("Slide images in 4B: Levenson RM, Krupinski EA, Navarro VM, Wasserman EA (2015). Pigeons (Columba livia) as Trainable Observers of Pathology and Radiology Breast Cancer Images. PLoS ONE 10(11): e0141357. doi:10.1371/journal.pone.0141357. CC BY 4.0. Images cropped.",{size:7.5,color:[100,100,100],gap:6})}
+ /* Part 5: summary */
+ if(Object.keys(D.mc).some(k=>k.startsWith("p5:"))||D.ans.p5w){banner("Part 5: Summary and Key Points");mcBlock(d,"p5:");answers(d,["p5w"]);d.gap(4)}
+ /* Part 6: predictions */
+ if(D.ans.p6q1||D.ans.p6q2||D.ans.p6q3){banner("Part 6: Predictions: The Root Cause of Cancer");answers(d,["p6q1","p6q2","p6q3"]);d.gap(4)}
  /* score summary */
- const all=Object.keys(D.mc).filter(k=>/^(p[12]|vp):/.test(k)&&!/^p1:q4:/.test(k)),tot=all.length,first=all.filter(k=>D.mc[k].d&&!D.mc[k].w).length,done=all.filter(k=>D.mc[k].d).length;
+ const all=Object.keys(D.mc).filter(k=>/^(p[1245]|vp):/.test(k)&&!/^p1:q4:/.test(k)),tot=all.length,first=all.filter(k=>D.mc[k].d&&!D.mc[k].w).length,done=all.filter(k=>D.mc[k].d).length;
  d.gap(6);d.rule();if(tot)d.text("Multiple-choice summary: "+first+" of "+tot+" correct on the first try ("+done+" of "+tot+" answered).",{size:11,bold:true,gap:6});
  d.room(120);
  d.text("Honor statement: I completed this work myself, using my own samples and my own words.",{size:10.5,bold:true,gap:4});

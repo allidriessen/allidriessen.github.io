@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cancer Cell Exploration</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head><body>
+<script src="/assets/bvl.js"></script>
+<script src="/assets/pdf.js"></script>
+<script src="/u3/cce/ws.js"></script>
+<script src="/u3/cce/pg.js"></script>
+<script>
+const $=PG.$;
+const main=PG.init({releaseId:"u3/cce/p6",part:"Part 6",title:"Predict: The Root Cause of Cancer",backUrl:"p5.html",nextLabel:"Finish: back to the lesson home →",nextUrl:"../cce.html",nextLocked:false});
+main.innerHTML=`
+<div class="box"><h2>Make a prediction</h2><p>Scientists often make a <b>prediction</b>, an educated guess based on evidence, before they know the answer. Use what you have learned in this activity to make yours. We will come back to your prediction later in this unit, so there are no wrong predictions yet.</p></div>
+<div class="box" id="q1"><h3>Question 1</h3></div>
+<div class="box" id="q2"><h3>Question 2</h3></div>
+<div class="box" id="q3"><h3>Question 3</h3></div>
+<div class="box" id="ex"></div><div id="sv"></div>`;
+WS.box($("q1"),"p6q1",WS.PROMPT.p6q1,5);
+$("q1").insertAdjacentHTML("beforeend",'<p class="note">Write one example per line. It is okay if you are not sure they are true. Include things you have heard from family, school, the news, or social media.</p>');
+WS.box($("q2"),"p6q2",WS.PROMPT.p6q2,6);
+PG.hint($("q2"),"Need a hint? It's something that all cells have and is the instruction manual that controls cell function.");
+WS.box($("q3"),"p6q3",WS.PROMPT.p6q3,4);
+$("ex").innerHTML="";
+WS.mountExport($("ex"),"p6");
+if(window.BVL)BVL.mountSavePanel($("sv"));
+</script></body></html>

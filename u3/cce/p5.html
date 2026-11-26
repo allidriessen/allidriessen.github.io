@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cancer Cell Exploration</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head><body>
+<script src="/assets/bvl.js"></script>
+<script src="/assets/pdf.js"></script>
+<script src="/u3/cce/ws.js"></script>
+<script src="/u3/cce/pg.js"></script>
+<script>
+const $=PG.$;
+const main=PG.init({releaseId:"u3/cce/p5",part:"Part 5",title:"Summary and Key Points",backUrl:"p4.html",nextUrl:"p6.html",nextLabel:"Next: Part 6 →"});
+main.innerHTML=`
+<div class="box"><h2>The big ideas</h2><p>You have compared cells, followed a tumor from a polyp to metastasis, seen how a tumor can affect an organ, and examined tissue like a pathologist. Here are the most important points.</p>
+<div class="cards3">
+<div><h3>1. Cancer cells look and act differently</h3><p>Compared with healthy cells, cancer cells vary in size and shape, have large, dark nuclei, lose their organized arrangement, and divide much faster.</p></div>
+<div><h3>2. Tumors grow in stages</h3><p>Cancer develops slowly, often over many years. A <b>benign</b> tumor stays in place. A <b>malignant</b> tumor breaks through the basement membrane, invades nearby tissue, and can spread.</p></div>
+<div><h3>3. Metastasis</h3><p>Cancer cells can travel through <b>blood</b> and <b>lymphatic</b> vessels and start secondary tumors. Cancers are named for where they <i>start</i>.</p></div>
+<div><h3>4. Structure affects function</h3><p>A growing tumor can crowd out normal tissue and interfere with an organ's job, such as moving air in the lungs.</p></div>
+<div><h3>5. Diagnosis</h3><p>Histopathologists examine tissue under a microscope and look for the same clues you used: cell size and shape, the nucleus, and how organized the tissue is.</p></div>
+</div></div>
+<div class="box" id="qz"></div>
+<div class="box" id="wr"></div>`;
+const QS=[
+ {q:"Which set of features best describes cancer cells compared with healthy cells?",o:["Varied sizes and shapes, large dark nuclei, and a disorganized arrangement","Uniform size, small nuclei, and neat layers","Smaller cells that divide more slowly"],a:0},
+ {q:"What makes a tumor malignant instead of benign?",o:["Its cells invade nearby tissue and can spread to other parts of the body","It is larger than other tumors","It grows more slowly"],a:0},
+ {q:"Which TWO routes can cancer cells use to travel to other parts of the body?",o:["Blood vessels","Lymphatic vessels","Nerves only","The skin only"],a:[0,1]},
+ {q:"How can a lung tumor harm the body even before it spreads?",o:["It can interfere with the lungs' ability to move air and exchange gases","It makes the lungs work better","It cannot cause harm until it has spread"],a:0},
+ {q:"What does a histopathologist do?",o:["Examines tissue under a microscope to help diagnose disease","Removes tumors during surgery","Prescribes medicine"],a:0}];
+PG.quiz($("qz"),QS,{key:"p5",title:"Quick check",onDone:()=>PG.unlock()});
+WS.box($("wr"),"p5w",WS.PROMPT.p5w,5);
+</script></body></html>
