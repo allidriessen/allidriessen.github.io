@@ -22,6 +22,8 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidd
 .vf iframe,.vf video{position:absolute;inset:0;width:100%;height:100%;border:0}
 .vnote{font-size:13px;color:#6b5a85}.vnote a{color:#4b2e83;font-weight:600}
 .vint{font-size:15px}
+.vcon{background:#fff8e6;border:2px solid #f0c75e;border-radius:12px;padding:8px 14px;font-size:14px}.vcon h2{margin:0 0 4px;font-size:16px;color:#7a5200}.vcon ul{margin:0;padding-left:20px}.vcon li{margin:3px 0}
+.vlab{font-weight:700;font-size:14px;color:#4b2e83;margin:4px 0 0}
 #vpq h2{font-size:18px;margin:14px 0 4px;color:#4b2e83}
 .vimg{margin:6px 0 10px}.vimg img{max-width:100%;border-radius:10px;border:2px solid #ddd0ee;display:block}.vimg figcaption{font-size:12px;color:#6b5a85}
 .vq{margin:10px 0}.vq p.vp{font-weight:700;margin:8px 0 6px}
@@ -31,14 +33,14 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidd
 .vbtn.g{background:#fff;color:#4b2e83;border:2px solid #4b2e83}
 .vnav{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 8px}
 #vt{display:none}
-#vpm.pt #vpv.min .vf{display:none}
+#vpm.pt #vpv.min .vf,#vpm.pt #vpv.min .vx{display:none}
 #vmod{position:fixed;inset:0;background:rgba(20,10,40,.6);z-index:90;display:flex;align-items:center;justify-content:center;padding:16px}
 #vmod div{background:#fff;border-radius:14px;padding:18px 20px;max-width:460px}
 .bvl-bar{top:auto!important;bottom:8px}
 .vtoast{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:#241a38;color:#fff;padding:10px 16px;border-radius:10px;z-index:95}
 @media (orientation:portrait),(max-width:760px){
  #vpm{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
- #vpv{padding:6px;overflow:visible}
+ #vpv{padding:6px;max-height:50vh}
  .vf{width:min(100%,calc(36vh * 16 / 9));margin:0 auto}
  #vt{display:inline-block}
  .vint,.vsrc{display:none}
@@ -54,9 +56,14 @@ VP.init=function(cfg){
  const vid=em.kind==="frame"?`<div class="vf"><iframe src="${esc(em.src)}" title="${esc(cfg.title)} video" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`
   :em.kind==="video"?`<div class="vf"><video src="${esc(em.src)}" controls playsinline></video></div>`
   :`<div class="vf" style="display:grid;place-items:center;color:#fff">No video link has been added yet.</div>`;
+ const mk=u=>{const e=VP.embed(u);return e.kind==="frame"?`<div class="vf"><iframe src="${esc(e.src)}" title="${esc(cfg.title)} additional video" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`:e.kind==="video"?`<div class="vf"><video src="${esc(e.src)}" controls playsinline></video></div>`:""};
+ const v2=cfg.video2&&cfg.video2.url?cfg.video2:null;
+ const vid2=v2&&mk(v2.url)?`<div class="vx"><p class="vlab">${esc(v2.label||"Additional video")}</p>${mk(v2.url)}<div class="vnote vsrc">Not loading? <a href="${esc(v2.url)}" target="_blank" rel="noopener">Open it in a new tab ↗</a></div></div>`:"";
+ const cn=cfg.considerations,con=cn&&cn.items&&cn.items.length?`<aside class="vcon" aria-label="${esc(cn.title||"Important considerations")}"><h2>${esc(cn.title||"Important considerations")}</h2><ul>${cn.items.map(t=>`<li>${t}</li>`).join("")}</ul></aside>`:"";
  const Q=cfg.questions;
  document.body.insertAdjacentHTML("afterbegin",`<header class="vph"><div><div class="ey">${esc(cfg.lesson)}</div><h1>${esc(cfg.part)}: ${esc(cfg.title)}</h1></div><button id="vh">🏠 All parts</button></header>
- <div id="vpm"><section id="vpv" aria-label="Video">${vid}
+ <div id="vpm"><section id="vpv" aria-label="Video">${con}${vid}
+  ${vid2}
   <div class="vnote"><button class="vbtn g" id="vt" style="min-height:38px;padding:6px 12px;font-size:14px">Hide / show video</button> ${cfg.video&&cfg.video.url?`<span class="vsrc">Video not loading? <a href="${esc(cfg.video.url)}" target="_blank" rel="noopener">Open it in a new tab ↗</a></span>`:""}</div>
   <p class="vint">${cfg.intro||""}</p></section>
  <section id="vpq" aria-label="Questions"></section></div>`);
@@ -67,7 +74,7 @@ VP.init=function(cfg){
  /* image slot: put a picture's address in cfg.image.src (for example "img/lungs.png") */
  if(cfg.image&&cfg.image.src)pane.insertAdjacentHTML("beforeend",`<figure class="vimg"><img src="${esc(cfg.image.src)}" alt="${esc(cfg.image.alt||"")}">${cfg.image.credit?`<figcaption>${esc(cfg.image.credit)}</figcaption>`:""}</figure>`);
  /* register this page's content for the PDF */
- if(W)W.vp(cfg.id,{order:cfg.order||0,part:cfg.part,title:cfg.title,url:(cfg.video&&cfg.video.url)||"",points:cfg.points||[],qs:Q.filter(q=>q.type!=="heading").map(q=>({id:q.id,type:q.type,prompt:q.prompt,a:q.type==="mc"?q.o[q.a]:""}))});
+ if(W)W.vp(cfg.id,{order:cfg.order||0,part:cfg.part,title:cfg.title,url:(cfg.video&&cfg.video.url)||"",url2:v2?v2.url:"",label2:v2?(v2.label||"Additional video"):"",cons:cn&&cn.items?cn.items.map(t=>t.replace(/<[^>]+>/g,"")):[],ctitle:cn?(cn.title||"Important considerations"):"",points:cfg.points||[],qs:Q.filter(q=>q.type!=="heading").map(q=>({id:q.id,type:q.type,prompt:q.prompt,a:q.type==="mc"?q.o[q.a]:""}))});
  Q.forEach(q=>{
   if(q.type==="heading"){pane.insertAdjacentHTML("beforeend",`<h2>${esc(q.text)}</h2>`);return}
   const box=document.createElement("div");box.className="vq";pane.appendChild(box);
