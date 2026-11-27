@@ -5,13 +5,15 @@
 const G=window.G,C=G.C,W=640,H=560,TH=26;/* TH = half thickness of the membrane band */
 const SP={o2:1.15,co2:1.1,h2o:1.1,na:.8,k:.8,glu:.65,aa:.65,sol:.55,atp:.7,adp:.7,pi:.8};
 const SC={o2:.5,co2:.5,h2o:.5,na:.55,k:.55,glu:.58,aa:.55,sol:.55,atp:.5,adp:.5,pi:.6,prot:.6};
-const spr={};const sp=k=>spr[k]||(spr[k]=(()=>{const c=document.createElement("canvas");c.width=c.height=96;G.mol(c.getContext("2d"),k,48,48,1.5);return c})());
+const SS=k=>k==="atp"?.9:k==="adp"?1.05:k==="glu"?1.3:1.5;const spr={};const sp=k=>spr[k]||(spr[k]=(()=>{const c=document.createElement("canvas");c.width=c.height=96;G.mol(c.getContext("2d"),k,48,48,SS(k));return c})());
 const R=(a,b)=>a+Math.random()*(b-a),ease=u=>u<0?0:u>1?1:u*u*(3-2*u);
 class Sim{
- constructor(cv){this.cv=cv;this.x=cv.getContext("2d");this.T=0;this.speed=1;this.paused=false;this.cfg=null;this.ps=[];this.focus=null;this.onTick=null;this._acc=0;
+ constructor(cv){this.cv=cv;this.x=cv.getContext("2d");this.T=0;this.speed=1;this.paused=false;this.cfg=null;this.ps=[];this.focus=null;this.z=1;this.zt=1;this.zc=[W/2,H/2];this.zcc=[W/2,H/2];this.onTick=null;this._acc=0;
   const f=t=>{const dt=Math.min(.05,(t-(this._l||t))/1000);this._l=t;try{this.frame(dt)}catch(e){console.error(e)}requestAnimationFrame(f)};requestAnimationFrame(f)}
+ setZoom(on,cx,cy,z){this.zt=on?(z||2):1;if(on){this.zc=[cx,cy]}else this.zc=[W/2,H/2]}
+ panBy(dx,dy){const z=this.zt;if(z<=1)return;this.zc[0]=Math.min(W-W/(2*z),Math.max(W/(2*z),this.zc[0]+dx));this.zc[1]=Math.min(H-H/(2*z),Math.max(H/(2*z),this.zc[1]+dy));this.zcc[0]=this.zc[0];this.zcc[1]=this.zc[1]}
  fit(w){const r=Math.min(devicePixelRatio||1,2);this.cv.style.width=w+"px";this.cv.width=Math.round(w*r);this.cv.height=Math.round(w*H/W*r)}
- load(cfg){this.cfg=cfg;this.T=0;this.ps=[];this.cross={};this.pumpOn=cfg.pumpOn!==false;this.atpUsed=0;this.mems=cfg.mem.map(m=>({y:m.y,prot:m.prot.map(p=>({...p,busy:0,ph:0,open:p.inside?1:0,tmp:null}))}));
+ load(cfg){this.cfg=cfg;this.T=0;this.ps=[];this.cross={};this.pumpOn=cfg.pumpOn!==false;this.atpUsed=0;this.v0=null;this.stepMode=false;this.mitoOn=false;this.mt=(cfg.mito||[]).map(m=>({...m,cd:0,pend:[],glow:0}));this.mems=cfg.mem.map(m=>({y:m.y,prot:m.prot.map(p=>({...p,busy:0,ph:0,open:p.inside?1:0,tmp:null}))}));
   const nr=cfg.mem.length+1;cfg.mols.forEach(m=>{m.n.forEach((n,r)=>{for(let i=0;i<n;i++)this.add(m.k,r)})});this.t0=0}
  bounds(r){const ys=this.mems.map(m=>m.y);const top=r===0?10:ys[r-1]+TH+6,bot=r===ys.length?H-10:ys[r]-TH-6;return[top,bot]}
  add(k,r,x,y){const[t,b]=this.bounds(r),a=Math.random()*6.283;this.ps.push({k,x:x==null?R(24,W-24):x,y:y==null?R(t+8,b-8):y,vx:Math.cos(a),vy:Math.sin(a),tr:null,ph:R(0,6)})}
@@ -20,9 +22,12 @@ class Sim{
  rule(k){return(this.cfg.rule&&this.cfg.rule[k])||"block"}
  note(k,from,to){const c=this.cross[k]||(this.cross[k]={});const key=from+">"+to;c[key]=(c[key]||0)+1}
  addProt(mi,pr){this.mems[mi].prot.push({...pr,busy:0,ph:0,open:pr.inside?1:0,tmp:null})}
- frame(dt){const d=this.paused?0:dt*this.speed;if(this.cfg&&!this.custom){this.T+=d;this.step(d)}else if(this.custom)this.T+=d;this.draw();if(this.onTick){this._acc+=dt;if(this._acc>.25){this._acc=0;this.onTick()}}}
+ frame(dt){const d=this.paused?0:dt*this.speed;const k=Math.min(1,dt*5);this.z+=(this.zt-this.z)*k;this.zcc[0]+=(this.zc[0]-this.zcc[0])*k;this.zcc[1]+=(this.zc[1]-this.zcc[1])*k;if(this.cfg&&!this.custom){this.T+=d;this.step(d)}else if(this.custom)this.T+=d;this.draw();if(this.onTick){this._acc+=dt;if(this._acc>.25){this._acc=0;this.onTick()}}}
  /* ---- physics ---- */
- step(dt){if(dt<=0)return;const ps=this.ps;if(this.cfg.refill){this.rf=(this.rf||0)+dt;if(this.rf>1.2){this.rf=0;this.cfg.refill.forEach(f=>{if(this.count(f.k,f.r)<f.min)this.add(f.k,f.r)})}}
+ moveMem(mi,ny){const m=this.mems[mi],old=m.y;if(Math.abs(ny-old)<.01)return;m.y=ny;this.ps.forEach(p=>{if(p.tr||p.band!=null&&p.band!==undefined&&p.band!==null)return;if(p.y<old){if(p.y>ny-TH)p.y=ny-TH-2}else{if(p.y<ny+TH)p.y=ny+TH+2}})}
+ step(dt){if(dt<=0)return;const ps=this.ps;if(this.cfg.update)this.cfg.update(this,dt);
+  if(this.stepMode){this.stepProt(dt);this.ps=this.ps.filter(q=>!q.dead);return}
+  this.stepMito(dt);if(this.cfg.refill){this.rf=(this.rf||0)+dt;if(this.rf>1.2){this.rf=0;this.cfg.refill.forEach(f=>{if(this.count(f.k,f.r)<f.min)this.add(f.k,f.r)})}}
   for(let i=ps.length-1;i>=0;i--){const p=ps[i];
    if(p.tr){this.stepTr(p,dt);continue}
    const v=34*(SP[p.k]||.8);p.vx+=R(-1,1)*5*dt;p.vy+=R(-1,1)*5*dt;const l=Math.hypot(p.vx,p.vy)||1;p.vx/=l;p.vy/=l;
@@ -40,7 +45,12 @@ class Sim{
     if(p.band===mi&&!inb1&&p.bf){/* left the band: record crossing */
      const out=ny<=top?mi:mi+1;if(out!==p.bf.from)this.note(p.k,p.bf.from,out);p.band=null;p.bf=null}}
    p.x=nx;p.y=ny}
-  this.stepProt(dt)}
+  this.stepProt(dt);this.ps=this.ps.filter(q=>!q.dead)}
+ stepMito(dt){if(!this.mt||!this.mt.length)return;const rr=this.cfg.mitoR||0;
+  this.mt.forEach(m=>{m.cd-=dt;if(m.glow>0)m.glow-=dt;
+   for(let i=m.pend.length-1;i>=0;i--){m.pend[i]-=dt;if(m.pend[i]<=0){m.pend.splice(i,1);const a={k:"atp",x:m.x,y:m.y,vx:R(-1,1),vy:R(-1,1),tr:null,ph:R(0,6)},ang=R(0,6.283),d=R(46,70);a.tr={kind:"mo",t:0,d:.9,x0:m.x,y0:m.y,x1:m.x+Math.cos(ang)*d*1.4,y1:m.y+Math.sin(ang)*d*.8,r0:rr};this.ps.push(a);m.glow=.8}}
+   if(!this.mitoOn||m.cd>0)return;const adp=this.near("adp",rr,m.x,m.y,1)[0],pi=this.near("pi",rr,m.x,m.y,1)[0];if(!adp||!pi)return;
+   m.cd=1.4;[adp,pi].forEach(q=>q.tr={kind:"mi",t:0,d:1.1,x0:q.x,y0:q.y,x1:m.x,y1:m.y,r0:rr});m.pend.push(1.3);m.glow=.7})}
  tryProtein(p,mi,fromTop,r0,r1){const m=this.mems[mi];
   for(const pr of m.prot){if(!(pr.f||[]).includes(p.k))continue;const dx=Math.abs(p.x-pr.x);
    if(pr.t==="channel"&&dx<(pr.cap||28)){p.tr={kind:"ch",t:0,d:.55,x0:p.x,y0:p.y,pr,mi,r0,r1,fromTop};return true}
@@ -50,7 +60,7 @@ class Sim{
   return false}
  sgltOk(pr,mi){const r0=mi,r1=mi+1;return this.count("na",r0)>=this.count("na",r1)*1.7+2}
  near(k,r,x,y,n,not){return this.ps.filter(q=>q!==not&&q.k===k&&!q.tr&&this.region(q.y)===r).sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y)).slice(0,n)}
- stepTr(p,dt){const t=p.tr;if(t.kind==="hold")return;t.t+=dt;const u=Math.min(1,t.t/t.d),m=this.mems[t.mi],top=m.y-TH,bot=m.y+TH,y0=t.fromTop?top:bot,y1=t.fromTop?bot:top,px=t.pr.x+(t.off||0);
+ stepTr(p,dt){const t=p.tr;if(t.kind==="hold")return;t.t+=dt;if(t.kind==="mi"||t.kind==="mo"){const u=Math.min(1,t.t/t.d),e=ease(u);p.x=t.x0+(t.x1-t.x0)*e;p.y=t.y0+(t.y1-t.y0)*e;if(u>=1){if(t.kind==="mi")p.dead=true;else p.tr=null}return}const u=Math.min(1,t.t/t.d),m=this.mems[t.mi],top=m.y-TH,bot=m.y+TH,y0=t.fromTop?top:bot,y1=t.fromTop?bot:top,px=t.pr.x+(t.off||0);
   if(t.kind==="ch"){const a=ease(Math.min(1,u*3));p.x=t.x0+(px-t.x0)*a;p.y=t.fromTop?top+(bot-top)*ease(u):bot+(top-bot)*ease(u);if(u<.12)p.y=t.y0+(p.y-t.y0)*u/.12}
   else if(t.kind==="car"){if(u<.3){const e=ease(u/.3);p.x=t.x0+(px-t.x0)*e;p.y=t.y0+(y0-t.y0)*e}else if(u<.5){p.x=px;p.y=y0+(m.y-y0)*ease((u-.3)/.2)}else if(u<.7){p.x=px;p.y=m.y}else{p.x=px;p.y=m.y+(y1-m.y)*ease((u-.7)/.3)}}
   if(u>=1){p.tr=null;p.x=px+R(-4,4);p.y=y1+(t.fromTop?4:-4);p.vy=t.fromTop?1:-1;p.vx=R(-1,1);this.note(p.k,t.r0,t.r1)}}
@@ -60,22 +70,30 @@ class Sim{
  stepPump(pr,mi,dt){const m=this.mems[mi],inR=mi+(pr.inside>0?1:0),outR=mi+(pr.inside>0?0:1),CY=2.2;
   if(pr.cy==null){if(!this.pumpOn)return;const atp=this.near("atp",inR,pr.x,m.y,1)[0];if(!atp)return;
    const na=this.near("na",inR,pr.x,m.y,3),kk=this.near("k",outR,pr.x,m.y,2);if(!na.length)return;
-   pr.cy=0;pr.atp=atp;pr.na=na;pr.kk=kk;[atp,...na,...kk].forEach(q=>{q.tr={kind:"hold",t:0,d:99,r0:this.region(q.y),sx:q.x,sy:q.y}});this.atpUsed++;return}
-  pr.cy+=dt/CY;const c=pr.cy,sd=pr.inside,inY=m.y+sd*(TH+14),outY=m.y-sd*(TH+14);
+   pr.cy=0;if(this.stepMode&&pr.target==null)pr.target=0;pr.atp=atp;pr.na=na;pr.kk=kk;[atp,...na,...kk].forEach(q=>{q.tr={kind:"hold",t:0,d:99,r0:this.region(q.y),sx:q.x,sy:q.y}});this.atpUsed++;return}
+  if(pr.target!=null){const mvv=dt/CY;if(Math.abs(pr.target-pr.cy)<=mvv)pr.cy=pr.target;else pr.cy+=Math.sign(pr.target-pr.cy)*mvv}else pr.cy+=dt/CY;const c=pr.cy,sd=pr.inside,inY=m.y+sd*(TH+14),outY=m.y-sd*(TH+14);
   const mv=(q,tx,ty,u)=>{q.x=q.tr.sx+(tx-q.tr.sx)*ease(u);q.y=q.tr.sy+(ty-q.tr.sy)*ease(u)};
   pr.open=c<.38?1:c<.62?.5:c<.9?0:.5;
   pr.na.forEach((q,i)=>{const ox=(i-1)*9;if(c<.3)mv(q,pr.x+ox,inY,c/.3);else if(c<.4){q.x=pr.x+ox;q.y=inY}else if(c<.7){q.x=pr.x+ox;q.y=inY+(outY-inY)*ease((c-.4)/.3)}else{q.x=pr.x+ox+(c-.7)*60*(i-1);q.y=outY-sd*(c-.7)*40}});
   pr.kk.forEach((q,i)=>{const ox=(i?1:-1)*8;if(c<.45){q.x=q.tr.sx;q.y=q.tr.sy;if(c>.3)mv(q,pr.x+ox,outY,Math.min(1,(c-.3)/.15))}else if(c<.8){q.x=pr.x+ox;q.y=outY+(inY-outY)*ease((c-.45)/.35)}else{q.x=pr.x+ox*(1+(c-.8)*4);q.y=inY+sd*(c-.8)*40}});
   if(c<.3){mv(pr.atp,pr.x,inY+sd*10,c/.3)}else{pr.atp.x=pr.x;pr.atp.y=inY+sd*10}
+  if(pr.target!=null){const at=pr.atp;if(c>=.45&&at.k==="atp")at.k="adp";else if(c<.45&&at.k==="adp")at.k="atp";
+   if(c>=.45){if(!pr.pi){pr.pi={k:"pi",x:pr.x+22,y:inY+sd*10,vx:0,vy:0,tr:{kind:"hold",r0:inR,t:0,d:99},ph:1};this.ps.push(pr.pi)}const e=Math.max(0,c-.8);pr.pi.x=pr.x+24+e*240;pr.pi.y=inY+sd*10+sd*e*140}
+   else if(pr.pi){pr.pi.dead=true;pr.pi=null}}
   if(c>=1){[...pr.na].forEach(q=>{q.tr=null;q.y=outY-sd*26+R(-6,6);q.vy=-sd;q.x=pr.x+R(-30,30);this.note("na",inR,outR)});pr.kk.forEach(q=>{q.tr=null;q.y=inY+sd*26;q.vy=sd;q.x=pr.x+R(-30,30);this.note("k",outR,inR)});
    const a=pr.atp;a.tr=null;a.k="adp";a.vy=sd;a.y=inY+sd*20;this.add("pi",inR,pr.x+R(-26,26),inY+sd*34);pr.cy=null}}
  /* ---- drawing ---- */
  draw(){const x=this.x,r=this.cv.width/W;x.setTransform(r,0,0,r,0,0);if(this.custom){this.custom(x,this.T);return}const cf=this.cfg;if(!cf){x.clearRect(0,0,W,H);return}
+  const z=this.z;x.save();if(z>1.001){const cx=Math.min(W-W/(2*z),Math.max(W/(2*z),this.zcc[0])),cy=Math.min(H-H/(2*z),Math.max(H/(2*z),this.zcc[1]));x.translate(W/2,H/2);x.scale(z,z);x.translate(-cx,-cy)}
   cf.regions.forEach((rg,i)=>{const t=i===0?0:this.mems[i-1].y,b=i===this.mems.length?H:this.mems[i].y;x.fillStyle=rg.col;x.fillRect(0,t,W,b-t)});
   cf.regions.forEach((rg,i)=>{const t=i===0?0:this.mems[i-1].y+TH,b=i===this.mems.length?H:this.mems[i].y-TH;x.font="800 15px 'Open Sans',sans-serif";x.textAlign="left";x.textBaseline="middle";x.fillStyle="rgba(36,26,56,.7)";x.fillText(rg.name,12,i===0?18:t+18)});
   this.mems.forEach(m=>this.drawMem(x,m));
-  const f=this.focus;this.ps.forEach(p=>{const on=!f||p.k===f;x.globalAlpha=on?1:.18;const s=SC[p.k]||.5,w=96*s*.8;x.save();x.translate(p.x,p.y);x.rotate(Math.sin(this.T*1.7+p.ph)*.5);x.drawImage(sp(p.k),-w/2,-w/2,w,w);x.restore()});x.globalAlpha=1;
-  this.mems.forEach(m=>m.prot.forEach(pr=>{if(pr.t==="pump"&&pr.cy!=null)this.drawPumpLabels(x,pr)}))}
+  (this.mt||[]).forEach((m,i)=>this.drawMito(x,m,i));
+  const f=this.focus;this.ps.forEach(p=>{const on=!f||p.k===f;x.globalAlpha=(on?1:.18)*(p.tr&&p.tr.kind==="mi"?1-.7*Math.min(1,p.tr.t/p.tr.d):1);const s=SC[p.k]||.5,w=96*s*.8*(1.5/SS(p.k));x.save();x.translate(p.x,p.y);x.rotate(Math.sin(this.T*1.7+p.ph)*.5);x.drawImage(sp(p.k),-w/2,-w/2,w,w);x.restore()});x.globalAlpha=1;
+  this.mems.forEach(m=>m.prot.forEach(pr=>{if(pr.t==="pump"&&pr.cy!=null)this.drawPumpLabels(x,pr)}));x.restore()}
+ drawMito(x,m,i){x.save();x.translate(m.x,m.y);x.rotate(m.r||0);const g=m.glow>0?Math.min(1,m.glow):0;if(g){x.shadowColor="#ffd21f";x.shadowBlur=18*g}
+  x.fillStyle="#f3aa60";x.strokeStyle="#b5651d";x.lineWidth=2.5;x.beginPath();x.ellipse(0,0,38,17,0,0,7);x.fill();x.stroke();x.shadowBlur=0;x.strokeStyle="#b5651d";x.lineWidth=1.8;x.beginPath();for(let k=-3;k<=3;k++){const a=k*9;x.moveTo(a,-14+(k%2?3:0));x.lineTo(a,-3);x.moveTo(a+4,14-(k%2?3:0));x.lineTo(a+4,3)}x.stroke();x.restore();
+  x.font="800 11px 'Open Sans',sans-serif";x.fillStyle="rgba(90,45,5,.9)";x.textAlign="center";x.textBaseline="middle";x.fillText("Mitochondrion",m.x,m.y+(m.lab||30))}
  drawMem(x,m){const pts=[];for(let i=0;i<=40;i++)pts.push([8+i*(W-16)/40,m.y]);
   const sk=m.prot.map(p=>{const hw=p.t==="pump"?42:p.t==="channel"?34:p.t==="aqp"?34:34;return[(p.x-hw-8)/(W-16),(p.x+hw-8)/(W-16)]});
   G.bilayer(x,pts,{gap:12,len:15,hl:5.5,lw:1.8,t:this.T*1.5,wob:this.paused?0:1.3,skip:sk});

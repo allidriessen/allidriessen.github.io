@@ -16,43 +16,79 @@ main.innerHTML=`<div class="steps" id="steps"><span>1 · Digestive system</span>
 const $=id=>document.getElementById(id),cv=$("cv"),ctx=cv.getContext("2d");
 let stage=0,paused=false,spd=1,T=0,sel=new Set(),seen=new Set(),tr=null,wrongApical=0;
 const cam={s:1,cx:W/2,cy:H/2};
+const R=(a,b)=>a+Math.random()*(b-a);
 const ease=u=>u<0?0:u>1?1:u*u*(3-2*u);
 /* ---------- canvas sizing ---------- */
 function fit(){const r=Math.min(devicePixelRatio||1,2),w=$("stage").parentElement.clientWidth-6,maxH=innerHeight*.6,h=Math.min(w*H/W,maxH),w2=h*W/H;cv.style.width=w2+"px";cv.style.margin="0 auto";cv.width=Math.round(w2*r);cv.height=Math.round(h*r)}
 addEventListener("resize",fit);fit();
 /* ---------- sprites ---------- */
-const spr={};const sp=k=>spr[k]||(spr[k]=(()=>{const c=document.createElement("canvas");c.width=c.height=128;G.mol(c.getContext("2d"),k,64,64,2.1);return c})());
-/* ---------- scene 0: the body ---------- */
-const OR={};/* organs: {path, w, name} */
-(function(){const P=s=>new Path2D(s);
- OR.esoph={p:P("M450,38 C452,90 462,120 482,172"),w:18,col:"#e69a9a",edge:"#b05a5a",name:"Esophagus"};
- OR.liver={p:P("M286,170 C330,150 420,150 462,172 C470,200 440,246 392,262 C340,276 296,250 286,170 Z"),fill:"#9a4a3a",edge:"#6a2a20",name:"Liver"};
- OR.stomach={p:P("M478,168 C540,150 612,180 600,240 C592,290 540,298 506,282 C486,272 490,246 506,240 C524,232 530,214 506,206 C486,198 470,190 478,168 Z"),fill:"#f0a592",edge:"#b86a58",name:"Stomach"};
- OR.large={p:P("M298,486 L298,308 Q298,270 338,270 L562,270 Q602,270 602,308 L602,470 Q602,498 574,500 L520,500 Q474,500 458,520"),w:26,col:"#d9a066",edge:"#a8703a",name:"Large intestine (colon)"};
- OR.small={p:P("M522,284 Q520,300 500,304 L358,304 Q336,304 336,322 Q336,340 358,340 L542,340 Q562,340 562,358 Q562,376 542,376 L358,376 Q336,376 336,394 Q336,412 358,412 L542,412 Q562,412 562,430 Q562,448 542,448 L420,448 Q404,448 404,462"),w:21,col:"#f3b0bb",edge:"#c96a80",name:"Small intestine"};
- OR.rect={p:P("M458,520 L452,540"),w:20,col:"#c98a50",edge:"#8f5c2a",name:"Rectum"};
+const SI=k=>k==="glu"?1.8:2.1;const spr={};const sp=k=>spr[k]||(spr[k]=(()=>{const c=document.createElement("canvas");c.width=c.height=128;G.mol(c.getContext("2d"),k,64,64,SI(k));return c})());
+/* ---------- scene 0: the digestive system (organs drawn at realistic relative sizes) ---------- */
+const OR={},FOOD={path:[],reg:[]};
+(function(){
+ const cr=(pts,n)=>{n=n||8;const out=[],P=[pts[0]].concat(pts,[pts[pts.length-1]]);for(let i=1;i<P.length-2;i++){const a=P[i-1],b=P[i],c=P[i+1],d=P[i+2];for(let k=0;k<n;k++){const t=k/n,t2=t*t,t3=t2*t;out.push([.5*((2*b[0])+(-a[0]+c[0])*t+(2*a[0]-5*b[0]+4*c[0]-d[0])*t2+(-a[0]+3*b[0]-3*c[0]+d[0])*t3),.5*((2*b[1])+(-a[1]+c[1])*t+(2*a[1]-5*b[1]+4*c[1]-d[1])*t2+(-a[1]+3*b[1]-3*c[1]+d[1])*t3)])}}out.push(pts[pts.length-1]);return out};
+ const P2=pts=>{const p=new Path2D();pts.forEach((q,i)=>i?p.lineTo(q[0],q[1]):p.moveTo(q[0],q[1]));return p};
+ const mouth=[[450,94],[450,108],[450,124]];
+ const eso=cr([[450,124],[450,150],[451,178],[456,206],[466,224]]);
+ const stom=cr([[466,224],[508,232],[524,256],[502,280],[470,282]]);
+ /* small intestine: duodenum, five coiled rows, ileum */
+ let si=[[470,282],[468,298],[458,318],[440,338],[422,352]];
+ const row=(y,x0,x1)=>{const o=[],n=10;for(let i=0;i<=n;i++)o.push([x0+(x1-x0)*i/n,y]);return o};
+ const turn=(xe,y,dir)=>{const o=[];for(let i=1;i<8;i++){const a=-Math.PI/2+Math.PI*i/8;o.push([xe+dir*10*Math.cos(a),y+10+10*Math.sin(a)])}return o};
+ si=si.concat(row(352,422,500),turn(500,352,1),row(372,500,400),turn(400,372,-1),row(392,400,500),turn(500,392,1),row(412,500,400),turn(400,412,-1),row(432,400,470));
+ si=si.concat(cr([[470,432],[448,444],[420,452],[392,450],[378,444]]));
+ const lg=cr([[372,448],[372,380],[372,340],[376,326],[392,321],[450,329],[508,321],[524,326],[528,340],[528,420],[522,452],[500,470],[474,462],[456,478],[452,500]]);
+ const rec=[[452,500],[452,518]];
+ OR.mouth={name:"Mouth",pts:mouth};
+ OR.esoph={name:"Esophagus",pts:eso,w:11,col:"#e69a9a",edge:"#b05a5a"};
+ OR.stomach={name:"Stomach",pts:stom,w:46,col:"#f0a592",edge:"#b86a58"};
+ OR.small={name:"Small intestine",pts:si,w:13,col:"#f3b0bb",edge:"#c96a80"};
+ OR.large={name:"Large intestine (colon)",pts:lg,w:30,col:"#d9a066",edge:"#a8703a"};
+ OR.rect={name:"Rectum",pts:rec,w:20,col:"#c98a50",edge:"#8f5c2a"};
+ OR.liver={name:"Liver",fill:"#9a4a3a",edge:"#6a2a20",p:new Path2D("M354,238 C380,214 440,208 474,222 C476,252 462,276 430,286 C396,294 360,278 354,238 Z")};
+ ["esoph","stomach","small","large","rect"].forEach(k=>OR[k].p=P2(OR[k].pts));
+ /* the food's route: mouth -> anus, with a speed for each region */
+ const reg=[["mouth",mouth,38],["esoph",eso,70],["stomach",stom,26],["small",si,46],["large",lg,34],["rect",rec,30]];
+ let tot=0;reg.forEach(([n,pts,v])=>{for(let i=0;i<pts.length;i++){FOOD.path.push({x:pts[i][0],y:pts[i][1],v:v,r:n,d:tot});if(i<pts.length-1)tot+=Math.hypot(pts[i+1][0]-pts[i][0],pts[i+1][1]-pts[i][1])}});
+ FOOD.len=tot;
 })();
+const FCOL=["#6dbb4a","#f08a2a","#e2b66a","#d9473a","#9a6cc4"];
+let fp=[];
+function foodAt(d){const P=FOOD.path;let lo=0,hi=P.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(P[m].d<=d)lo=m;else hi=m}const a=P[lo],b=P[hi],u=b.d>a.d?Math.min(1,Math.max(0,(d-a.d)/(b.d-a.d))):0;return{x:a.x+(b.x-a.x)*u,y:a.y+(b.y-a.y)*u,v:a.v,r:a.r}}
+function foodInit(){fp=[];for(let i=0;i<16;i++)fp.push({d:-i*FOOD.len/16*.9+R(0,20),c:FCOL[i%FCOL.length],ph:R(0,6),j:R(-3,3)})}
+function foodStep(dt){fp.forEach(p=>{if(p.d<0){p.d+=dt*60;return}const f=foodAt(p.d);p.d+=f.v*dt;if(p.d>=FOOD.len){p.d=-R(10,120);p.c=FCOL[Math.floor(R(0,FCOL.length))]}})}
+function foodDraw(x,t){fp.forEach(p=>{if(p.d<0)return;const f=foodAt(p.d),u=p.d/FOOD.len,ox=Math.sin(t*3+p.ph)*p.j*.7,oy=Math.cos(t*2.4+p.ph)*p.j*.7;
+  let col=p.c,r=7;if(f.r==="stomach"){col=mix(p.c,"#e8cf9a",.6);r=6}else if(f.r==="small"){col="#e9d3a2";r=4.6}else if(f.r==="large"){col=mix("#e9d3a2","#8a5a2a",Math.min(1,(u-.7)*4));r=4.4}else if(f.r==="rect"){col="#7a4a22";r=4.6}else if(f.r==="mouth"){r=8}
+  x.beginPath();x.arc(f.x+ox,f.y+oy,r,0,7);x.fillStyle=col;x.fill();x.lineWidth=1.6;x.strokeStyle="rgba(40,30,20,.55)";x.stroke();x.beginPath();x.arc(f.x+ox-r*.3,f.y+oy-r*.3,r*.28,0,7);x.fillStyle="rgba(255,255,255,.55)";x.fill()})}
+function mix(a,b,u){const h=s=>[1,3,5].map(i=>parseInt(s.slice(i,i+2),16)),A=h(a),B=h(b);return"#"+A.map((v,i)=>Math.round(v+(B[i]-v)*u).toString(16).padStart(2,"0")).join("")}
 function drawBody(x,t){
  const bg=x.createLinearGradient(0,0,0,H);bg.addColorStop(0,"#eaf1fb");bg.addColorStop(1,"#dbe6f6");x.fillStyle=bg;x.fillRect(0,0,W,H);
- /* torso: medium brown skin */
- x.beginPath();x.moveTo(405,0);x.lineTo(402,34);x.bezierCurveTo(330,48,226,56,196,100);x.bezierCurveTo(176,130,214,300,236,420);x.bezierCurveTo(240,470,214,520,206,H);x.lineTo(694,H);x.bezierCurveTo(686,520,660,470,664,420);x.bezierCurveTo(686,300,724,130,704,100);x.bezierCurveTo(674,56,570,48,498,34);x.lineTo(495,0);x.closePath();
- x.fillStyle=C.skin;x.fill();x.lineWidth=5;x.strokeStyle=C.skind;x.stroke();
+ const skin=C.skin,sk=C.skind;
+ /* neck + torso (medium brown skin) */
+ x.beginPath();x.moveTo(426,110);x.lineTo(426,150);x.bezierCurveTo(380,154,312,162,300,204);x.bezierCurveTo(296,262,322,330,330,400);x.bezierCurveTo(334,450,320,500,314,H+4);x.lineTo(586,H+4);x.bezierCurveTo(580,500,566,450,570,400);x.bezierCurveTo(578,330,604,262,600,204);x.bezierCurveTo(588,162,520,154,474,150);x.lineTo(474,110);x.closePath();
+ x.fillStyle=skin;x.fill();x.lineWidth=5;x.strokeStyle=sk;x.stroke();
+ /* head */
+ x.beginPath();x.ellipse(450,64,47,58,0,0,7);x.fillStyle=skin;x.fill();x.stroke();
+ x.fillStyle=sk;[[432,46],[468,46]].forEach(e=>{x.beginPath();x.ellipse(e[0],e[1],3.6,2.6,0,0,7);x.fill()});x.lineWidth=2.5;x.strokeStyle=sk;x.beginPath();x.moveTo(450,50);x.quadraticCurveTo(445,66,452,68);x.stroke();
+ /* open mouth: lips, teeth, tongue */
+ x.beginPath();x.ellipse(450,94,21,11,0,0,7);x.fillStyle="#7a2f2f";x.fill();x.lineWidth=3;x.strokeStyle="#5a1f1f";x.stroke();
+ x.fillStyle="#fff";x.beginPath();x.roundRect(436,84,28,5,2);x.fill();x.beginPath();x.ellipse(450,98,13,5.5,0,0,7);x.fillStyle="#e0707a";x.fill();
  /* cut-away window */
- x.beginPath();x.moveTo(258,150);x.bezierCurveTo(300,112,600,112,642,150);x.bezierCurveTo(664,260,654,420,640,500);x.bezierCurveTo(600,548,300,548,260,500);x.bezierCurveTo(246,420,236,260,258,150);x.closePath();
- x.fillStyle="#f1d9c4";x.fill();x.lineWidth=3;x.strokeStyle="#c9a081";x.stroke();
- const tube=o=>{x.lineCap="round";x.lineJoin="round";x.strokeStyle=o.edge;x.lineWidth=o.w+6;x.stroke(o.p);x.strokeStyle=o.col;x.lineWidth=o.w;x.stroke(o.p)};
- x.save();x.clip();
- const blob=o=>{x.fillStyle=o.fill;x.strokeStyle=o.edge;x.lineWidth=4;x.fill(o.p);x.stroke(o.p)};
- blob(OR.liver);blob(OR.stomach);tube(OR.large);tube(OR.small);tube(OR.rect);
- /* gentle motion along the small intestine */
- x.setLineDash([2,34]);x.lineDashOffset=-t*30;x.strokeStyle="#fff";x.globalAlpha=.7;x.lineWidth=7;x.stroke(OR.small.p);x.setLineDash([]);x.globalAlpha=1;
- x.restore();tube(OR.esoph);
+ x.beginPath();x.moveTo(438,100);x.lineTo(462,100);x.lineTo(462,176);x.bezierCurveTo(500,176,548,186,552,226);x.bezierCurveTo(558,320,560,420,548,500);x.quadraticCurveTo(540,528,450,528);x.quadraticCurveTo(360,528,352,500);x.bezierCurveTo(340,420,342,320,348,226);x.bezierCurveTo(352,186,400,176,438,176);x.closePath();
+ x.fillStyle="#f6e6d6";x.fill();x.lineWidth=3;x.strokeStyle="#c9a081";x.stroke();
+ const tube=o=>{x.lineCap="round";x.lineJoin="round";x.strokeStyle=o.edge;x.lineWidth=o.w+5;x.stroke(o.p);x.strokeStyle=o.col;x.lineWidth=o.w;x.stroke(o.p)};
+ x.fillStyle=OR.liver.fill;x.strokeStyle=OR.liver.edge;x.lineWidth=4;x.fill(OR.liver.p);x.stroke(OR.liver.p);
+ x.fillStyle="#7ec27a";x.strokeStyle="#3f7d3b";x.lineWidth=2;x.beginPath();x.ellipse(440,288,7,11,.5,0,7);x.fill();x.stroke();
+ tube(OR.esoph);tube(OR.stomach);tube(OR.small);tube(OR.large);tube(OR.rect);
+ x.beginPath();x.moveTo(368,456);x.lineTo(360,472);x.lineWidth=7;x.strokeStyle="#a8703a";x.lineCap="round";x.stroke();
+ foodDraw(x,t);
  /* labels */
- const lab=(txt,tx,ty,px,py,al)=>{x.strokeStyle="#33405f";x.lineWidth=2;x.beginPath();x.moveTo(tx+(al==="right"?-4:4),ty);x.lineTo(px,py);x.stroke();x.beginPath();x.arc(px,py,4,0,7);x.fillStyle="#33405f";x.fill();x.font="700 19px 'Open Sans',sans-serif";x.fillStyle="#1c2140";x.textAlign=al;x.textBaseline="middle";x.fillText(txt,tx,ty)};
- lab("Esophagus",404,70,444,76,"right");lab("Liver",262,200,320,200,"right");lab("Stomach",690,200,586,220,"left");
- lab("Large intestine",204+40,330,298,330,"right");lab("Small intestine",690,420,562,420,"left");lab("Rectum",600,530,452,532,"left");
- /* pulse on the small intestine */
- if(stage===0&&!tr){const r=10+((t*30)%30);x.strokeStyle="rgba(255,255,255,"+(1-r/40)+")";x.lineWidth=5;x.beginPath();x.arc(450,376,60+r,0,7);x.stroke()}}
+ const lab=(txt,tx,ty,px,py,al)=>{x.strokeStyle="#1c2140";x.lineWidth=2;x.beginPath();x.moveTo(tx+(al==="right"?6:-6),ty);x.lineTo(px,py);x.stroke();x.beginPath();x.arc(px,py,4,0,7);x.fillStyle="#1c2140";x.fill();x.font="700 18px 'Open Sans',sans-serif";x.fillStyle="#1c2140";x.textAlign=al;x.textBaseline="middle";x.fillText(txt,tx,ty)};
+ lab("Mouth",388,94,432,94,"right");lab("Liver",292,236,380,240,"right");lab("Large intestine",292,352,370,360,"right");
+ lab("Esophagus",506,134,454,150,"left");lab("Stomach",606,238,520,248,"left");lab("Small intestine",606,392,500,392,"left");lab("Rectum",606,484,458,490,"left");lab("Anus",606,522,454,518,"left");
+ x.font="800 15px 'Open Sans',sans-serif";x.textAlign="left";x.fillStyle="rgba(255,255,255,.9)";const cap="Food moves from the mouth to the anus";const cw=x.measureText(cap).width+18;x.beginPath();x.roundRect(14,14,cw,28,14);x.fill();x.fillStyle="#1c2140";x.textBaseline="middle";x.fillText(cap,23,29);
+ if(stage===0&&!tr){const r=((t*30)%30);x.strokeStyle="rgba(255,255,255,"+(1-r/30)+")";x.lineWidth=5;x.beginPath();x.arc(450,392,54+r,0,7);x.stroke()}}
+
 /* ---------- scene 1: lumen, cells, blood ---------- */
 const NC=6,CW=140,CX0=30,cellCx=i=>CX0+CW*i+CW/2,TOP=172,BOT=352;
 function cellPath(i){const x0=CX0+CW*i,p=new Path2D();p.moveTo(x0+3,TOP+3);
@@ -90,7 +126,7 @@ const MOL={
  carb:{n:3,v:30,sc:.36,txt:"Starch is a carbohydrate made of many glucose units. It is far too large to be absorbed. Enzymes break it into glucose first."},
  prot:{n:3,v:30,sc:.36,txt:"Proteins from food are huge molecules. Enzymes break them into amino acids before they can be absorbed."},
  lip:{n:3,v:30,sc:.34,txt:"Fats (lipids) are large, too. Enzymes and bile break them into fatty acids that the cells can absorb."}};
-const KIND=["o2","co2","h2o","glu","aa","fa","carb","prot","lip"],R=(a,b)=>a+Math.random()*(b-a);
+const KIND=["o2","co2","h2o","glu","aa","fa","carb","prot","lip"];
 const SPLIT={carb:"glu",prot:"aa",lip:"fa"};
 let ps=[];
 function route(k,x0,ci){const cx=cellCx(ci)+R(-34,34);
@@ -110,13 +146,13 @@ function stepP(dt){for(let i=ps.length-1;i>=0;i--){const p=ps[i];if(p.delay>0){p
 function drawMols(x,t){const any=sel.size>0;
  ps.forEach(p=>{if(p.delay>0)return;const on=!any||sel.has(p.k)||(p.once&&sel.has(Object.keys(SPLIT).find(q=>SPLIT[q]===p.k)));const ox=Math.sin(t*3+p.ph)*2.5,oy=Math.cos(t*2.3+p.ph)*2.5,s=MOL[p.k].sc;
   x.globalAlpha=on?1:.14;if(any&&on){x.fillStyle="rgba(255,255,255,.55)";x.beginPath();x.arc(p.x+ox,p.y+oy,17,0,7);x.fill()}
-  x.save();x.translate(p.x+ox,p.y+oy);x.rotate(Math.sin(t*1.4+p.ph)*.5);x.drawImage(sp(p.k),-64*s,-64*s,128*s,128*s);x.restore()});x.globalAlpha=1}
+  x.save();x.translate(p.x+ox,p.y+oy);x.rotate(Math.sin(t*1.4+p.ph)*.5);x.drawImage(sp(p.k),-64*s*2.1/SI(p.k),-64*s*2.1/SI(p.k),128*s*2.1/SI(p.k),128*s*2.1/SI(p.k));x.restore()});x.globalAlpha=1}
 /* ---------- drawing & camera ---------- */
 function view(x,fn,c,alpha){x.save();x.translate(W/2,H/2);x.scale(c.s,c.s);x.translate(-c.cx,-c.cy);if(alpha!=null)x.globalAlpha=alpha;fn();x.restore()}
 function whiteout(x,a){if(a<=0)return;x.fillStyle="rgba(255,255,255,"+Math.min(1,a)+")";x.fillRect(0,0,W,H)}
 let clickPt=null;
 function frame(now){const dt=Math.min(.05,(now-(frame.l||now))/1000);frame.l=now;
- const sdt=paused?0:dt*spd;T+=sdt;if(stage>=1&&stage<=2&&!tr)stepP(sdt);
+ const sdt=paused?0:dt*spd;T+=sdt;if(stage>=1&&stage<=2&&!tr)stepP(sdt);if(stage===0)foodStep(sdt);
  const r=cv.width/W;ctx.setTransform(r,0,0,r,0,0);
  if(tr){const u=Math.min(1,(now-tr.t0)/tr.dur);tr.draw(u);if(u>=1){const f=tr.done;tr=null;f&&f()}}
  else draw(ctx);
@@ -130,7 +166,7 @@ const MI=[["glu",.5,.22,.1],["o2",.2,.3,.2],["na",.37,.14,.7],["h2o",.62,.28,.4]
 function drawIcons(x){MI.forEach(([k,fx,fy,ph])=>{G.mol(x,k,fx*W+Math.sin(T*.9+ph*9)*14,fy*H+Math.cos(T*.7+ph*7)*10,1.25,Math.sin(T+ph*5)*.3)})}
 /* ---------- transitions ---------- */
 function go(kind,done){const now=performance.now();
- if(kind==="body->tissue"){const tx=450,ty=376;tr={t0:now,dur:2300,done,draw:u=>{if(u<.55){const e=ease(u/.55);view(ctx,()=>drawBody(ctx,T),{s:1+e*6,cx:W/2+(tx-W/2)*e,cy:H/2+(ty-H/2)*e});whiteout(ctx,(e-.55)*2.4)}
+ if(kind==="body->tissue"){const tx=450,ty=392;tr={t0:now,dur:2300,done,draw:u=>{if(u<.55){const e=ease(u/.55);view(ctx,()=>drawBody(ctx,T),{s:1+e*6,cx:W/2+(tx-W/2)*e,cy:H/2+(ty-H/2)*e});whiteout(ctx,(e-.55)*2.4)}
    else{const e=ease((u-.55)/.45);stage=1;view(ctx,()=>{drawTissue(ctx,T);drawMols(ctx,T)},{s:.4+.6*e,cx:W/2,cy:H/2});whiteout(ctx,1-e*1.4)}}}}
  else if(kind==="tissue->cells"){const a={...cam};tr={t0:now,dur:1300,done:()=>{cam.s=2;cam.cx=520;cam.cy=282},draw:u=>{const e=ease(u),c={s:a.s+(2-a.s)*e,cx:a.cx+(520-a.cx)*e,cy:a.cy+(282-a.cy)*e};stage=2;cam.s=c.s;cam.cx=c.cx;cam.cy=c.cy;view(ctx,()=>{drawTissue(ctx,T);drawMols(ctx,T)},c)}}}
  else if(kind==="cells->mem"){const tx=clickPt[0],ty=TOP;const a={...cam};tr={t0:now,dur:2400,done,draw:u=>{if(u<.6){const e=ease(u/.6),s=a.s+(16-a.s)*e;view(ctx,()=>{drawTissue(ctx,T);drawMols(ctx,T)},{s,cx:a.cx+(tx-a.cx)*e,cy:a.cy+(ty-a.cy)*e});whiteout(ctx,(e-.5)*2)}
@@ -141,18 +177,19 @@ function setSteps(){steps.forEach((s,i)=>{const cur=Math.min(stage===4?3:stage==
 const say=t=>$("say").innerHTML=t,prompt=t=>$("prompt").innerHTML=t?`<div class="prompt">${t}</div>`:"";
 const qsEl=$("qs"),actEl=$("act");
 function q0(){qsEl.innerHTML="";const b=document.createElement("div");b.className="box";b.innerHTML=`<h3 class="sh" style="margin-top:0">Homeostasis: a quick review</h3><p class="big"><b>Homeostasis</b> is the process living things use to keep their internal conditions <b>stable</b> (temperature, pH, water, nutrients) even when conditions outside change. A cell does this too. Its <b>cell membrane</b> controls what goes in and what goes out.</p><p class="big">Your <b>gastrointestinal (GI) system</b> is a long tube that breaks food down. Nutrients that are broken down must cross the lining of the <b>small intestine</b> to reach your blood. That is where we are headed.</p><div id="hq"></div>`;qsEl.appendChild(b);const h=b.querySelector("#hq");
- L.choice(h,"intro.homeo1","1. Which statement best describes homeostasis?",["Keeping internal conditions relatively stable even when outside conditions change","Making the inside of a cell exactly the same as the outside","Stopping all change in an organism","Making energy from glucose"],0,{explain:"Stable inside, even when the outside changes."});
- L.choice(h,"intro.homeo2","2. Which is an example of a cell helping to maintain homeostasis?",["A membrane letting needed nutrients in and keeping unwanted substances out","A cell growing larger without limit","A cell becoming identical to its neighbors","A cell losing water until it shrivels"],0,{explain:"Controlling what enters and leaves keeps the inside stable."})}
+ L.choice(h,"intro.homeo1","1. Which statement best describes homeostasis?",["Keeping inside conditions fairly steady when the outside changes","Making the inside of a cell exactly the same as the outside","Stopping every kind of change inside an organism","Making all of the energy that a cell needs from glucose"],0,{explain:"Stable inside, even when the outside changes."});
+ L.choice(h,"intro.homeo2","2. Which is an example of a cell helping to maintain homeostasis?",["A membrane letting needed nutrients in and keeping others out","A cell growing larger and larger without any limit","A cell becoming exactly identical to all of its neighbors","A cell losing water until it shrivels and cannot work"],0,{explain:"Controlling what enters and leaves keeps the inside stable."})}
 function homeoDone(){return D.mc["intro.homeo1"]&&D.mc["intro.homeo1"].d&&D.mc["intro.homeo2"]&&D.mc["intro.homeo2"].d}
-function s0(){stage=0;setSteps();cam.s=1;cam.cx=W/2;cam.cy=H/2;cv.className="pt";
- say("<b>Zoomed out:</b> the digestive (GI) system inside the body. Food enters the mouth, passes down the esophagus, and is broken down in the stomach and small intestine. The large intestine absorbs water. Most nutrients are absorbed in the <b>small intestine</b>.");
- prompt("Answer the two review questions below. Then <b>click the small intestine</b> (the long coiled tube in the middle) to zoom in.");q0();actEl.innerHTML=""}
-const NAMEHINT={Liver:"The liver makes bile that helps digest fat, but food does not pass through it.",Stomach:"The stomach starts digesting protein, but very few nutrients are absorbed there.","Large intestine (colon)":"The large intestine mostly absorbs water. Most nutrients are already absorbed before food gets here.",Esophagus:"The esophagus is just a passageway that moves food to the stomach.",Rectum:"The rectum stores waste before it leaves the body."};
+function s0(){stage=0;setSteps();foodInit();$("ctl").hidden=false;cam.s=1;cam.cx=W/2;cam.cy=H/2;cv.className="pt";
+ say("<b>Zoomed out:</b> the digestive (GI) system inside the body. Food enters the <b>mouth</b>, travels down the <b>esophagus</b>, and is broken into smaller and smaller pieces in the <b>stomach</b> and <b>small intestine</b>. The <b>large intestine</b> absorbs water, and what is left leaves through the <b>rectum</b> and <b>anus</b>. The moving dots show food on its trip (watch them change as they are digested). Most nutrients are absorbed in the <b>small intestine</b>.");
+ prompt("Answer the two review questions below. Then <b>click the small intestine</b> (the long coiled tube in the middle of the belly) to zoom in.");q0();actEl.innerHTML=""}
+const NAMEHINT={Liver:"The liver makes bile that helps digest fat, but food does not pass through it.",Stomach:"The stomach starts digesting protein, but very few nutrients are absorbed there.","Large intestine (colon)":"The large intestine mostly absorbs water. Most nutrients are already absorbed before food gets here.",Mouth:"The mouth is where food enters. Teeth and saliva start breaking it up, but no nutrients are absorbed here.",Esophagus:"The esophagus is just a passageway that moves food to the stomach.",Rectum:"The rectum stores waste before it leaves the body."};
 cv.addEventListener("pointerdown",e=>{if(tr)return;const b=cv.getBoundingClientRect(),px=(e.clientX-b.left)/b.width*W,py=(e.clientY-b.top)/b.height*H;
  if(stage===0){const c=document.createElement("canvas").getContext("2d");let hit=null;
   [OR.small,OR.large,OR.esoph,OR.rect,OR.liver,OR.stomach].forEach(o=>{if(hit)return;const ok=o.w?(c.lineWidth=o.w+10,c.lineCap="round",c.isPointInStroke(o.p,px,py)):c.isPointInPath(o.p,px,py);if(ok)hit=o});
-  if(!hit){say("Click on one of the organs. The small intestine is the long coiled tube in the middle.");return}
-  if(hit!==OR.small){say("<b>"+hit.name+".</b> "+(NAMEHINT[hit.name]||"")+" Try the <b>small intestine</b>, the coiled tube in the middle.");return}
+  if(!hit&&Math.hypot((px-450)/50,(py-64)/60)<1)hit=OR.mouth;
+  if(!hit){say("Click on one of the organs. The small intestine is the long coiled tube in the middle of the belly.");return}
+  if(hit!==OR.small){say("<b>"+hit.name+".</b> "+(NAMEHINT[hit.name]||"")+" Try the <b>small intestine</b>, the long coiled tube in the middle of the belly.");return}
   if(!homeoDone()){say("First answer the two review questions below, then click the small intestine.");L.flash("Answer the review questions first");return}
   go("body->tissue",s1);return}
  if(stage===2){const m=cam,wx=(px-W/2)/m.s+m.cx,wy=(py-H/2)/m.s+m.cy;const ci=Math.floor((wx-CX0)/CW);
