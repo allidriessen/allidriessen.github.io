@@ -19,10 +19,9 @@ window.BVL_UNITS=[
  {n:1,title:"Ecosystem Interactions & Dynamics",theme:"earth",release:"2026-08-17",activities:[
  ]},
  {n:2,title:"Matter & Energy",theme:"atoms",release:"2026-09-21",activities:[
-  {key:"ers",title:"Enzymatic Reactions Simulator",desc:"",url:"/u2/ers.html",release:"2026-09-21"},
-  {key:"ersbe",title:"Enzymatic Reaction Simulator: Build the Equation",desc:"",url:"/u2/ersbe.html",release:"2026-09-28"},
-  {key:"eial",title:"Enzymes in Action Virtual Lab DRAFT",desc:"Draft: the 2.11.B worksheet built into a web page.",url:"/u2/eial.html",release:"2099-01-01"},
-  {key:"eial2",title:"Enzymes in Action Virtual Lab DRAFT 2 (Lab Bench)",desc:"Draft: same lab with the simulator pinned beside the worksheet.",url:"/u2/eial2.html",release:"2099-01-01"}   /* DRAFT: set the real date when ready */
+  {key:"ervl",group:"lab",title:"Enzymatic Reactions Virtual Lab",desc:"Guided lab: how do temperature, pH, and concentrations change enzyme activity?",url:"/u2/ervl.html",release:"2099-01-01"},   /* set the real release date (or the Google Sheet row u2/ervl) when ready */
+  {key:"ers",group:"sim",title:"Enzymatic Reactions Simulator",desc:"",url:"/u2/ers.html",release:"2026-09-21"},
+  {key:"ersbe",group:"sim",title:"Enzymatic Reactions Simulator: Build the Equation",desc:"",url:"/u2/ersbe.html",release:"2026-09-28"}
  ]},
  {n:3,title:"Cellular Dynamics: The Life and Death of a Cell",theme:"cells",release:"2026-10-26",activities:[
   {key:"cce",title:"Cancer Cell Exploration",desc:"How are cancer cells different from normal cells?",url:"/u3/cce.html",release:"2026-10-26"},

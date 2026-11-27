@@ -1,13 +1,13 @@
-/* Enzymes in Action Virtual Lab: worksheet widgets (choices, dropdown blanks, data tables, writing boxes, pictures).
+/* Enzymatic Reactions Virtual Lab: worksheet widgets (choices, dropdown blanks, data tables, writing boxes, pictures).
    Everything is saved in this browser (BVL.save) and printed to the PDF. Needs /assets/bvl.js first. */
 (function(){
-const K="eial",B=()=>window.BVL;
+const K="ervl",B=()=>window.BVL;
 const D=window.LAB_D={mc:{},ans:{},data:{},cap:{},pr:{},sig:""};
 const L=window.LAB={D,K,items:[],part:""};
 L.load=()=>{const d=B()&&B().load(K);if(d){["mc","ans","data","cap","pr"].forEach(k=>D[k]=d[k]||{});D.sig=d.sig||""}};
 let tm;L.save=()=>{if(!B())return;clearTimeout(tm);tm=setTimeout(L.saveNow,250)};
 L.saveNow=()=>{if(!B())return;const sc=Object.values(D.mc).filter(q=>!q.pred),n=sc.filter(q=>q.d).length,w=Object.values(D.ans).filter(v=>v&&v.trim()).length;
- B().save(K,{title:"Enzymes in Action Virtual Lab · worksheet",summary:n+" of "+sc.length+" questions answered, "+w+" written answers",mc:D.mc,ans:D.ans,data:D.data,cap:D.cap,pr:D.pr,sig:D.sig})};
+ B().save(K,{title:"Enzymatic Reactions Virtual Lab · worksheet",summary:n+" of "+sc.length+" questions answered, "+w+" written answers",mc:D.mc,ans:D.ans,data:D.data,cap:D.cap,pr:D.pr,sig:D.sig})};
 addEventListener("pagehide",()=>L.saveNow());document.addEventListener("visibilitychange",()=>{if(document.hidden)L.saveNow()});
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 L.esc=esc;
@@ -97,14 +97,14 @@ L.sim=()=>{const f=document.getElementById("simf");try{const win=f&&f.contentWin
 /* ---- capture the simulator's graph into the PDF */
 L.captureBtn=(host,key,label,label2)=>{L.items.push({part:L.part,t:"img",key,cap:label2||"My graph"});const w=document.createElement("div");w.className="capw";
  w.innerHTML=`<button type="button" class="pbtn ghost sm">📷 Capture my graph</button> <span class="note">${label||"Click Record result in the simulator for each trial first. Then capture the Variable view graph for your PDF."}</span><div class="capv"></div>`;host.appendChild(w);
- const v=w.querySelector(".capv"),show=()=>{const c=B()&&B().load("img:eial:"+key);v.innerHTML=c&&c.d?`<img alt="Your captured graph" src="${c.d}">`:""};show();
+ const v=w.querySelector(".capv"),show=()=>{const c=B()&&B().load("img:ervl:"+key);v.innerHTML=c&&c.d?`<img alt="Your captured graph" src="${c.d}">`:""};show();
  w.querySelector("button").onclick=()=>{const s=L.sim();if(!s){L.flash("The simulator is still loading.");return}
   try{const g=s.doc.getElementById("g"),r=s.doc.getElementById("tb"),c=document.createElement("canvas");c.width=g.width;c.height=g.height;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(g,0,0);
-   if(B())B().save("img:eial:"+key,{d:c.toDataURL("image/jpeg",.82),w:c.width,h:c.height});D.cap[key]=1;L.save();show();L.flash("Graph captured. It will appear in your PDF.")}catch(e){L.flash("Could not capture the graph: "+e.message)}};
+   if(B())B().save("img:ervl:"+key,{d:c.toDataURL("image/jpeg",.82),w:c.width,h:c.height});D.cap[key]=1;L.save();show();L.flash("Graph captured. It will appear in your PDF.")}catch(e){L.flash("Could not capture the graph: "+e.message)}};
  return w};
-L.img=k=>{const d=B()&&B().load("img:eial:"+k);return d?d:null};
+L.img=k=>{const d=B()&&B().load("img:ervl:"+k);return d?d:null};
 /* SVG string -> small JPEG saved for the PDF */
-L.capture=(key,svg,w,h)=>new Promise(res=>{try{const im=new Image();im.onload=()=>{const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,w,h);x.drawImage(im,0,0,w,h);if(B())B().save("img:eial:"+key,{d:c.toDataURL("image/jpeg",.85),w,h});res(1)};im.onerror=()=>res(0);im.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg)}catch(e){res(0)}});
+L.capture=(key,svg,w,h)=>new Promise(res=>{try{const im=new Image();im.onload=()=>{const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,w,h);x.drawImage(im,0,0,w,h);if(B())B().save("img:ervl:"+key,{d:c.toDataURL("image/jpeg",.85),w,h});res(1)};im.onerror=()=>res(0);im.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg)}catch(e){res(0)}});
 
 /* ---- molecule pictures (SVG strings) */
 const O='<circle r="10" fill="#e23b3b" stroke="#8f1414" stroke-width="1.5"/>',Hh='<circle r="6" fill="#fff" stroke="#8796a5" stroke-width="1.5"/>';
@@ -121,4 +121,32 @@ L.molName={h2o2:"H₂O₂",h2o:"H₂O",o2:"O₂"};
 L.enzymeCanvas=(d,size)=>{const c=document.createElement("canvas"),r=Math.min(window.devicePixelRatio||1,2),s=size||210;c.width=c.height=s*r;c.style.width=c.style.height=s+"px";c.style.touchAction="manipulation";
  const x=c.getContext("2d");x.setTransform(r,0,0,r,0,0);
  const draw=()=>{x.clearRect(0,0,s,s);L.drawE(x,s/2,s/2,0,s/175,d,1,1.7,1.7,false,0,0)};draw();return c};
+
+/* ---- drag-and-drop ordering: cards[i] belongs in zones[i]. Drag, or tap a card then tap a box. */
+L.dnd=(host,id,prompt,zones,cards,o)=>{o=o||{};const names=o.names||cards.map((c,i)=>"card "+(i+1));
+ L.reg(id,prompt,zones.map((z,i)=>z+": "+names[i]).join("; "),false);const st=D.mc[id],key="dnd:"+id;
+ let S=D.data[key];if(!S){const ord=cards.map((c,i)=>i);for(let i=ord.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ord[i],ord[j]]=[ord[j],ord[i]]}if(ord.every((v,i)=>v===i))ord.push(ord.shift());S=D.data[key]={z:zones.map(()=>-1),ord}}
+ const w=document.createElement("div");w.className="q dnd";
+ w.innerHTML=`<p>${prompt}</p><div class="dz">${zones.map((z,i)=>`${i?'<div class="dar" aria-hidden="true">\u2192</div>':""}<div class="zbox" data-z="${i}"><div class="zlab">${z}</div><div class="zcard"></div></div>`).join("")}</div><div class="dtray" aria-label="Diagrams to place"></div><div class="czr"><button type="button" class="pbtn sm dchk">Check</button><button type="button" class="pbtn ghost sm drst">Start over</button><span class="fb" aria-live="polite"></span></div>`;
+ host.appendChild(w);const fb=w.querySelector(".fb"),tray=w.querySelector(".dtray"),chk=w.querySelector(".dchk"),rst=w.querySelector(".drst");let sel=-1;
+ const card=c=>`<button type="button" class="dcard" data-c="${c}" aria-label="Diagram ${c+1}">${cards[c]}</button>`;
+ const draw=()=>{const placed=S.z.filter(v=>v>=0);tray.innerHTML=S.ord.filter(c=>!placed.includes(c)).map(card).join("");
+  w.querySelectorAll(".zbox").forEach((b,i)=>{b.querySelector(".zcard").innerHTML=S.z[i]>=0?card(S.z[i]):"";b.classList.toggle("tgt",sel>=0);b.classList.toggle("okz",!!st.d)});
+  w.querySelectorAll(".dcard").forEach(b=>b.classList.toggle("sel",+b.dataset.c===sel));
+  if(st.d){tray.hidden=true;chk.hidden=true;rst.hidden=true;fb.className="fb good";fb.textContent="\u2713 Correct"+(st.w?" (after "+(st.w+1)+" tries)":" on the first try")}};
+ const put=(z,c)=>{if(st.d)return;const from=S.z.indexOf(c),old=S.z[z];if(from>=0)S.z[from]=old>=0?old:-1;S.z[z]=c;sel=-1;fb.textContent="";draw();L.save()};
+ let g=null,sx,sy,mv=0,cc=-1;
+ w.addEventListener("pointerdown",e=>{const b=e.target.closest(".dcard");if(!b||st.d)return;cc=+b.dataset.c;sx=e.clientX;sy=e.clientY;mv=0;g=document.createElement("div");g.className="dragg";g.style.width="150px";g.innerHTML=cards[cc];g.style.display="none";document.body.appendChild(g)});
+ addEventListener("pointermove",e=>{if(!g)return;if(Math.hypot(e.clientX-sx,e.clientY-sy)>8)mv=1;if(mv){g.style.display="block";g.style.left=e.clientX-75+"px";g.style.top=e.clientY-30+"px"}});
+ const end=e=>{if(!g)return;g.remove();g=null;const c=cc;cc=-1;
+  if(!mv){const inZone=S.z.indexOf(c);if(inZone>=0){S.z[inZone]=-1;sel=-1;draw();L.save()}else{sel=sel===c?-1:c;draw()}return}
+  const t=document.elementFromPoint(e.clientX,e.clientY),z=t&&t.closest&&t.closest(".zbox");if(z&&w.contains(z))put(+z.dataset.z,c);else if(S.z.includes(c)){S.z[S.z.indexOf(c)]=-1;draw();L.save()}};
+ addEventListener("pointerup",end);addEventListener("pointercancel",()=>{if(g){g.remove();g=null}});
+ w.addEventListener("click",e=>{const z=e.target.closest(".zbox");if(z&&sel>=0&&!e.target.closest(".dcard"))put(+z.dataset.z,sel)});
+ rst.onclick=()=>{if(st.d)return;S.z=zones.map(()=>-1);sel=-1;fb.textContent="";draw();L.save()};
+ chk.onclick=()=>{if(st.d)return;if(S.z.some(v=>v<0)){fb.className="fb bad";fb.textContent="Put a diagram in every box first.";return}
+  const bad=S.z.map((v,i)=>v!==i);if(!bad.some(Boolean)){st.d=1;st.pick="ok";draw();L.save();return}
+  st.w++;L.save();fb.className="fb bad";fb.textContent="Not quite. Look at the length of the arrow and the size of the vibration marks. The wrong ones went back to the tray.";
+  bad.forEach((b,i)=>{if(b)S.z[i]=-1});draw()};
+ draw();return w};
 })();

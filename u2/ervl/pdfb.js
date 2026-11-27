@@ -1,12 +1,12 @@
-/* Enzymes in Action Virtual Lab: PDF of the student's work. */
+/* Enzymatic Reactions Virtual Lab: PDF of the student's work. */
 (function(){
 const L=window.LAB,D=L.D,W_=504,pt=L.pt;
 const TITLES={p1:"Part 1: Meet the Molecules",p2:"Part 2: Build the Reaction",p3:"Part 3: Investigation",p4:"Part 4: Summarize Your Learning"};
-const SUBS={q15:"3A: Baseline",q16cold:"3B: Temperature",q23:"3C: pH",q26:"3D: Substrate concentration",q28a:"3E: Enzyme concentration"};
+const SUBS={t3a:"3A: Baseline",q16:"3B: Temperature",q23:"3C: pH",q26:"3D: Substrate concentration",q28a:"3E: Enzyme concentration"};
 const TBLT={t3a:"3A: Baseline counts (30 s)",t3b:"3B: Temperature data",t3c:"3C: pH data",t3d:"3D: Substrate concentration data",t3e:"3E: Enzyme concentration data"};
 L.buildPdf=()=>{const b=window.BVL,p=b.profile(),d=new PDFDoc(),now=new Date(),id=(Date.now().toString(36)+Math.random().toString(36).slice(2,5)).toUpperCase();
- const url=location.origin+"/u2/eial.html",banner=t=>{d.gap(8);d.room(70);d.box(54,d.y,W_,22,[15,118,110]);d.y+=4;d.text(t,{size:13,bold:true,color:[255,255,255],x:62,gap:0});d.y+=8};
- d.text("2.11.B Enzymes in Action Virtual Lab",{size:20,bold:true,gap:2});
+ const url=location.origin+"/u2/ervl.html",banner=t=>{d.gap(8);d.room(70);d.box(54,d.y,W_,22,[15,118,110]);d.y+=4;d.text(t,{size:13,bold:true,color:[255,255,255],x:62,gap:0});d.y+=8};
+ d.text("Enzymatic Reactions Virtual Lab",{size:20,bold:true,gap:2});
  d.text("What variables influence enzyme activity?  Click to return to the lab page: "+url,{size:9.5,color:[26,80,200],link:url,gap:6});d.rule();
  d.text("Name: "+p.name+"     Teacher: "+p.teacher+"     Period: "+p.period,{size:11,bold:true,gap:1});
  d.text("Date: "+now.toLocaleDateString()+"     Submission ID: "+id,{size:10,gap:6});
@@ -14,7 +14,7 @@ L.buildPdf=()=>{const b=window.BVL,p=b.profile(),d=new PDFDoc(),now=new Date(),i
  let cur="",scored=0,first=0,answered=0;
  L.items.forEach(it=>{
   if(it.part!==cur&&TITLES[it.part]){cur=it.part;banner(TITLES[cur])}
-  if(SUBS[it.id]){d.gap(4);d.text(SUBS[it.id],{size:11.5,bold:true,color:[15,118,110],gap:3})}
+  if(SUBS[it.id||it.tid]){d.gap(4);d.text(SUBS[it.id||it.tid],{size:11.5,bold:true,color:[15,118,110],gap:3})}
   if(it.t==="mc"){const q=D.mc[it.id];if(!q)return;
    d.text(pt(q.q),{size:10,bold:true,gap:1});
    if(q.pred){d.text("   Prediction: "+(q.d?pt(q.pt||""):"(not answered)"),{size:9.5,color:q.d?[20,20,20]:[150,60,50],gap:3});return}
