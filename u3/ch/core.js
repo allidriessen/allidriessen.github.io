@@ -21,17 +21,18 @@ L.reg=(id,q,a,pred)=>{ord("mc",id);if(!L.items.some(x=>x.id===id&&x.t==="mc"))L.
 const mark=(h,ok)=>{h.classList.remove("ok","no");if(ok!=null)h.classList.add(ok?"ok":"no")};
 
 /* ---- multiple choice. opts are HTML. correct = index, array of indexes, or a function returning an index (or null when it cannot be decided yet) */
-L.choice=(host,id,prompt,opts,correct,o)=>{o=o||{};const pred=!!o.pred;
+L.shuf=(n,seed)=>{let h=2166136261;for(const c of String(seed))h=Math.imul(h^c.charCodeAt(0),16777619);const a=[...Array(n).keys()];for(let i=n-1;i>0;i--){h=Math.imul(h^(h>>>15),2246822519)+i|0;const j=Math.abs(h)%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+L.choice=(host,id,prompt,opts,correct,o)=>{o=o||{};const pred=!!o.pred;const ord=o.fixed?opts.map((_,i)=>i):L.shuf(opts.length,id);
  const ansText=()=>{if(pred)return"(prediction)";const c=typeof correct==="function"?correct():correct;return c==null?"(depends on your data)":[].concat(c).map(i=>strip(opts[i])).join(" or ")};
  L.reg(id,prompt,ansText(),pred);
  const w=document.createElement("div");w.className="q"+(o.cls?" "+o.cls:"");
- w.innerHTML=`<p>${prompt}${pred?' <span class="tag">Prediction: no wrong answer</span>':""}</p><div class="opts ${o.row?"row":""}">${opts.map((t,i)=>`<button type="button" class="opt" data-i="${i}">${t}</button>`).join("")}</div><div class="fb" aria-live="polite"></div>`;
+ w.innerHTML=`<p>${prompt}${pred?' <span class="tag">Prediction: no wrong answer</span>':""}</p><div class="opts ${o.row?"row":""}">${ord.map(i=>`<button type="button" class="opt" data-i="${i}">${opts[i]}</button>`).join("")}</div><div class="fb" aria-live="polite"></div>`;
  host.appendChild(w);const bs=[...w.querySelectorAll(".opt")],fb=w.querySelector(".fb");
  const st=D.mc[id];
- const paint=()=>{if(pred){bs.forEach((b,i)=>b.classList.toggle("sel",st.pick===String(i)));if(st.d)fb.textContent="Prediction saved. You will check it against real data later.";return}
-  if(st.d){const c=typeof correct==="function"?correct():correct,ok=[].concat(c);bs.forEach((b,i)=>{b.classList.toggle("right",ok.includes(i)&&st.pick===String(i))});fb.className="fb good";fb.innerHTML="✓ Correct"+(st.w?" (after "+(st.w+1)+" tries)":" on the first try")+(o.explain?". "+o.explain:"")}};
+ const paint=()=>{if(pred){bs.forEach(b=>b.classList.toggle("sel",st.pick===b.dataset.i));if(st.d)fb.textContent="Prediction saved. You will check it against real data later.";return}
+  if(st.d){const c=typeof correct==="function"?correct():correct,ok=[].concat(c);bs.forEach(b=>{const i=+b.dataset.i;b.classList.toggle("right",ok.includes(i)&&st.pick===String(i))});fb.className="fb good";fb.innerHTML="✓ Correct"+(st.w?" (after "+(st.w+1)+" tries)":" on the first try")+(o.explain?". "+o.explain:"")}};
  paint();
- bs.forEach((b,i)=>b.onclick=()=>{
+ bs.forEach(b=>b.onclick=()=>{const i=+b.dataset.i;
   if(pred){st.pick=String(i);st.pt=strip(opts[i]);st.d=1;paint();L.save();if(o.onPick)o.onPick(i);return}
   if(st.d)return;const c=typeof correct==="function"?correct():correct;
   if(c==null){fb.className="fb bad";fb.textContent=o.wait||"Fill in your data table first, then answer.";return}
@@ -43,7 +44,7 @@ L.choice=(host,id,prompt,opts,correct,o)=>{o=o||{};const pred=!!o.pred;
 /* ---- dropdown blanks inside any HTML.  {{a|*b|c}} makes a dropdown; the option starting with * is correct.  A "Check" button scores the whole group at once. */
 L.cloze=(host,id,html,o)=>{o=o||{};let n=0;const keys=[];
  const body=html.replace(/\{\{([^}]+)\}\}/g,(m,s)=>{const parts=s.split("|"),i=n++;let ci=0;const opts=parts.map((p,j)=>{if(p[0]==="*"){ci=j;return p.slice(1)}return p});keys.push({c:opts[ci]});
-  return`<select class="bl" data-i="${i}" aria-label="Choose an answer"><option value="">choose…</option>${opts.map(x=>`<option>${esc(x)}</option>`).join("")}</select>`});
+  return`<select class="bl" data-i="${i}" aria-label="Choose an answer"><option value="">choose…</option>${L.shuf(opts.length,id+"."+i).map(j=>`<option>${esc(opts[j])}</option>`).join("")}</select>`});
  const filled=strip(html.replace(/<\/p>/g," ").replace(/<\/t[dh]>/g," | ").replace(/<\/tr>/g,"; ").replace(/\{\{([^}]+)\}\}/g,(m,q)=>{const a=q.split("|").find(x=>x[0]==="*");return"["+(a?a.slice(1):q.split("|")[0])+"]"})).replace(/\s+/g," ").trim();
  L.reg(id,o.q||"Complete the statement.",filled,false);
  const w=document.createElement("div");w.className="q cz";w.innerHTML=`${o.pre||""}<div class="czb">${body}</div><div class="czr"><button type="button" class="pbtn sm">Check</button><span class="fb" aria-live="polite"></span></div>`;

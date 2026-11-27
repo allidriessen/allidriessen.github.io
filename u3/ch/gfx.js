@@ -20,16 +20,16 @@ G.mol=(x,type,px,py,s,rot)=>{s=s||1;x.save();x.translate(px,py);x.rotate(rot||0)
  case"co2":dbond(x,-17,0,0,0,2);dbond(x,0,0,17,0,2);sph(x,-18,0,8.5,C.O,C.Od);sph(x,18,0,8.5,C.O,C.Od);sph(x,0,0,7.5,C.C,"#15181c");break;
  case"h2o":{const a=52*Math.PI/180;bond(x,0,2,-Math.sin(a)*15,2-Math.cos(a)*15,3);bond(x,0,2,Math.sin(a)*15,2-Math.cos(a)*15,3);
   sph(x,0,3,10,C.O,C.Od);sph(x,-Math.sin(a)*16,2-Math.cos(a)*16,6,C.H,C.Hd);sph(x,Math.sin(a)*16,2-Math.cos(a)*16,6,C.H,C.Hd);break}
- case"glu":{/* beta-D-glucopyranose ring with ring O, CH2OH and four OH groups */
-  const R=13,pts=[0,1,2,3,4,5].map(i=>{const a=-Math.PI/2+i*Math.PI/3+Math.PI/6;return[Math.cos(a)*R,Math.sin(a)*R+3]});
-  x.beginPath();pts.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));x.closePath();x.fillStyle="#fff7e0";x.fill();x.lineWidth=2.2;x.strokeStyle="#5b6775";x.stroke();
-  const out=(i,len,lab,dx,dy)=>{const p=pts[i],a=Math.atan2(p[1]-3,p[0]),qx=p[0]+Math.cos(a)*len,qy=p[1]+Math.sin(a)*len;bond(x,p[0],p[1],qx,qy,2);text(x,lab,qx+(dx||0),qy+(dy||0),8,C.Od)};
-  sph(x,pts[0][0],pts[0][1],5.2,C.O,C.Od,"O",C.H);
-  out(1,9,"OH",5,0);out(2,9,"OH",0,3);out(3,9,"OH",-5,2);out(4,9,"HO",-6,-1);
-  bond(x,pts[5][0],pts[5][1],pts[5][0]-4,pts[5][1]-10,2);text(x,"CH₂OH",pts[5][0]-6,pts[5][1]-14,7.5,C.Od);break}
+ case"glu":{/* glucose ring: hexagon with the ring oxygen, four OH groups and a CH2OH arm (no text labels) */
+  const R=12,pts=[0,1,2,3,4,5].map(i=>{const a=-Math.PI/2+i*Math.PI/3+Math.PI/6;return[Math.cos(a)*R,Math.sin(a)*R+4]});
+  x.beginPath();pts.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));x.closePath();x.fillStyle="#fff1c9";x.fill();x.lineWidth=2.4;x.strokeStyle="#5b6775";x.stroke();
+  const oh=i=>{const p=pts[i],a=Math.atan2(p[1]-4,p[0]),qx=p[0]+Math.cos(a)*8,qy=p[1]+Math.sin(a)*8;bond(x,p[0],p[1],qx,qy,2);sph(x,qx,qy,3.6,C.O,C.Od);sph(x,qx+Math.cos(a)*5,qy+Math.sin(a)*5,2.2,C.H,C.Hd)};
+  sph(x,pts[0][0],pts[0][1],4.6,C.O,C.Od);
+  oh(1);oh(2);oh(3);oh(4);
+  bond(x,pts[5][0],pts[5][1],pts[5][0]-2,pts[5][1]-8,2);sph(x,pts[5][0]-2,pts[5][1]-9,3.4,C.C,"#15181c");bond(x,pts[5][0]-2,pts[5][1]-9,pts[5][0]-2,pts[5][1]-16,2);sph(x,pts[5][0]-2,pts[5][1]-17,3.4,C.O,C.Od);break}
  case"adp":case"atp":{/* adenine (two rings), ribose, then phosphate chain */
   const n=type==="atp"?3:2;
-  x.translate(-8*(n-1)-4,0);
+  x.translate(-8*(n-1)-4+4,0);
   /* adenine: 6-ring + 5-ring */
   const hex=(cx,cy,r)=>{x.beginPath();for(let i=0;i<6;i++){const a=i*Math.PI/3;i?x.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r):x.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r)}x.closePath();x.fillStyle="#d9c8f2";x.fill();x.lineWidth=1.6;x.strokeStyle=C.ad;x.stroke()};
   hex(-12,-10,7);x.beginPath();[[-5,-14],[-1,-9],[-5,-4],[-12,-3]].forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));x.fillStyle="#cdb6ee";x.fill();x.strokeStyle=C.ad;x.stroke();
@@ -49,7 +49,7 @@ G.mol=(x,type,px,py,s,rot)=>{s=s||1;x.save();x.translate(px,py);x.rotate(rot||0)
  case"carb":[-14,-1,12].forEach((a,i)=>{x.beginPath();for(let k=0;k<6;k++){const an=k*Math.PI/3+Math.PI/6,xx=a+Math.cos(an)*7,yy=(i%2?4:-4)+Math.sin(an)*7;k?x.lineTo(xx,yy):x.moveTo(xx,yy)}x.closePath();x.fillStyle="#fff7e0";x.fill();x.lineWidth=2;x.strokeStyle="#8d6a2a";x.stroke()});break;
  case"sol":sph(x,0,0,13,"#8a6fd0","#4b2e83");sph(x,-4,-4,3.5,"#c8b8ee","#8a6fd0");break;
  }x.restore()};
-G.icon=(type,px)=>{const c=document.createElement("canvas"),r=2;px=px||44;c.width=c.height=px*r;const x=c.getContext("2d");x.scale(r,r);G.mol(x,type,px/2,px/2,px/46);return c.toDataURL("image/png")};
+G.icon=(type,px)=>{const c=document.createElement("canvas"),r=2;px=px||44;c.width=c.height=px*r;const x=c.getContext("2d");x.scale(r,r);G.mol(x,type,px/2,px/2,px/Math.max(46,({atp:80,adp:66,glu:66,co2:58})[type]||0));return c.toDataURL("image/png")};
 
 /* ---- phospholipid bilayer along a centre-line.  pts: [[x,y],...]  closed: true for a vesicle (outer leaflet faces OUT)
    o: {gap, len, wob(t) wobble amount, hl (head radius), skip:[[a,b]...] fraction ranges with no lipids (protein sits there), side:"both"|"out"|"in"} */
@@ -98,5 +98,41 @@ G.memScene=(x,t,o)=>{o=o||{};const m=G.MEM,W=m.W,H=m.H,Y=m.Y,L=m.L,HR=m.HR,T=L+H
   x.fillStyle="#fff3c0";x.strokeStyle="#b57d0b";x.lineWidth=2;x.beginPath();x.roundRect(cx-10,top-14+Math.sin(t*2)*2,20,16,5);x.fill();x.stroke();x.restore()}
  return pw};
 (x,a,b,w,h,r)=>{x.beginPath();x.roundRect?x.roundRect(a,b,w,h,r):x.rect(a,b,w,h)};
+
+/* ---------- static teaching diagrams ---------- */
+const arrow=(x,a,b,c,d,col,w)=>{x.save();x.strokeStyle=col;x.fillStyle=col;x.lineWidth=w||4;x.lineCap="round";x.beginPath();x.moveTo(a,b);x.lineTo(c,d);x.stroke();const an=Math.atan2(d-b,c-a),h=(w||4)*2.6;x.beginPath();x.moveTo(c,d);x.lineTo(c-Math.cos(an-.45)*h,d-Math.sin(an-.45)*h);x.lineTo(c-Math.cos(an+.45)*h,d-Math.sin(an+.45)*h);x.closePath();x.fill();x.restore()};
+const pill=(x,t,px,py,col)=>{x.font="800 14px 'Open Sans',sans-serif";const w=x.measureText(t).width+18;x.fillStyle="#fff";x.strokeStyle=col||"#3a56a8";x.lineWidth=2.5;x.beginPath();x.roundRect(px,py-13,w,26,13);x.fill();x.stroke();x.fillStyle="#241a38";x.textAlign="left";x.textBaseline="middle";x.fillText(t,px+9,py+1);return w};
+const numc=(x,n,px,py)=>{x.beginPath();x.arc(px,py,13,0,7);x.fillStyle="#3a56a8";x.fill();x.fillStyle="#fff";x.font="800 15px 'Open Sans',sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText(n,px,py+1)};
+const memLine=(x,W,y,prots)=>{const pts=[];for(let i=0;i<=40;i++)pts.push([8+i*(W-16)/40,y]);G.bilayer(x,pts,{gap:12,len:15,hl:5.5,lw:1.8,skip:prots.map(p=>[(p.x-p.hw-8)/(W-16),(p.x+p.hw-8)/(W-16)])});
+ prots.forEach(p=>{const top=y-34,h=68;x.save();x.lineWidth=2.5;x.fillStyle=p.col[0];x.strokeStyle=p.col[1];x.beginPath();x.roundRect(p.x-p.hw,top,p.hw*2,h,12);x.fill();x.stroke();
+  if(p.t==="channel"){x.fillStyle="rgba(180,225,255,.85)";x.fillRect(p.x-6,top+2,12,h-4)}else{x.fillStyle="#fbf1d8";x.beginPath();x.moveTo(p.x-12,top);x.quadraticCurveTo(p.x,top+26,p.x+12,top);x.closePath();x.fill();x.stroke()}
+  x.restore()})};
+/* glucose uptake: three proteins working together (640 x 340) */
+G.dGluc=x=>{const W=640,H=340,Y1=96,Y2=250;x.fillStyle="#fff1d6";x.fillRect(0,0,W,Y1);x.fillStyle="#f9d9e0";x.fillRect(0,Y1,W,Y2-Y1);x.fillStyle="#f6b8c0";x.fillRect(0,Y2,W,H-Y2);
+ x.font="800 14px 'Open Sans',sans-serif";x.fillStyle="rgba(36,26,56,.7)";x.textAlign="left";x.textBaseline="middle";x.fillText("LUMEN (lots of Na⁺)",10,16);x.fillText("INSIDE THE CELL (little Na⁺)",10,Y1+46);x.fillText("BLOOD",10,H-14);
+ memLine(x,W,Y1,[{x:210,hw:34,t:"carrier",col:["#3b9d8a","#175b4d"]}]);
+ memLine(x,W,Y2,[{x:210,hw:30,t:"carrier",col:["#4aa58f","#1e6b59"]},{x:470,hw:38,t:"carrier",col:["#e5a24a","#9a5f0e"]}]);
+ x.fillStyle="#175b4d";x.font="800 10px 'Open Sans',sans-serif";x.textAlign="center";x.fillText("Na⁺–glucose",210,Y1+1);x.fillText("carrier",210,Y1+13);x.fillStyle="#1e6b59";x.fillText("glucose",210,Y2+1);x.fillText("carrier",210,Y2+13);x.fillStyle="#9a5f0e";x.fillText("Na⁺/K⁺ pump",470,Y2+6);
+ [[60,40],[150,74],[360,30],[400,70],[520,60],[600,70],[330,66]].forEach(a=>G.mol(x,"na",a[0],a[1],.9));[[110,62],[280,52],[560,40]].forEach(a=>G.mol(x,"glu",a[0],a[1],.85));
+ G.mol(x,"na",380,140,.9);[[100,175],[270,140],[330,214],[560,175]].forEach(a=>G.mol(x,"k",a[0],a[1],.9));G.mol(x,"glu",120,215,.85);
+ [[90,300],[330,296],[560,300]].forEach(a=>G.mol(x,"na",a[0],a[1],.9));[[600,300]].forEach(a=>G.mol(x,"glu",a[0],a[1],.85));
+ arrow(x,196,44,196,Y1-38,"#2b7d4c",5);arrow(x,224,44,224,Y1-38,"#3f6fd6",5);arrow(x,196,Y1+38,196,Y1+74,"#2b7d4c",5);arrow(x,224,Y1+38,224,Y1+74,"#3f6fd6",5);
+ arrow(x,210,Y2-74,210,Y2-38,"#2b7d4c",5);arrow(x,210,Y2+38,210,Y2+72,"#2b7d4c",5);
+ arrow(x,424,Y2-52,424,Y2+66,"#3f6fd6",5);arrow(x,516,Y2+66,516,Y2-52,"#8a5fc8",4);
+ numc(x,"1",214,Y2-62);numc(x,"2",300,Y1-6);numc(x,"3",262,Y2+36);
+ pill(x,"Pump uses ATP: Na⁺ out, K⁺ in",232,Y2-62,"#c0762b");pill(x,"Na⁺ flows in and pulls glucose along",318,Y1-6);pill(x,"Glucose exits (no ATP)",280,Y2+36);
+ /* labels for the arrows' colors are the icons themselves */
+};
+/* Na+ / K+ gradients with the pump ON or OFF (320 x 280) */
+G.dGrad=(x,on)=>{const W=320,H=280,Y=150;x.fillStyle="#f9d9e0";x.fillRect(0,0,W,Y);x.fillStyle="#f6b8c0";x.fillRect(0,Y,W,H-Y);
+ x.font="800 13px 'Open Sans',sans-serif";x.fillStyle="rgba(36,26,56,.7)";x.textAlign="left";x.textBaseline="middle";x.fillText("INSIDE THE CELL",8,14);x.fillText("OUTSIDE (BLOOD)",8,H-14);
+ memLine(x,W,Y,[{x:60,hw:20,t:"channel",col:["#6f8fd8","#38539a"]},{x:260,hw:20,t:"channel",col:["#6f8fd8","#38539a"]},{x:160,hw:30,t:"carrier",col:on?["#e5a24a","#9a5f0e"]:["#c9c3b6","#8a8578"]}]);
+ x.fillStyle=on?"#9a5f0e":"#6d675a";x.font="800 10px 'Open Sans',sans-serif";x.textAlign="center";x.fillText("pump",160,Y+1);
+ const inK=on?[[40,50],[100,40],[170,56],[230,46],[290,60],[130,90],[210,100]]:[[40,50],[170,56],[290,60],[130,96]],inN=on?[[260,100]]:[[100,44],[230,48],[210,102]],
+  outN=on?[[40,214],[100,240],[170,222],[230,246],[290,220],[130,252]]:[[40,214],[170,222],[290,230]],outK=on?[[230,200]]:[[100,236],[230,246],[130,200]];
+ inK.forEach(a=>G.mol(x,"k",a[0],a[1],.8));inN.forEach(a=>G.mol(x,"na",a[0],a[1],.8));outN.forEach(a=>G.mol(x,"na",a[0],a[1],.8));outK.forEach(a=>G.mol(x,"k",a[0],a[1],.8));
+ arrow(x,60,Y-42,60,Y+42,"#9aa6c8",2.5);arrow(x,260,Y+42,260,Y-42,"#9aa6c8",2.5);
+ if(on){arrow(x,122,Y-48,122,Y+50,"#3f6fd6",5);arrow(x,198,Y+50,198,Y-48,"#8a5fc8",4)}};
+G.diag=(w,h,fn,alt)=>{const c=document.createElement("canvas"),r=2;c.width=w*r;c.height=h*r;c.style.width="100%";c.style.maxWidth=w+"px";c.style.height="auto";c.style.border="2px solid #cfd7ee";c.style.borderRadius="10px";c.setAttribute("role","img");c.setAttribute("aria-label",alt||"");const x=c.getContext("2d");x.scale(r,r);fn(x);return c};
 G.text=text;G.sph=sph;G.bond=bond;
 })();

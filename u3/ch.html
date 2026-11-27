@@ -55,7 +55,7 @@ h1{margin:0;font-size:clamp(32px,6.4vw,60px);font-weight:800;line-height:1.05}
  const st=document.createElement("style");st.textContent=".f{animation:dr var(--d) ease-in-out infinite alternate}@keyframes dr{to{transform:translate(var(--x),var(--y))}}@media(prefers-reduced-motion:reduce){.f{animation:none}}";document.head.appendChild(st);
 })();
 function draw(){LAB.load();
- document.getElementById("grid").innerHTML=CH.PARTS.map((p,i)=>{const open=CH.open(i),done=!!LAB.D.done[p.id];
+ document.getElementById("grid").innerHTML=CH.PARTS.map((p,i)=>{const open=CH.open(i),done=CH.PARTS.some((q,j)=>j>=i&&LAB.D.done[q.id]);
   return `<div class="card" style="--c:${p.c}"><div class="row"><div class="num">${done?"✓":i+1}</div><div><h2>${p.t}</h2></div></div><p>${p.sub}</p>${open?`<a class="go ${done?"dn":""}" href="${p.u}">${done?"Review ":"Open "}${p.t.replace(/^Part \d: /,"")} →</a>`:`<span class="go soon">🔒 Finish the part before this one</span>`}</div>`}).join("")}
-draw();if(window.BVL){BVL.guard("u3/ch","2099-01-01");BVL.loadSchedule(draw)}
+draw();addEventListener("pageshow",draw);document.addEventListener("visibilitychange",()=>{if(!document.hidden)draw()});if(window.BVL){BVL.guard("u3/ch","2099-01-01");BVL.loadSchedule(draw)}
 </script></body></html>
