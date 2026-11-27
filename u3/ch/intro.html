@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Introduction · Cellular Homeostasis</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/u3/ch/ch.css">
+<style>
+#stage{width:fit-content;max-width:100%;position:relative;background:#fff;border:3px solid var(--line);border-radius:14px;overflow:hidden;margin:8px auto;line-height:0}
+#cv{display:block;width:100%;height:auto;cursor:default}
+#cv.pt{cursor:pointer}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.steps span{background:#fff;border:2px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:700;font-size:13px;color:var(--mute)}
+.steps span.on{background:var(--teal);border-color:var(--teal);color:#fff}.steps span.dn{border-color:var(--ok);color:var(--ok)}
+.ctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.ctl label{font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
+.ctl input[type=range]{width:170px;height:34px}
+.mbtns{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:8px;margin:8px 0}
+.mb{display:flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--line);border-radius:12px;padding:4px 8px;font:700 14px 'Open Sans',sans-serif;color:var(--ink);cursor:pointer;min-height:52px;text-align:left}
+.mb img{width:38px;height:38px;flex:none}.mb.on{border-color:var(--teal);background:#e2e8f7;box-shadow:0 0 0 3px #3a56a844}.mb.seen::after{content:"✓";margin-left:auto;color:var(--ok)}
+.say{background:#eef2fc;border:2px solid var(--line);border-radius:12px;padding:10px 14px;font-size:15px;margin:8px 0;line-height:1.5}
+.big{font-size:17px}
+.prompt{background:#fff8d6;border:2px solid #e6c84a;border-radius:12px;padding:10px 14px;font-weight:700;margin:8px 0;line-height:1.5}
+</style></head><body>
+<div id="shell"></div>
+<script src="/assets/bvl.js"></script>
+<script src="/u3/ch/gfx.js"></script>
+<script src="/u3/ch/core.js"></script>
+<script src="/u3/ch/frame.js"></script>
+<script src="/u3/ch/intro.js"></script>
+</body></html>
