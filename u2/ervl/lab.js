@@ -47,7 +47,7 @@ const sites=document.createElement("div");sites.className="sites";p1.appendChild
  const label=()=>{const x=c.getContext("2d"),r=Math.min(window.devicePixelRatio||1,2),t=target(),tx=s/2+t[0]*sc,ty=s/2+t[1]*sc;x.save();x.setTransform(r,0,0,r,0,0);
   x.strokeStyle="#111";x.fillStyle="#111";x.lineWidth=2.5;x.beginPath();x.moveTo(tx+62,ty-48);x.lineTo(tx+8,ty-6);x.stroke();x.beginPath();x.arc(tx+8,ty-6,4,0,6.3);x.fill();
   x.font="700 15px 'Open Sans',sans-serif";x.textAlign="center";const wd=x.measureText("Active site").width+14;x.fillStyle="#fff";x.strokeStyle="#111";x.lineWidth=1.5;x.beginPath();x.rect(tx+62-wd/2,ty-68,wd,24);x.fill();x.stroke();x.fillStyle="#111";x.fillText("Active site",tx+62,ty-51);x.restore();
-  if(L.B){const t=document.createElement("canvas");t.width=c.width;t.height=c.height;const tx=t.getContext("2d");tx.fillStyle="#fff";tx.fillRect(0,0,t.width,t.height);tx.drawImage(c,0,0);L.B.save("img:eial:site"+lab,{d:t.toDataURL("image/jpeg",.85),w:t.width,h:t.height})}};
+  if(L.B){const t=document.createElement("canvas");t.width=c.width;t.height=c.height;const tx=t.getContext("2d");tx.fillStyle="#fff";tx.fillRect(0,0,t.width,t.height);tx.drawImage(c,0,0);L.B.save("img:ervl:site"+lab,{d:t.toDataURL("image/jpeg",.85),w:t.width,h:t.height})}};
  const BV=window.BVL;L.B=BV;
  const done=()=>{fb.className="fb good site-fb";fb.textContent="✓ Correct. That is the active site"+(st.w?" (after "+(st.w+1)+" tries)":" on the first try")+"."};
  if(st.d){label();done()}
