@@ -25,8 +25,8 @@ CH.buildPdf=(o)=>{o=o||{};const b=window.BVL,p=b.profile(),d=new PDFDoc(),now=ne
     scored++;if(q.d)answered++;const ok=q.d&&!q.w;if(ok)first++;
     d.text("   "+(q.d?(ok?"Correct on the first try":"Correct after "+(q.w+1)+" tries"):"Not answered yet")+(q.d?"   (answer: "+pt(q.a)+")":""),{size:9.5,color:q.d?(ok?[20,120,60]:[160,90,20]):[150,60,50],gap:3})}
    else if(it.t==="w")answerBox(pt(D.pr[it.id]||it.id),(D.ans[it.id]||"").trim())});
-  (IMGS[part]||[]).forEach(([k,cap])=>{const im=L.img(k);d.room(220);
-   if(im&&im.d){const wpt=Math.min(W_-60,400);d.gap(4);d.text(pt(cap),{size:10,bold:true,gap:2,w:W_});d.image(im.d,im.w,im.h,wpt);d.gap(6)}
+  (IMGS[part]||[]).forEach(([k,cap])=>{const im=L.img(k);d.room(im&&im.d?(k==='lbl'?260:240):30);
+   if(im&&im.d){const wpt=k==='lbl'?Math.min(W_-40,420):Math.min(W_-60,290);d.gap(4);d.text(pt(cap),{size:10,bold:true,gap:2,w:W_});d.image(im.d,im.w,im.h,wpt);d.gap(6)}
    else d.text(pt(cap.split(":")[0])+": (picture not saved yet)",{size:10,color:[150,150,150],gap:4})});
   if(part==="p1"){d.gap(4);d.room(90);d.text("Vocabulary and definitions",{size:11.5,bold:true,color:[58,86,168],gap:3});
    CH.VOCAB.concat(CH.TERMS2).forEach(v=>{d.text(pt(v.t)+": "+pt(v.d),{size:9.5,x:62,w:W_-14,gap:3})})}

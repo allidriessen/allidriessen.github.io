@@ -14,7 +14,7 @@ L.esc=esc;
 const strip=t=>String(t||"").replace(/<[^>]+>/g,"");
 L.strip=strip;
 /* text that is safe for the PDF's plain fonts */
-L.pt=t=>strip(t).replace(/[₀-₉]/g,c=>String.fromCharCode(c.charCodeAt(0)-8272)).replace(/→/g,"->").replace(/≤/g,"<=").replace(/≥/g,">=").replace(/✓/g,"").replace(/[★☆]/g,"*");
+L.pt=t=>strip(t).replace(/[₀-₉]/g,c=>String.fromCharCode(c.charCodeAt(0)-8272)).replace(/→/g,"->").replace(/≤/g,"<=").replace(/≥/g,">=").replace(/✓/g,"").replace(/[★☆]/g,"*").replace(/⁺/g,"+").replace(/⁻/g,"-").replace(/ᵢ/g,"i").replace(/[–—]/g,"-").replace(/[‘’]/g,"'").replace(/[“”]/g,"\"").replace(/[^\x00-\xFF]/g,"?");
 L.flash=t=>{let e=document.getElementById("toast");if(!e){e=document.createElement("div");e.id="toast";e.className="toast";document.body.appendChild(e)}e.textContent=t;e.hidden=false;clearTimeout(L.flash.t);L.flash.t=setTimeout(()=>e.hidden=true,3200)};
 const ord=(t,id)=>{if(!D.order.some(o=>o.id===id))D.order.push({t,id,part:L.part})};
 L.reg=(id,q,a,pred)=>{ord("mc",id);if(!L.items.some(x=>x.id===id&&x.t==="mc"))L.items.push({part:L.part,t:"mc",id});if(!D.mc[id])D.mc[id]={q:strip(q),a:strip(a),w:0,d:0,pred:pred?1:0,pick:""};else{D.mc[id].q=strip(q);D.mc[id].a=strip(a);D.mc[id].pred=pred?1:0}};
@@ -44,7 +44,8 @@ L.choice=(host,id,prompt,opts,correct,o)=>{o=o||{};const pred=!!o.pred;
 L.cloze=(host,id,html,o)=>{o=o||{};let n=0;const keys=[];
  const body=html.replace(/\{\{([^}]+)\}\}/g,(m,s)=>{const parts=s.split("|"),i=n++;let ci=0;const opts=parts.map((p,j)=>{if(p[0]==="*"){ci=j;return p.slice(1)}return p});keys.push({c:opts[ci]});
   return`<select class="bl" data-i="${i}" aria-label="Choose an answer"><option value="">choose…</option>${opts.map(x=>`<option>${esc(x)}</option>`).join("")}</select>`});
- L.reg(id,o.q||"Complete the statement.",keys.map(k=>k.c).join(" | "),false);
+ const filled=strip(html.replace(/<\/p>/g," ").replace(/<\/t[dh]>/g," | ").replace(/<\/tr>/g,"; ").replace(/\{\{([^}]+)\}\}/g,(m,q)=>{const a=q.split("|").find(x=>x[0]==="*");return"["+(a?a.slice(1):q.split("|")[0])+"]"})).replace(/\s+/g," ").trim();
+ L.reg(id,o.q||"Complete the statement.",filled,false);
  const w=document.createElement("div");w.className="q cz";w.innerHTML=`${o.pre||""}<div class="czb">${body}</div><div class="czr"><button type="button" class="pbtn sm">Check</button><span class="fb" aria-live="polite"></span></div>`;
  host.appendChild(w);const ss=[...w.querySelectorAll("select.bl")],btn=w.querySelector("button"),fb=w.querySelector(".fb"),st=D.mc[id];
  const vals=()=>D.data["cz:"+id]||(D.data["cz:"+id]=[]);

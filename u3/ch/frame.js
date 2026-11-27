@@ -27,6 +27,7 @@ CH.init=cfg=>{const i=CH.idx(cfg.id),P=CH.PARTS[i];
  $("tg").onclick=()=>{if(CH.teach())return;const e=$("tc");e.hidden=!e.hidden;if(!e.hidden)e.focus()};
  $("tc").onkeydown=e=>{if(e.key==="Enter"){if(e.target.value===TCODE()){try{sessionStorage.setItem("bvl:preview","1")}catch(x){}BVL.preview=true;e.target.hidden=true;LAB.flash("Teacher mode: next buttons unlocked");CH.sync&&CH.sync()}else{e.target.value="";LAB.flash("Incorrect code")}}};
  return $("pg")};
+CH.finishPart=id=>{LAB.finish(id);LAB.flash("Part complete! Your work is saved.")};
 /* bottom navigation: Back + Next. Next is locked until CH.unlock() (or teacher mode) */
 CH.nav=(host,id,o)=>{o=o||{};const i=CH.idx(id),prev=CH.PARTS[i-1],next=CH.PARTS[i+1];
  const w=document.createElement("div");w.className="navrow";
