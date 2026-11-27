@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Enzymes in Action Virtual Lab DRAFT 2 (Lab Bench)</title>
+<title>Enzymatic Reactions Virtual Lab</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#16202a;--teal:#0f766e;--tl:#0e9f8e;--bg:#eef5f4;--line:#cfe0dd;--ok:#14803f;--bad:#c0392b}
@@ -12,6 +12,7 @@ body{margin:0;font-family:'Open Sans',system-ui,sans-serif;background:var(--bg);
 .ph{background:linear-gradient(135deg,#0b3b44,#0f766e 65%,#2fa38f);color:#fff;border-radius:16px;padding:16px 20px;margin-bottom:10px}
 .ph a{color:#c8f1ea;font-weight:600;text-decoration:none}.ph .ey{font-size:15px;font-weight:600;opacity:.9;margin-top:6px}
 .ph h1{margin:0;font-size:clamp(26px,5vw,40px);font-weight:800;line-height:1.1}
+.sq{margin:6px 0 0;font-size:clamp(17px,2.6vw,22px);font-weight:700;color:#bff0e8}
 .draft{display:inline-block;background:#ffe27a;color:#4a3800;font-weight:800;border-radius:8px;padding:1px 10px;font-size:.55em;vertical-align:middle;margin-left:6px}
 #chips{position:sticky;top:0;z-index:20;display:flex;gap:6px;flex-wrap:wrap;background:var(--bg);padding:6px 0 8px}
 #chips a{background:#fff;border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:700;font-size:14px;color:var(--teal);text-decoration:none}
@@ -82,19 +83,26 @@ body.nosim .bench{grid-template-columns:1fr}body.nosim #simpane{display:none}
 .bgd .cnt{font-weight:600;font-size:13px;color:var(--mute);margin-left:6px}
 .bgb{padding-bottom:6px}
 .tabp h3.sh{margin-top:6px}
+.opt small{display:block;font-size:.72em;font-weight:600;opacity:.75}
+.dz{display:flex;gap:4px;align-items:stretch;margin:8px 0}.dar{align-self:center;font-size:28px;color:var(--teal);font-weight:800}
+.zbox{flex:1;min-width:0;min-height:130px;border:3px dashed #8a9a9c;background:#e4e8e9;border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:4px}
+.zbox.tgt{border-color:var(--teal);background:#d9ecea}.zbox.okz{border-style:solid;border-color:var(--ok);background:#e3f6ea}
+.zlab{font-weight:800;text-align:center;color:#37494c;text-transform:uppercase;font-size:13px;letter-spacing:.05em}.zcard{flex:1;display:flex;align-items:center;justify-content:center}
+.dtray{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:8px;border:2px solid var(--line);border-radius:12px;min-height:90px;background:#fcfefe}
+.dcard{background:#fff;border:3px solid var(--line);border-radius:10px;padding:4px;cursor:grab;touch-action:none;width:100%;max-width:210px}.dtray .dcard{width:30%;min-width:120px}.dcard.sel{border-color:var(--teal);box-shadow:0 0 0 3px #0f766e44}
 </style></head><body>
-<div class="bench"><aside id="simpane" aria-label="Simulator"><iframe id="simf" src="/u2/eial/sim.html?bench=1" title="Catalase and H2O2 simulator"></iframe></aside>
+<div class="bench"><aside id="simpane" aria-label="Simulator"><iframe id="simf" src="/u2/ervl/sim.html?bench=1" title="Catalase and H2O2 simulator"></iframe></aside>
 <div id="wspane"><div class="wrap">
-<header class="ph"><a href="/u2/home.html">← Unit 2: Matter &amp; Energy</a><div class="ey">Honors Biology · Unit 2 · 2.11.B</div><h1>Enzymes in Action Virtual Lab <span class="draft">DRAFT</span></h1></header>
+<header class="ph"><a href="/u2/home.html">← Unit 2: Matter &amp; Energy</a><div class="ey">Honors Biology · Unit 2</div><h1>Enzymatic Reactions Virtual Lab</h1><p class="sq">What variables influence enzyme activity?</p></header>
 <div id="chips"></div>
 <div id="notin" class="info" hidden><b>Not signed in.</b> You can try the lab, but your answers will not be saved and you cannot make a PDF. <a href="/home.html">Sign in on the home page</a>.</div>
 <main id="lab"></main>
 </div></div></div>
 <script src="/assets/bvl.js"></script>
 <script src="/assets/pdf.js"></script>
-<script>if(window.BVL){BVL.guard("u2/eial2","2099-01-01");if(!BVL.user())document.getElementById("notin").hidden=false}</script>
-<script src="/u2/eial/core.js"></script>
-<script src="/u2/eial/enz.js"></script>
-<script src="/u2/eial/lab2.js"></script>
-<script src="/u2/eial/pdfb.js"></script>
+<script>if(window.BVL){BVL.guard("u2/ervl","2099-01-01");if(!BVL.user())document.getElementById("notin").hidden=false}</script>
+<script src="/u2/ervl/core.js"></script>
+<script src="/u2/ervl/enz.js"></script>
+<script src="/u2/ervl/lab.js"></script>
+<script src="/u2/ervl/pdfb.js"></script>
 </body></html>
