@@ -68,6 +68,7 @@ L.write=(host,key,prompt,rows)=>{const w=document.createElement("div");w.classNa
 L.shot=(key,cv,cap)=>{try{const t=document.createElement("canvas");t.width=cv.width;t.height=cv.height;const x=t.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,t.width,t.height);x.drawImage(cv,0,0);
  const sc=Math.min(1,900/t.width),o=document.createElement("canvas");o.width=Math.round(t.width*sc);o.height=Math.round(t.height*sc);o.getContext("2d").drawImage(t,0,0,o.width,o.height);
  if(B())B().save("img:ch:"+key,{d:o.toDataURL("image/jpeg",.85),w:o.width,h:o.height,cap:cap||""});D.cap[key]=1;L.save();return true}catch(e){return false}};
+L.img=k=>{const d=B()&&B().load("img:ch:"+k);return d?d:null};
 /* mark a part finished (sequential unlock on the main page) */
 L.finish=p=>{D.done[p]=1;L.saveNow()};
 /* ---- drag-and-drop ordering: cards[i] belongs in zones[i]. Drag, or tap a card then tap a box. */
