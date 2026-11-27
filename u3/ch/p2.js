@@ -1,0 +1,64 @@
+/* Part 2: passive transport (lab bench). */
+(function(){
+const L=LAB,D=L.D,G=window.G,W=Sim.W;
+const LUM="#fff1d6",CEL="#f9d9e0";
+const base=()=>({regions:[{name:"Lumen (outside the cell)",col:LUM},{name:"Inside the cell",col:CEL}],mem:[{y:290,prot:[]}],rule:{}});
+const REQ=["p2.a.move","p2.a.dir","p2.a.eq","p2.a.en","p2.b.none","p2.b.carrier","p2.b.na","p2.b.sum","p2.c.dir","p2.c.block","p2.c.out","p2.c.sum","p2.d.sum","p2.d.match"];
+const done=()=>REQ.every(i=>D.mc[i]&&D.mc[i].d);
+let reveal;const chk=()=>{if(done()){if(!D.done.p2)CH.finishPart("p2");reveal()}};
+const osm=(h,s)=>()=>{const c=base();c.rule={h2o:"slow"};c.mols=[{k:"h2o",n:h},{k:"sol",n:s}];return c};
+const SC={
+ diff:{title:"Scene: O₂ and CO₂ at a cell membrane",kinds:["o2","co2"],note:"Tap a molecule's row in the table to follow just that molecule.",
+  cfg:()=>{const c=base();c.rule={o2:"free",co2:"free"};c.mols=[{k:"o2",n:[26,4]},{k:"co2",n:[4,26]}];return c},
+  btns:[{label:"+10 O₂ in the lumen",fn:s=>{for(let i=0;i<10;i++)s.add("o2",0)}},{label:"+10 CO₂ in the cell",fn:s=>{for(let i=0;i<10;i++)s.add("co2",1)}}]},
+ fac:{title:"Scene: glucose and Na⁺ at a cell membrane",kinds:["glu","na"],note:"Add proteins with the buttons. Tap a row in the table to follow one molecule.",
+  cfg:()=>{const c=base();c.mols=[{k:"glu",n:[24,2]},{k:"na",n:[24,2]}];return c},
+  btns:[{label:"+ Carrier protein (glucose)",fn:s=>{const m=s.mems[0],n=m.prot.filter(p=>p.t==="carrier").length;if(n<2)s.addProt(0,{t:"carrier",x:n?470:170,f:["glu"]})}},
+   {label:"+ Channel protein (Na⁺)",fn:s=>{const m=s.mems[0],n=m.prot.filter(p=>p.t==="channel").length;if(n<2)s.addProt(0,{t:"channel",x:n?570:320,f:["na"]})}},
+   {label:"Remove proteins",fn:s=>{s.mems[0].prot=[]}}]},
+ osm:{title:"Scene: water and large dissolved particles",kinds:["h2o","sol"],note:"The big purple particles are dissolved solute that cannot cross. Pick a setup with the buttons.",
+  cfg:osm([30,30],[8,8]),
+  btns:[{label:"Equal solute",fn:(s,a)=>{s.load(osm([30,30],[8,8])());s.v0=null}},{label:"More solute in the cell",fn:s=>{s.load(osm([36,24],[0,16])());s.v0=null}},{label:"More solute in the lumen",fn:s=>{s.load(osm([24,36],[16,0])());s.v0=null}}],
+  extra:s=>{const cn=s.counts(),n=(cn.h2o?cn.h2o[1]:0)+(cn.sol?cn.sol[1]:0);if(s.v0==null)s.v0=n;const pc=Math.round((n/s.v0-1)*100);return`<div class="vol"><svg width="52" height="52" viewBox="-26 -26 52 52"><circle r="${(22*Math.sqrt(n/s.v0)).toFixed(1)}" fill="#f4c6d1" stroke="#bf5a78" stroke-width="3"/><circle r="6" fill="#bba3e6"/></svg><span>Cell contents: ${n} particles (${pc>0?"+":""}${pc}% from the start)<br><span class="note">A cell with more contents would swell. One with fewer would shrink.</span></span></div>`}}
+};
+const api=CH.bench({id:"p2",q:"How do molecules cross the membrane without using energy?",scenes:SC,tabs:[
+ {label:"2A",sub:"Diffusion",title:"Small, uncharged molecules slip through",scene:"diff",build:(h,a)=>{
+  a.fold(h,"Background and prediction",`<p><b>Passive transport</b> moves molecules from an area of <b>high concentration</b> to an area of <b>low concentration</b>. The cell does <b>not</b> use energy (ATP). Molecules are always moving randomly, and the net result is that they spread out.</p><p><b>Diffusion</b> is passive transport of <b>small, uncharged</b> molecules, like O₂ and CO₂. They can slip between the phospholipids.</p><p>Your cells use O₂ and make CO₂ in cellular respiration, so the lumen side starts with lots of O₂ and the cell side starts with lots of CO₂. Press <b>Reset</b> any time to start over.</p>`,true);
+  const b=document.createElement("div");h.appendChild(b);
+  L.choice(b,"p2.a.pred","Prediction: O₂ starts mostly in the lumen. CO₂ starts mostly inside the cell. Which way will each one mostly move?",["O₂ moves into the cell and CO₂ moves out","Both move into the cell","Both move out of the cell","Neither moves"],0,{pred:true});
+  b.insertAdjacentHTML("beforeend",'<div class="info"><b>Do this:</b> The simulation is running. Watch for about 20 seconds. Look at the table under the picture.</div>');
+  L.choice(b,"p2.a.move","1. Look closely at ONE molecule (tap its row). Which statement describes how it moves?",["It moves randomly in all directions, bouncing around","It moves in a straight line from high to low concentration","It stops after it crosses the membrane","It only moves toward the cell"],0,{explain:"Each molecule moves randomly. The overall result is movement from high to low concentration."});
+  L.cloze(b,"p2.a.dir","<p>2. Fill in what happened overall. O₂ moved from the {{*lumen|cell}}, where it was {{*more|less}} concentrated, into the {{*cell|lumen}}, where it was {{*less|more}} concentrated.</p>",{q:"Describe the net movement of O₂.",hint:"Check the table: where did O₂ start with the larger number?",onRight:()=>{a.shotAuto("diff","Diffusion");chk()}});
+  L.choice(b,"p2.a.eq","3. After a while the numbers on both sides are about equal. What are the molecules doing now?",["They keep moving randomly, but there is no net change","They have all stopped moving","They are all moving toward the lumen","They are all moving toward the cell"],0,{explain:"This is called dynamic equilibrium: lots of movement, no net change.",onRight:chk});
+  L.cloze(b,"p2.a.en","<p>4. O₂ and CO₂ can slip through because they are {{*small|large}} and {{*uncharged|charged}}. The cell {{*does not use|uses}} energy for diffusion.</p>",{q:"Why can O₂ and CO₂ diffuse across the membrane, and does the cell use energy?",hint:"Think back to Part 1: the middle of the bilayer is oily.",onRight:chk});
+  a.shotBtn(b,"diff","Diffusion")}},
+ {label:"2B",sub:"Facilitated",title:"Large or charged molecules need a protein",scene:"fac",build:(h,a)=>{
+  a.fold(h,"Background and prediction",`<p><b>Facilitated diffusion</b> is passive transport for <b>large</b> or <b>charged</b> molecules, like glucose and Na⁺. They cannot slip through the bilayer, so they cross with the help of a membrane protein:</p><p>• A <b>channel protein</b> makes a tunnel.<br>• A <b>carrier protein</b> grabs a molecule, changes shape and releases it on the other side. Carriers are specific: each one fits one kind of molecule.</p><p>It is still passive: molecules move from high to low concentration and the cell does <b>not</b> use energy.</p>`,true);
+  const b=document.createElement("div");h.appendChild(b);
+  L.choice(b,"p2.b.pred","Prediction: glucose and Na⁺ are mostly in the lumen. What will happen once we add proteins to the membrane?",["They will cross from the lumen into the cell, from high to low concentration","They will cross from the cell into the lumen","Nothing will change","They will all go into the cell and never leave"],0,{pred:true});
+  b.insertAdjacentHTML("beforeend",'<div class="info"><b>Do this:</b> First watch for 15 seconds with <b>no proteins</b>. Then press <b>+ Carrier protein</b> and <b>+ Channel protein</b> under the picture.</div>');
+  L.choice(b,"p2.b.none","1. With no proteins in the membrane, what do glucose and Na⁺ do?",["They bounce off the membrane and stay on the same side","They slip through the bilayer","They cross, but slowly","They disappear"],0,{explain:"Large and charged particles cannot pass through the oily middle of the bilayer.",onRight:chk});
+  L.choice(b,"p2.b.carrier","2. Add a carrier protein. Which molecule does it help cross?",["Glucose","Na⁺","Both glucose and Na⁺","Neither"],0,{explain:"Carrier proteins are specific. This one fits glucose.",onRight:chk});
+  L.choice(b,"p2.b.na","3. Add a channel protein. Which way do Na⁺ ions move through it, and why?",["From the lumen into the cell, because there is a higher concentration of Na⁺ in the lumen","From the cell into the lumen, because the cell needs less Na⁺","Into the cell, because the channel uses ATP","They do not move through it"],0,{explain:"Facilitated diffusion still follows the concentration gradient: high to low.",onRight:()=>{a.shotAuto("fac","Facilitated diffusion");chk()}});
+  L.cloze(b,"p2.b.sum","<p>4. Facilitated diffusion helps {{*large or charged|small and uncharged}} molecules cross. A {{*channel|carrier}} protein forms a tunnel, and a {{*carrier|channel}} protein changes shape to move a molecule. The cell {{*does not use|uses}} energy.</p>",{q:"Summarize facilitated diffusion.",hint:"A channel is like a tunnel. A carrier is like a revolving door.",onRight:chk});
+  a.shotBtn(b,"fac","Facilitated diffusion")}},
+ {label:"2C",sub:"Osmosis",title:"Water moves toward more solute",scene:"osm",build:(h,a)=>{
+  a.fold(h,"Background and prediction",`<p><b>Osmosis</b> is the diffusion of <b>water</b> across a membrane. Water can cross the bilayer slowly, and faster through water channels.</p><p>Dissolved particles (<b>solutes</b>) take up space, so where there is more solute there is <b>less free water</b>. Water moves from where it is <b>more</b> concentrated (low solute) to where it is <b>less</b> concentrated (high solute). That is why people say "water follows solute."</p><p>In this simulation the purple solute particles are too big to cross.</p>`,true);
+  const b=document.createElement("div");h.appendChild(b);
+  L.choice(b,"p2.c.pred","Prediction: the cell has MORE solute than the lumen. Which way will water mostly move?",["Into the cell","Out of the cell","It will not move"],0,{pred:true});
+  b.insertAdjacentHTML("beforeend",'<div class="info"><b>Do this:</b> Press <b>More solute in the cell</b> under the picture. Watch for 30 seconds. Check the water counts and the cell size.</div>');
+  L.cloze(b,"p2.c.dir","<p>1. Water moved toward the side with {{*more|less}} solute, which is the side with {{*less|more}} free water.</p>",{q:"Which way does water move relative to solute?",hint:"Check the table: did the water count in the cell go up?",onRight:chk});
+  L.choice(b,"p2.c.block","2. Which particles could NOT cross the membrane in this simulation?",["The large solute particles","Water","Both water and solute","Neither"],0,{onRight:chk});
+  L.choice(b,"p2.c.out","3. Now press <b>More solute in the lumen</b> and watch. What happens to the cell?",["Water leaves, and the cell shrinks","Water enters, and the cell swells","Nothing happens","The solute leaves the cell"],0,{explain:"Water follows the solute, so it leaves the cell.",onRight:()=>{a.shotAuto("osm","Osmosis");chk()}});
+  L.cloze(b,"p2.c.sum","<p>4. Osmosis is the diffusion of {{*water|solute|glucose}} across a membrane. Water moves from {{*low|high}} solute concentration to {{*high|low}} solute concentration, and the cell {{*does not use|uses}} energy.</p>",{q:"Summarize osmosis.",hint:"Water follows solute.",onRight:chk});
+  a.shotBtn(b,"osm","Osmosis")}},
+ {label:"2D",sub:"Summary",title:"Passive transport summary",scene:null,build:(h,a)=>{
+  const b=document.createElement("div");h.appendChild(b);
+  L.cloze(b,"p2.d.sum","<p>Passive transport moves molecules from {{*high|low}} concentration to {{*low|high}} concentration. The cell {{*does not use|uses}} energy (ATP) for passive transport.</p>",{q:"Complete the passive transport statement.",onRight:chk});
+  L.cloze(b,"p2.d.match",`<p>Match each example to its type of passive transport.</p><table class="vt" style="width:100%;border-collapse:collapse">${[["O₂ slipping through the phospholipids","Diffusion"],["Glucose moving through a carrier protein","Facilitated diffusion"],["Na⁺ moving through a channel protein","Facilitated diffusion"],["Water moving toward a side with more solute","Osmosis"],["CO₂ leaving a cell","Diffusion"]].map(r=>`<tr><td style="border:1px solid #cfd7ee;padding:6px 8px">${r[0]}</td><td style="border:1px solid #cfd7ee;padding:6px 8px">{{${["Diffusion","Facilitated diffusion","Osmosis"].map(o=>(o===r[1]?"*":"")+o).join("|")}}}</td></tr>`).join("")}</table>`,{q:"Match each example to diffusion, facilitated diffusion or osmosis.",hint:"Ask: is it water? Does it need a protein?",onRight:chk});
+  const e=document.createElement("div");e.className="box";e.id="endbox";e.hidden=true;b.appendChild(e);
+  reveal=()=>{e.hidden=false;e.innerHTML=`<h3 class="sh" style="margin-top:0">✓ Part 2 complete</h3><p>Your pictures of diffusion, facilitated diffusion and osmosis are saved. Download a PDF of your work so far, or continue to Part 3.</p><div class="czr"><button type="button" class="pbtn ghost" id="pdfb">⬇ Download my PDF so far</button><span class="fb" id="pdfm"></span></div><div class="navrow"><a class="pbtn ghost" href="/u3/ch/p1.html" style="text-decoration:none">← Part 1</a><a class="pbtn" href="/u3/ch/p3.html" style="text-decoration:none">Next: Part 3, Active Transport →</a></div>`;e.querySelector("#pdfb").onclick=()=>CH.pdf(e.querySelector("#pdfm"),{partial:"Part 2",partialId:"p2"})};
+  if(D.done.p2||done())reveal()}}
+]});
+api.show(0);
+})();
