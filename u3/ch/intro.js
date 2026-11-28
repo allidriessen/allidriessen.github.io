@@ -234,7 +234,10 @@ function s4(){stage=4;setSteps();$("ctl").hidden=true;
 $("pz").onclick=()=>{paused=!paused;$("pz").textContent=paused?"▶ Play":"❚❚ Pause"};
 $("spd").oninput=e=>{spd=+e.target.value;$("spv").textContent=spd+"×"};
 CH.nav(main,"intro",{label:"Next: Part 1, Membrane Structure →",hint:"Reach the membrane (zoom all the way in) to unlock Part 1."});
-if(D.done.intro&&!CH.teach()){/* returning student: go straight to the end view */}
+/* Next stays locked until all four intro questions are answered (even in teacher mode) */
+{const base=CH.sync,allQ=()=>["intro.homeo1","intro.homeo2","intro.obs1","intro.obs2"].every(k=>D.mc[k]&&D.mc[k].d);
+ CH.sync=()=>{base();const b=document.getElementById("nxb");if(b&&!allQ()){b.disabled=true;document.getElementById("navfb").textContent="Answer all four questions (two now, two after you zoom into the cells) and reach the membrane to unlock Part 1."}};
+ CH.sync();setInterval(CH.sync,500)}
 s0();requestAnimationFrame(frame);
 window.__intro={go:()=>({stage}),jump:n=>{if(n===1)s1();if(n===2){s1();cam.s=2;cam.cx=520;cam.cy=282;s2()}if(n===4)s4()},setStage:n=>{stage=n}};
 })();
